@@ -2,6 +2,7 @@
 import curses
 import argparse
 import os
+import language.vhdl as vhdl
 
 def findListings(dirs, regex=None) :
   listings = set()
@@ -12,10 +13,10 @@ def findListings(dirs, regex=None) :
         fileFullPath = os.path.join(dir, fname)
         listings.add(fileFullPath)
   if not regex :
-    return listings
+    return frozenset(listings)
   else :
     import re
-    return set(filter(lambda x : re.match(regex, x), listings))
+    return frozenset(filter(lambda x : re.match(regex, x), listings))
 
 
 if __name__=="__main__" :
@@ -32,10 +33,15 @@ if __name__=="__main__" :
       , help = 'Optional : Top module in your design.'
       )
 
-  class Args:
-    pass 
+  class Args: pass 
   args = Args()
   parser.parse_args(namespace=args)
-  files = findListings(args.d, regex=".*py$")
-  print(files)
+  files = findListings(args.d, regex=".*vhd$")
+  if len(files) < 1 :
+    print("No file is found with regex {0} in directories"
+        +" {1}".format(regex,args.d))
+    sys.exit();
+  else :
+    design = vhdl.getDesign(files)
+    print(design)
 
