@@ -8,9 +8,9 @@ def findListings(dirs, regex=None) :
   listings = set()
   for dir in dirs :
     dir = dir.pop()
-    for dirPath, subdirPath, fileList in os.walk(dir) :
+    for root, subdirPath, fileList in os.walk(dir) :
       for fname in fileList :
-        fileFullPath = os.path.join(dir, fname)
+        fileFullPath = os.path.join(root, fname)
         listings.add(fileFullPath)
   if not regex :
     return frozenset(listings)
