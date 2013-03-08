@@ -5,9 +5,9 @@ _tabversion = '3.2'
 
 _lr_method = 'LALR'
 
-_lr_signature = '7\xbd\xdc\x83N5 "\xe9\xf2\x83\x1a@\x96E\xf2'
+_lr_signature = '+\xd6\x8c\x85\x7fi\xea\xbd\xe5R\x1an\xb3\x04\xedQ'
     
-_lr_action_items = {'IS':([10,],[15,]),'USE':([0,],[1,]),'END':([15,19,20,23,24,26,],[-11,22,-14,-13,-10,-9,]),'SEMICOLON':([8,11,17,18,20,21,23,25,28,],[13,16,-5,-6,-14,24,-13,27,29,]),'DECIMAL':([8,9,17,18,],[12,14,-5,-6,]),'ENTITY':([0,22,],[6,25,]),'ARCHITECTURE':([0,7,],[7,11,]),'ID':([1,6,12,14,15,20,24,25,],[9,10,17,18,20,20,20,28,]),'$end':([2,3,4,5,13,16,27,29,],[-2,-1,0,-3,-4,-12,-7,-8,]),}
+_lr_action_items = {'IS':([10,23,],[15,27,]),'':([15,],[19,]),'USE':([0,],[1,]),'END':([19,21,26,34,44,55,],[-11,25,-12,45,-25,-24,]),'COMMAS':([30,],[40,]),'SEMICOLON':([8,17,18,22,31,32,33,35,36,37,39,43,46,47,56,57,58,59,61,],[13,-5,-6,26,41,42,44,-29,47,48,53,54,-28,-13,60,-16,-22,-23,62,]),'OF':([11,],[16,]),'DECIMAL':([8,9,17,18,],[12,14,-5,-6,]),'ENTITY':([0,25,],[6,32,]),'PORT':([15,],[20,]),'COLON':([29,40,53,],[38,-18,-17,]),'ARCHITECTURE':([0,45,],[7,56,]),'LPAREN':([20,],[24,]),'IN':([38,],[50,]),'RPAREN':([28,41,48,],[36,-15,-14,]),'BIT':([49,50,51,52,],[-21,-19,58,-20,]),'OUT':([38,],[52,]),'ID':([1,6,7,12,14,16,24,27,28,29,32,35,40,41,44,48,49,50,51,52,53,56,],[9,10,11,17,18,23,30,35,30,39,43,35,-18,-15,35,-14,-21,-19,59,-20,-17,61,]),'INOUT':([38,],[49,]),'$end':([2,3,4,5,13,42,54,60,62,],[-2,-1,0,-3,-4,-7,-8,-9,-10,]),}
 
 _lr_action = { }
 for _k, _v in _lr_action_items.items():
@@ -16,7 +16,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'library':([1,],[8,]),'entity':([0,],[2,]),'header':([0,],[3,]),'entity_body':([15,],[19,]),'design':([0,],[4,]),'architecture':([0,],[5,]),'entity_expressions':([15,20,24,],[21,23,26,]),}
+_lr_goto_items = {'arch_expressions':([27,35,44,],[33,46,33,]),'portlist':([24,],[28,]),'portnames':([24,28,],[29,29,]),'library':([1,],[8,]),'entity':([0,],[2,]),'header':([0,],[3,]),'entity_body':([15,],[21,]),'design':([0,],[4,]),'architecture':([0,],[5,]),'portdir':([38,],[51,]),'architecture_body':([27,44,],[34,55,]),'ports':([15,],[22,]),'porttype':([51,],[57,]),'portdecl':([24,28,],[31,37,]),}
 
 _lr_goto = { }
 for _k, _v in _lr_goto_items.items():
@@ -26,18 +26,33 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> design","S'",1,None,None,None),
-  ('design -> header','design',1,'p_design','/home/dilawar/Works/github/pyghdl/language/vhdl.py',85),
-  ('design -> entity','design',1,'p_design','/home/dilawar/Works/github/pyghdl/language/vhdl.py',86),
-  ('design -> architecture','design',1,'p_design','/home/dilawar/Works/github/pyghdl/language/vhdl.py',87),
-  ('header -> USE library SEMICOLON','header',3,'p_header','/home/dilawar/Works/github/pyghdl/language/vhdl.py',90),
-  ('library -> library DECIMAL ID','library',3,'p_library','/home/dilawar/Works/github/pyghdl/language/vhdl.py',93),
-  ('library -> ID DECIMAL ID','library',3,'p_library','/home/dilawar/Works/github/pyghdl/language/vhdl.py',94),
-  ('entity -> ENTITY ID IS entity_body END ENTITY SEMICOLON','entity',7,'p_entity','/home/dilawar/Works/github/pyghdl/language/vhdl.py',97),
-  ('entity -> ENTITY ID IS entity_body END ENTITY ID SEMICOLON','entity',8,'p_entity','/home/dilawar/Works/github/pyghdl/language/vhdl.py',98),
-  ('entity_body -> entity_expressions SEMICOLON entity_expressions','entity_body',3,'p_entity_body','/home/dilawar/Works/github/pyghdl/language/vhdl.py',105),
-  ('entity_body -> entity_expressions SEMICOLON','entity_body',2,'p_entity_body','/home/dilawar/Works/github/pyghdl/language/vhdl.py',106),
-  ('entity_body -> <empty>','entity_body',0,'p_entity_body','/home/dilawar/Works/github/pyghdl/language/vhdl.py',107),
-  ('architecture -> ARCHITECTURE ARCHITECTURE SEMICOLON','architecture',3,'p_architecture','/home/dilawar/Works/github/pyghdl/language/vhdl.py',110),
-  ('entity_expressions -> ID entity_expressions','entity_expressions',2,'p_entity_expressions','/home/dilawar/Works/github/pyghdl/language/vhdl.py',119),
-  ('entity_expressions -> ID','entity_expressions',1,'p_entity_expressions','/home/dilawar/Works/github/pyghdl/language/vhdl.py',120),
+  ('design -> header','design',1,'p_design','/home/dilawar/Works/github/pyghdl/language/vhdl.py',86),
+  ('design -> entity','design',1,'p_design','/home/dilawar/Works/github/pyghdl/language/vhdl.py',87),
+  ('design -> architecture','design',1,'p_design','/home/dilawar/Works/github/pyghdl/language/vhdl.py',88),
+  ('header -> USE library SEMICOLON','header',3,'p_header','/home/dilawar/Works/github/pyghdl/language/vhdl.py',91),
+  ('library -> library DECIMAL ID','library',3,'p_library','/home/dilawar/Works/github/pyghdl/language/vhdl.py',94),
+  ('library -> ID DECIMAL ID','library',3,'p_library','/home/dilawar/Works/github/pyghdl/language/vhdl.py',95),
+  ('entity -> ENTITY ID IS entity_body END ENTITY SEMICOLON','entity',7,'p_entity','/home/dilawar/Works/github/pyghdl/language/vhdl.py',98),
+  ('entity -> ENTITY ID IS entity_body END ENTITY ID SEMICOLON','entity',8,'p_entity','/home/dilawar/Works/github/pyghdl/language/vhdl.py',99),
+  ('architecture -> ARCHITECTURE ID OF ID IS architecture_body END ARCHITECTURE SEMICOLON','architecture',9,'p_architecture','/home/dilawar/Works/github/pyghdl/language/vhdl.py',102),
+  ('architecture -> ARCHITECTURE ID OF ID IS architecture_body END ARCHITECTURE ID SEMICOLON','architecture',10,'p_architecture','/home/dilawar/Works/github/pyghdl/language/vhdl.py',103),
+  ('entity_body -> ','entity_body',1,'p_entity_body','/home/dilawar/Works/github/pyghdl/language/vhdl.py',106),
+  ('entity_body -> ports SEMICOLON','entity_body',2,'p_entity_body','/home/dilawar/Works/github/pyghdl/language/vhdl.py',107),
+  ('ports -> PORT LPAREN portlist RPAREN SEMICOLON','ports',5,'p_ports','/home/dilawar/Works/github/pyghdl/language/vhdl.py',110),
+  ('portlist -> portlist portdecl SEMICOLON','portlist',3,'p_portlist','/home/dilawar/Works/github/pyghdl/language/vhdl.py',113),
+  ('portlist -> portdecl SEMICOLON','portlist',2,'p_portlist','/home/dilawar/Works/github/pyghdl/language/vhdl.py',114),
+  ('portdecl -> portnames COLON portdir porttype','portdecl',4,'p_portdecl','/home/dilawar/Works/github/pyghdl/language/vhdl.py',117),
+  ('portnames -> portnames ID SEMICOLON','portnames',3,'p_portnames','/home/dilawar/Works/github/pyghdl/language/vhdl.py',120),
+  ('portnames -> ID COMMAS','portnames',2,'p_portnames','/home/dilawar/Works/github/pyghdl/language/vhdl.py',121),
+  ('portdir -> IN','portdir',1,'p_portdir','/home/dilawar/Works/github/pyghdl/language/vhdl.py',124),
+  ('portdir -> OUT','portdir',1,'p_portdir','/home/dilawar/Works/github/pyghdl/language/vhdl.py',125),
+  ('portdir -> INOUT','portdir',1,'p_portdir','/home/dilawar/Works/github/pyghdl/language/vhdl.py',126),
+  ('porttype -> BIT','porttype',1,'p_porttype','/home/dilawar/Works/github/pyghdl/language/vhdl.py',128),
+  ('porttype -> ID','porttype',1,'p_porttype','/home/dilawar/Works/github/pyghdl/language/vhdl.py',129),
+  ('architecture_body -> arch_expressions SEMICOLON architecture_body','architecture_body',3,'p_architecture_body','/home/dilawar/Works/github/pyghdl/language/vhdl.py',133),
+  ('architecture_body -> arch_expressions SEMICOLON','architecture_body',2,'p_architecture_body','/home/dilawar/Works/github/pyghdl/language/vhdl.py',134),
+  ('entity_expressions -> ID entity_expressions','entity_expressions',2,'p_entity_expressions','/home/dilawar/Works/github/pyghdl/language/vhdl.py',137),
+  ('entity_expressions -> ID','entity_expressions',1,'p_entity_expressions','/home/dilawar/Works/github/pyghdl/language/vhdl.py',138),
+  ('arch_expressions -> ID arch_expressions','arch_expressions',2,'p_arch_expressions','/home/dilawar/Works/github/pyghdl/language/vhdl.py',141),
+  ('arch_expressions -> ID','arch_expressions',1,'p_arch_expressions','/home/dilawar/Works/github/pyghdl/language/vhdl.py',142),
 ]
