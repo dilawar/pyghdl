@@ -1,3 +1,4 @@
+import sys
 import re
 import pprint
 
@@ -15,13 +16,27 @@ class Design :
     # Component inside architecture
     self.components = dict()
 
+    self.allcomponents = list()
+
   def designPrint(self) :
-    for i in self.components :
-      print("Component : {0} {1}".format(i, self.components[i]))
+    for i in self.allcomponents :
+      print("Component : {0} ".format(i))
     for i in self.entities :
       entity = i
       print("Entity : {}".format(i))
       print(" Body : {0}".format(self.entity_bodies[i]))
+
+  def findTopModule(self) :
+    noOfTopModules = 0
+    for en in self.entities :
+      if en in self.allcomponents : pass
+      else :
+        noOfTopModules += 1
+        self.topmodule = en
+
+    if noOfTopModules != 1 :
+      print("Not a single topmodule found.")
+      sys.exit(0)
 
 design = Design()
 
@@ -52,6 +67,7 @@ def parseTxt(txt) :
     for ii in mm :
       components.append(ii[0])
     design.components[arch_name] = components
+    design.allcomponents += components
   
 
 def getDesign(files) :
@@ -64,4 +80,4 @@ def getDesign(files) :
         else : 
           txt += line
       parseTxt(txt)
-  design.designPrint()
+  design.findTopModule()
