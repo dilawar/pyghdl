@@ -2,7 +2,7 @@
 import curses
 import argparse
 import os
-import language.vhdl as vhdl
+import language.vhdl_regex as vhdl
 
 def findListings(dirs, regex=None) :
   listings = set()
