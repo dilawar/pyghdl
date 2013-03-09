@@ -2,31 +2,57 @@ import re
 import pprint
 
 pp = pprint.PrettyPrinter(indent=2)
-design = []
+
+class Design :
+  def __init__(self) :
+    # entity in design
+    self.entities = list()
+    self.entity_bodies = dict()
+    
+    # Architecture of an entity
+    self.architectures = dict()
+
+    # Component inside architecture
+    self.components = dict()
+
+  def designPrint(self) :
+    for i in self.entities :
+      entity = i
+      print("Entity : {}".format(i))
+      print(" Body : {0}".format(self.entity_bodies[i]))
+
+design = Design()
 
 def parseTxt(txt) :
-  #entity_name = '\w+'
-  #generic_decl = '(\s*\w+\s*(\s*\:\s*\w+\s*\:\=\s*\w+\s*)?)'
-  #generic_list = '({0}[,])*{0}'.format(generic_decl)
-  #generic = '(generic\s*\(\s*{0}\s*\);)*'.format(generic_list)
-  #port_name = '\w+'
-  #port_list = '({0}\s*\,\s*)*{0}'.format(port_name)
-  #port_decl = '{0}\:\s*\w+\s+\w+\s*(\([^;]*\))?(;)?'.format(port_list)
-
-  ##ports = 'port\s*\(.*\)\s*;'
-  #ports = 'port\s*\({0}+\)\s*;'.format(port_decl)
-  #entity_body = '(?P<generic>{0})*\s*(?P<ports>{1})?'.format(generic, ports)
-  #pattern = r'''entity\s+(?P<name>{0}\s*)is\s+{1}\s+end\s+entity(\s+\w+)?\s*;'''.format(
-  #    entity_name
-  #    , entity_body
-  #)
   pattern = r'entity\s+(?P<name>\w+)\s+is\s*(?P<body>.*)end\s+entity(\s+\w+)?\s*;'
   entity = re.compile(pattern, re.IGNORECASE | re.DOTALL);
   m = entity.finditer(txt)
   for i in m :
     match = i.groupdict()
-    design.append(match)
-    
+    design.entities.append(match['name'])
+    design.entity_bodies[match['name']] = match['body']
+
+  #architecture_body = '.*(component\s+(?P<component_name>\w+)\s+(.*)end\s+component.*)*.*'
+  architecture_body = '(?P<arch_body>.*)'
+  pattern = r'architecture\s+(?P<arch_name>\w+)\s+of\s+(?P<arch_of>\w+)\s+is\s+{0}'.format(
+      architecture_body)
+  architecture = re.compile(pattern, re.IGNORECASE | re.DOTALL);
+  m = architecture.finditer(txt)
+  for i in m :
+    match = i.groupdict()
+    arch_name = match['arch_name']
+    arch_body = match['arch_body']
+    arch_of = match['arch_of']
+    del match['arch_body']
+    component_pat = r'\s*component\s+(?P<comp_name>\w+)(.*)end\s+component'
+    mm = re.findall(component_pat, arch_body, re.IGNORECASE | re.DOTALL)
+    components = []
+    for ii in mm :
+      components.append(ii[0])
+
+    design.components[arch_name] = components
+    design.designPrint()
+  
 
 def getDesign(files) :
   for file in files :
@@ -38,3 +64,4 @@ def getDesign(files) :
         else : 
           txt += line
       parseTxt(txt)
+      #print design
