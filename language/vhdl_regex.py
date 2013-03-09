@@ -16,6 +16,8 @@ class Design :
     self.components = dict()
 
   def designPrint(self) :
+    for i in self.components :
+      print("Component : {0} {1}".format(i, self.components[i]))
     for i in self.entities :
       entity = i
       print("Entity : {}".format(i))
@@ -44,12 +46,11 @@ def parseTxt(txt) :
     arch_body = match['arch_body']
     arch_of = match['arch_of']
     del match['arch_body']
-    component_pat = r'\s*component\s+(?P<comp_name>\w+)(.*)end\s+component'
+    component_pat = r'\s*component\s+(?P<comp_name>\w+)(((?!component).)*)end\s+component\s*;'
     mm = re.findall(component_pat, arch_body, re.IGNORECASE | re.DOTALL)
     components = []
     for ii in mm :
       components.append(ii[0])
-
     design.components[arch_name] = components
   
 
