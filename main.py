@@ -36,12 +36,12 @@ if __name__=="__main__" :
   class Args: pass 
   args = Args()
   parser.parse_args(namespace=args)
-  files = findListings(args.d, regex=".*MemTest\.vhd$")
+  files = findListings(args.d, regex=".*mux.*vhd$")
   if len(files) < 1 :
     print("No file is found with regex {0} in directories"
         +" {1}".format(regex,args.d))
     sys.exit();
   else :
     design = vhdl.getDesign(files)
-    print(design)
+  print(design)
 

@@ -24,7 +24,7 @@ class Design :
 design = Design()
 
 def parseTxt(txt) :
-  pattern = r'entity\s+(?P<name>\w+)\s+is\s*(?P<body>.*)end\s+entity(\s+\w+)?\s*;'
+  pattern = r'entity\s+(?P<name>\w+)\s+is\s*(?P<body>.*)end\s*(entity)?\s*(?P=name)?\s*;'
   entity = re.compile(pattern, re.IGNORECASE | re.DOTALL);
   m = entity.finditer(txt)
   for i in m :
@@ -51,7 +51,6 @@ def parseTxt(txt) :
       components.append(ii[0])
 
     design.components[arch_name] = components
-    design.designPrint()
   
 
 def getDesign(files) :
@@ -64,4 +63,4 @@ def getDesign(files) :
         else : 
           txt += line
       parseTxt(txt)
-      #print design
+  design.designPrint()
