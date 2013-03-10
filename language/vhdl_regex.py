@@ -1,6 +1,9 @@
 import sys
 import re
 import pprint
+import os
+import errno
+import subprocess
 
 pp = pprint.PrettyPrinter(indent=2)
 
@@ -45,6 +48,10 @@ class Design :
 design = Design()
 
 def parseTxt(txt) :
+  '''
+  Parse the given 'txt'. Construct a design object which has topmodule.
+  If this topmodule is not a test bench then write one. Compile and simulate.
+  '''
   pattern = r'entity\s+(?P<name>\w+)\s+is\s*(?P<body>.*)end\s*(entity)?\s*(?P=name)?\s*;'
   entity = re.compile(pattern, re.IGNORECASE | re.DOTALL);
   m = entity.finditer(txt)
@@ -75,6 +82,8 @@ def parseTxt(txt) :
   
 
 def getDesign(files) :
+  ''' Process all files to get the heirarchy of design.
+  '''
   for file in files :
     with open(file, "r") as f :
       print("Parsing file {0}".format(file))
@@ -86,6 +95,28 @@ def getDesign(files) :
       parseTxt(txt)
   design.findTopModule()
 
+## Compile and run the design.
+def compileAndRun(files, topmodule) :
+  command_string = "ghdl {0} --std=93 --workdir={1} --work=work --ieee=synopsys "
+  topentity = design.topmodule
+  for file in files :
+    filename = os.path.basename(file)
+    dirpath = os.path.dirname(file)
+    # create the work dir.
+    workdir = dirpath+"/work"
+    try :
+      os.makedirs(workdir)
+    except OSError as exception :
+      if exception.errno != errno.EEXIST :
+        raise
+    command = command_string.format( '-a', workdir)
+    subprocess.check_call(("{0} {1}".format(command, file)), shell=True)
+    print("|- Compilation successful : {0}".format(file))
+  
+  print("Elaborating {0}".format(topentity))
+  command = command_string.format('-e', workdir)
+  subprocess.check_call(("{0} {1}".format(command, topentity)), shell=True)
+
 def processTheFiles(files) :
   print("Processing all files.")
   getDesign(files)
@@ -96,6 +127,7 @@ def processTheFiles(files) :
   m = re.search(port_regex, topentity, re.IGNORECASE | re.DOTALL)
   if not m :
     print("No port specified in this entity. Looks like it is testbench.")
-    print(" -- Compile and run it.")
+    print("-- Compile and run it.")
+    compileAndRun(files, topmodule)
   else :
     print("Write a test-bench.")
