@@ -121,6 +121,9 @@ def compileAndRun(files, topmodule) :
     ,topentity
     , binpath
     )), shell=True)
+  command = '{0} --vcd={1} --stop-time=1ms'.format(binpath
+      , dirpath+"/"+topentity+".vcd")
+  subprocess.check_call(command, shell=True)
 
 def processTheFiles(files) :
   print("Processing all files.")
