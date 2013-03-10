@@ -11,6 +11,8 @@ class Design :
   def __init__(self) :
     # entity in design
     self.entities = list()
+    # Root dir of design.
+    self.dirpath = ""
     self.entity_bodies = dict()
     
     # Architecture of an entity
@@ -102,6 +104,7 @@ def compileAndRun(files, topmodule) :
   for file in files :
     filename = os.path.basename(file)
     dirpath = os.path.dirname(file)
+    design.dirpath = dirpath
     # create the work dir.
     workdir = dirpath+"/work"
     try :
@@ -125,6 +128,13 @@ def compileAndRun(files, topmodule) :
       , dirpath+"/"+topentity+".vcd")
   subprocess.check_call(command, shell=True)
 
+
+def addATestBench(topmodule) :
+  ''' Add a test-bench '''
+  print("Writing test-bench for entity {0}".format(design.topmodule))
+  entitybosy = design.entity_bodies[topmodule]
+  
+
 def processTheFiles(files) :
   print("Processing all files.")
   getDesign(files)
@@ -139,3 +149,4 @@ def processTheFiles(files) :
     compileAndRun(files, topmodule)
   else :
     print("Write a test-bench.")
+    addATestBench(topmodule)
