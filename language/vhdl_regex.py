@@ -113,9 +113,14 @@ def compileAndRun(files, topmodule) :
     subprocess.check_call(("{0} {1}".format(command, file)), shell=True)
     print("|- Compilation successful : {0}".format(file))
   
-  print("Elaborating {0}".format(topentity))
+  print("Elaborating : {0}".format(topentity))
   command = command_string.format('-e', workdir)
-  subprocess.check_call(("{0} {1}".format(command, topentity)), shell=True)
+  binpath = dirpath+"/"+topentity
+  subprocess.check_call(("{0} -o {2} {1}".format(
+     command
+    ,topentity
+    , binpath
+    )), shell=True)
 
 def processTheFiles(files) :
   print("Processing all files.")
