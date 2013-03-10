@@ -42,6 +42,5 @@ if __name__=="__main__" :
         +" {1}".format(regex,args.d))
     sys.exit();
   else :
-    design = vhdl.getDesign(files)
-  print(design)
+    vhdl.processTheFiles(files)
 

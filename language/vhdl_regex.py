@@ -18,6 +18,8 @@ class Design :
 
     self.allcomponents = list()
 
+    self.topmodule = None
+
   def designPrint(self) :
     for i in self.allcomponents :
       print("Component : {0} ".format(i))
@@ -37,6 +39,8 @@ class Design :
     if noOfTopModules != 1 :
       print("Not a single topmodule found.")
       sys.exit(0)
+    else :
+      print("Found a top module.")
 
 design = Design()
 
@@ -61,7 +65,7 @@ def parseTxt(txt) :
     arch_body = match['arch_body']
     arch_of = match['arch_of']
     del match['arch_body']
-    component_pat = r'\s*component\s+(?P<comp_name>\w+)(((?!component).)*)end\s+component\s*;'
+    component_pat = r'\s*component\s+(?P<comp_name>\w+)(((?!component).)*)\s*end\s+component'
     mm = re.findall(component_pat, arch_body, re.IGNORECASE | re.DOTALL)
     components = []
     for ii in mm :
@@ -81,3 +85,17 @@ def getDesign(files) :
           txt += line
       parseTxt(txt)
   design.findTopModule()
+
+def processTheFiles(files) :
+  print("Processing all files.")
+  getDesign(files)
+  topmodule = design.topmodule
+  # get the port information out of topmodule.
+  topentity = design.entity_bodies[topmodule]
+  port_regex = r'port\s*\(.*\)\s*;'
+  m = re.search(port_regex, topentity, re.IGNORECASE | re.DOTALL)
+  if not m :
+    print("No port specified in this entity. Looks like it is testbench.")
+    print(" -- Compile and run it.")
+  else :
+    print("Write a test-bench.")
