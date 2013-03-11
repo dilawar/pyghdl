@@ -7,6 +7,34 @@ import subprocess
 
 pp = pprint.PrettyPrinter(indent=2)
 
+testbench = '''
+
+ENTITY testbench IS END;
+-------------------------------------------------------------------------------
+-- This testbench is automatically generated. May not work.
+-------------------------------------------------------------------------------
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+USE std,textio.ALL;
+USE ieee.std_logic_textio.ALL;
+USE work.ALL;
+
+ARCHITECTURE arch OF testbench IS 
+
+\t---------------------------------------------------------------------------
+\t-- Component declaration.
+\t--------------------------------------------------------------------------
+\tCOMPONENT dut 
+\t\t{0}
+\tEND COMPONENT;
+\t
+\t-- Signals in entity
+{1}
+\t-- Instantiate a dut
+{2}
+END ARCHITECTURE arch;
+'''
+
 class Design :
   
   class TopEntity : 
@@ -137,6 +165,7 @@ def compileAndRun(files, topmodule) :
 
 def addATestBench(_topmodule) :
   ''' Add a test-bench '''
+  global testbench
   design.objTopEntity.name = _topmodule
   print("Writing test-bench for entity {0}".format(design.topmodule))
   entityBody = design.entity_bodies[_topmodule]
@@ -156,8 +185,23 @@ def addATestBench(_topmodule) :
       for p in portlist :
         portDict[p.strip()] = (dir, type)
     design.objTopEntity.ports = portDict
+    signals = ""
+    for port in design.objTopEntity.ports :
+      signals += "\tSIGNAL " + port  \
+           + ": " + design.objTopEntity.ports[port][1][0]+";\n"
+
+    dut = "\tdut : {0} ".format(_topmodule) + " PORT MAP (\n";
+    portmap = ""
+    for port in design.objTopEntity.ports :
+      portmap += "\t\t{0} => {0},\n".format(port)
+
+    portmap = portmap[0:-2]
+    dut += (portmap + "\n\t);")
+    testbench = testbench.format(entityBody, signals, dut)
+    print(testbench)
   else :
-    print("Port not found.")
+    print("No port is found. This is an error.")
+    sys.exit(1)
   
 
 def processTheFiles(files) :
@@ -173,5 +217,4 @@ def processTheFiles(files) :
     print("-- Compile and run it.")
     compileAndRun(files, topmodule)
   else :
-    print("Write a test-bench.")
     addATestBench(topmodule)
