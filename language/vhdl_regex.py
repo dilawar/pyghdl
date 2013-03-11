@@ -21,9 +21,9 @@ USE work.ALL;
 
 ARCHITECTURE arch OF testbench IS 
 
-\t---------------------------------------------------------------------------
+\t----------------------------------------------------------------
 \t-- Component declaration.
-\t--------------------------------------------------------------------------
+\t----------------------------------------------------------------
 \tCOMPONENT dut 
 \t\t{0}
 \tEND COMPONENT;
@@ -32,6 +32,25 @@ ARCHITECTURE arch OF testbench IS
 {1}
 \t-- Instantiate a dut
 {2}
+\ttest : PROCESS 
+\t\tTYPE stim_vec IS 
+\t\t\tRECORD
+\t\t\t\tevent_time : time;
+{3}
+\t\t\tEND RECORD;
+\t\t-- generate the test vector
+{4}
+\t\tFOR i in stim_array\’RANGE LOOP
+\t\t\trev_time := stim_array(i).event_time;
+\t\t\tIF (now < ev_time) THEN
+\t\t\t\tWAIT FOR ev_time - now; -- wait until the next event.
+\t\t\tEND IF;
+{5}
+\t\t\tEND LOOP;
+\t\t\tASSERT false REPORT “Test complete”;
+\t\t\tWAIT;
+\t\t\tEND PROCESS;
+\t\tEND;
 END ARCHITECTURE arch;
 '''
 
@@ -197,14 +216,31 @@ def addATestBench(_topmodule) :
 
     portmap = portmap[0:-2]
     dut += (portmap + "\n\t);")
-    testbench = testbench.format(entityBody, signals, dut)
+    record = ""
+    for port in design.objTopEntity.ports :
+      record += ("\t\t\t\t" + port + " : " + 
+          design.objTopEntity.ports[port][1][0] + ";\n")
+    test_vec = generateTestData(design.computeFun)
+    assignStatements = "\t\t\t--Assign the values"
+    testbench = testbench.format(entityBody, signals, dut
+          , record, test_vec
+          , assignStatements
+          )
     print(testbench)
   else :
     print("No port is found. This is an error.")
     sys.exit(1)
+
+def generateTestData(computeFun, *args) :
+  noOfTestVectors = 100
+  test = "\t\tTYPE vec_array IS ARRAY (0, {0}) of stim_vec;\n".format(noOfTestVectors)
+  test += "\t\tVARIABLE stim_array : vec_array := (\n"
+  test += "\t\t)"
+  return test
   
 
 def processTheFiles(files) :
+  ''' Process the all file listings. '''
   print("Processing all files.")
   getDesign(files)
   topmodule = design.topmodule
