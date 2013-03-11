@@ -8,22 +8,28 @@ import subprocess
 pp = pprint.PrettyPrinter(indent=2)
 
 class Design :
+  
+  class TopEntity : 
+    def  __init__(self) :
+      self.name = ''
+      self.ports = dict()
+  
   def __init__(self) :
     # entity in design
     self.entities = list()
     # Root dir of design.
     self.dirpath = ""
     self.entity_bodies = dict()
-    
     # Architecture of an entity
     self.architectures = dict()
-
     # Component inside architecture
     self.components = dict()
 
     self.allcomponents = list()
 
     self.topmodule = None
+    self.objTopEntity = self.TopEntity()
+
 
   def designPrint(self) :
     for i in self.allcomponents :
@@ -129,10 +135,29 @@ def compileAndRun(files, topmodule) :
   subprocess.check_call(command, shell=True)
 
 
-def addATestBench(topmodule) :
+def addATestBench(_topmodule) :
   ''' Add a test-bench '''
+  design.objTopEntity.name = _topmodule
   print("Writing test-bench for entity {0}".format(design.topmodule))
-  entitybosy = design.entity_bodies[topmodule]
+  entityBody = design.entity_bodies[_topmodule]
+  port_regex = re.compile(r'port\s*\((?P<port_body>.*)\s*\)\s*;'
+      , re.IGNORECASE | re.DOTALL)
+  m = port_regex.search(entityBody)
+  if m :
+    portExpr = m.groupdict()['port_body']
+    ports = portExpr.split(";")
+    portDict = dict()
+    for port in ports :
+      port = port.strip()
+      portlist, dirAndType = port.split(":")
+      portlist = portlist.split(",")
+      dir = dirAndType.split()[0]
+      type = dirAndType.split()[1:]
+      for p in portlist :
+        portDict[p.strip()] = (dir, type)
+    design.objTopEntity.ports = portDict
+  else :
+    print("Port not found.")
   
 
 def processTheFiles(files) :
