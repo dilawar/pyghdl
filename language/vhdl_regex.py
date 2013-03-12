@@ -2,6 +2,7 @@ import sys
 import re
 import os
 import errno
+import shlex
 import subprocess
 import mycurses as mc
 from language.vcd import parse_vcd
@@ -164,7 +165,7 @@ def getDesign(design, files) :
   for file in files :
     with open(file, "r") as f :
       msg = "Parsing file {0}".format(file)
-      mc.writeOnWindow(mc.processWindow, msg)
+      mc.writeOnWindow(mc.msgWindow, msg)
       txt = ""
       for line in f :
         if(line.strip()[0:2] == "--") : pass 
@@ -188,26 +189,38 @@ def compileAndRun(design, files, topmodule) :
       if exception.errno != errno.EEXIST :
         raise
     command = command_string.format( '-a', workdir)
-    subprocess.check_call(("{0} {1}".format(command, file)), shell=True)
+    p1 = subprocess.Popen(shlex.split("{0} {1}".format(command, file))
+        , stdout = subprocess.PIPE
+        , stderr = subprocess.PIPE
+        )
     msg = "Compilation successful : {0}".format(file)
     mc.writeOnWindow(mc.msgWindow, msg)
   
   msg = ("Elaborating : {0}".format(topentity))
-  mc.writeOnWindow(mc.processWindow, msg)
+  mc.writeOnWindow(mc.msgWindow, msg)
 
   command = command_string.format('-e', workdir)
   bin = design.binpath+"/"+topentity
-  subprocess.check_call(("{0} -o {2} {1}".format(
+  if not os.path.isfile(bin) :
+    mc.writeOnWindow(mc.msgWindow, "No such file {0}".format(bin))
+    mc.msgWindow.getch()
+    mc.killCurses()
+    return
+  p2 = subprocess.Popen(shlex.split("{0} -o {2} {1}".format(
      command
     ,topentity
-    , bin
-    )), shell=True)
+    , bin)),
+    stdout = subprocess.PIPE
+    , stderr = subprocess.PIPE)
   vcddir = design.binpath+"/waveforms"
   if not os.path.exists(vcddir) :
     os.makedirs(vcddir)
   vcdfile = vcddir+"/"+topentity+".vcd"
   command = '{0} --vcd={1} --stop-time=1ms'.format(bin, vcdfile)
-  subprocess.check_call(command, shell=True)
+  p3 = subprocess.Popen(shlex.split(command), 
+      stdout = subprocess.PIPE
+      , stderr = subprocess.PIPE 
+   )
 
 
 def addATestBench(design) :

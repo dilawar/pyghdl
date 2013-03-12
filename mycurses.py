@@ -11,7 +11,6 @@ def killCurses() :
   curses.nocbreak()
   stdscr.keypad(0)
   curses.echo()
-  stdscr.getch()
   curses.endwin()
 
 
@@ -43,12 +42,12 @@ def initCurses() :
 
 def writeOnWindow(win, msg, indent=1, overwrite=False
     , appendNewLine=True) :
+  win.scrollok(True)
   y, x = win.getyx()
   if overwrite : 
     x = 0
-  if appendNewLine : 
-    x = 0
-    y += 1
+  if appendNewLine :
+    msg += "\n"
   assert y >= 0, x >= 0
   win.addstr(int(y),int(x+indent),str(msg))
   win.box()
