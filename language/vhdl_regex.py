@@ -1,12 +1,10 @@
 import sys
 import re
-import pprint
 import os
 import errno
 import subprocess
+import mycurses as mc
 from language.vcd import parse_vcd
-
-pp = pprint.PrettyPrinter(indent=2)
 
 testbench = '''
 ENTITY testbench IS END;
@@ -98,11 +96,14 @@ class Design :
 
   def designPrint(self) :
     for i in self.allcomponents :
-      print("Component : {0} ".format(i))
+      msg = "Component : {0} ".format(i)
+      mc.writeOnWindow(mc.dataWin, msg)
     for i in self.entities :
       entity = i
-      print("Entity : {}".format(i))
-      print(" Body : {0}".format(self.entity_bodies[i]))
+      msg = "Entity : {}".format(i)
+      mc.writeOnWindow(mc.dataWin, msg)
+      msg = " Body : {0}".format(self.entity_bodies[i])
+      mc.writeOnWindow(mc.dataWin, msg)
 
   def findTopModule(self) :
     noOfTopModules = 0
@@ -114,10 +115,13 @@ class Design :
         self.topModules.append(en)
 
     if noOfTopModules != 1 :
-      print("More than one topmodule are found.")
-      print("We'll try to compile all of them.")
+      msg = "More than one topmodule are found."
+      mc.writeOnWindow(mc.msgWindow, msg)
+      msg = ("We'll try to compile all of them.")
+      mc.writeOnWindow(mc.msgWindow, msg, indent=2)
     else :
-      print("Found a top module.")
+      msg = "Found a top module."
+      mc.writeOnWindow(mc.msgWindow, msg)
 
 
 def parseTxt(design, txt) :
@@ -159,7 +163,8 @@ def getDesign(design, files) :
   '''
   for file in files :
     with open(file, "r") as f :
-      print("Parsing file {0}".format(file))
+      msg = "Parsing file {0}".format(file)
+      mc.writeOnWindow(mc.processWindow, msg)
       txt = ""
       for line in f :
         if(line.strip()[0:2] == "--") : pass 
@@ -184,9 +189,12 @@ def compileAndRun(design, files, topmodule) :
         raise
     command = command_string.format( '-a', workdir)
     subprocess.check_call(("{0} {1}".format(command, file)), shell=True)
-    print("|- Compilation successful : {0}".format(file))
+    msg = "Compilation successful : {0}".format(file)
+    mc.writeOnWindow(mc.msgWindow, msg)
   
-  print("Elaborating : {0}".format(topentity))
+  msg = ("Elaborating : {0}".format(topentity))
+  mc.writeOnWindow(mc.processWindow, msg)
+
   command = command_string.format('-e', workdir)
   bin = design.binpath+"/"+topentity
   subprocess.check_call(("{0} -o {2} {1}".format(
@@ -206,7 +214,8 @@ def addATestBench(design) :
   ''' Add a test-bench '''
   global testbench
   _topmodule = design.objTopEntity.name
-  print("Writing test-bench for entity {0}".format(design.topmodule))
+  msg = ("Writing test-bench for entity {0}".format(design.topmodule))
+  mc.writeOnWindow(mc.processWindow, msg)
   entityBody = design.entity_bodies[_topmodule]
   port_regex = re.compile(r'port\s*\((?P<port_body>.*)\s*\)\s*;'
       , re.IGNORECASE | re.DOTALL)
@@ -247,7 +256,9 @@ def addATestBench(design) :
           , variables, assertLines
           )
   else :
-    print("No port is found. This is an error.")
+    msg = ("No port is found. This is an error.")
+    mc.writeOnWindow(mc.msgWindow, msg)
+    mc.killCurses()
     sys.exit(1)
 
 def generateAssertLines(design ) :
@@ -272,15 +283,21 @@ def generateAssertLines(design ) :
 
 def compileAndRunATopModule(design, topDir, files, topModule) :
   # get the port information out of topmodule.
+  msg = "Compile and run a top module."
+  mc.writeOnWindow(mc.processWindow, msg)
+
   topentity = design.entity_bodies[topModule]
   port_regex = r'port\s*\(.*\)\s*;'
   m = re.search(port_regex, topentity, re.IGNORECASE | re.DOTALL)
   if not m :
-    print("NOTICE : No port specified in this entity. Looks like it is testbench.")
-    print("-- Compile and run it.")
+    msg = "NOTICE : No port specified in this entity. Looks like it is testbench."
+    mc.writeOnWindow(mc.msgWindow, msg)
+    msg = "|- Compile and run it."
+    mc.writeOnWindow(mc.msgWindow, msg)
     compileAndRun(design, files, topModule)
   else :
-    print("Notice : No testbench found. Generating one.")
+    msg = "Notice : No testbench found. Generating one."
+    mc.writeOnWindow(mc.processWindow, msg)
     addATestBench(design)
     testbenchFile = "{0}/testbench.vhd".format(topdir)
     with open(testbenchFile, "w") as testF :
@@ -295,7 +312,8 @@ def compileAndRunATopModule(design, topDir, files, topModule) :
 
 def processTheFiles(topdir, files) :
   ''' Process the all file listings. '''
-  print("Processing all files.")
+  msg = ("Processing all files.")
+  mc.writeOnWindow(mc.processWindow, msg)
   design = Design()
   design.binpath = topdir
   getDesign(design, files)
