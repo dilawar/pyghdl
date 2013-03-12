@@ -201,17 +201,21 @@ def compileAndRun(design, files, topmodule) :
 
   command = command_string.format('-e', workdir)
   bin = design.binpath+"/"+topentity
-  if not os.path.isfile(bin) :
-    mc.writeOnWindow(mc.msgWindow, "No such file {0}".format(bin))
-    mc.msgWindow.getch()
-    mc.killCurses()
-    return
+  bin = "/".join(bin.split("/"))
   p2 = subprocess.Popen(shlex.split("{0} -o {2} {1}".format(
      command
     ,topentity
     , bin)),
     stdout = subprocess.PIPE
     , stderr = subprocess.PIPE)
+  output = p2.stderr.readline()
+  mc.writeOnWindow(mc.msgWindow, str(output), indent=2)
+ 
+  if not os.path.isfile(bin) :
+    mc.writeOnWindow(mc.msgWindow, "No such file {0}".format(bin))
+    mc.msgWindow.getch()
+    mc.killCurses()
+    return
   vcddir = design.binpath+"/waveforms"
   if not os.path.exists(vcddir) :
     os.makedirs(vcddir)
