@@ -27,7 +27,7 @@ ARCHITECTURE arch OF testbench IS
 \t----------------------------------------------------------------
 \t-- Component declaration.
 \t----------------------------------------------------------------
-\tCOMPONENT dut 
+\tCOMPONENT {component_name}
 \t\t{0}
 \tEND COMPONENT;
 \t
@@ -123,7 +123,6 @@ class Design :
     else :
       msg = "Found a top module."
       mc.writeOnWindow(mc.msgWindow, msg)
-
 
 def parseTxt(design, txt) :
   '''
@@ -259,7 +258,7 @@ def addATestBench(design) :
       signals += "\tSIGNAL " + port  \
            + ": " + design.objTopEntity.ports[port][1][0]+";\n"
 
-    dut = "\tuut : dut ".format(_topmodule) + " PORT MAP (\n";
+    dut = "\tdut : {0} ".format(_topmodule) + " PORT MAP (\n";
     portmap = ""
     for port in design.objTopEntity.ports :
       portmap += "\t\t{0} => {0},\n".format(port)
@@ -273,9 +272,10 @@ def addATestBench(design) :
     assertLines = generateAssertLines(design)
     assignStatements = "\t\t\t--Assign the values"
     # Fill the testbench.
-    testbench = testbench.format(entityBody, signals, dut
-          , variables, assertLines
-          )
+    testbench = testbench.format( entityBody, signals, dut
+        , variables, assertLines
+        , component_name = _topmodule
+        )
   else :
     msg = ("No port is found. This is an error.")
     mc.writeOnWindow(mc.msgWindow, msg)
@@ -334,7 +334,7 @@ def compileAndRunATopModule(design, topDir, files, topModule) :
 
 def processTheFiles(topdir, files) :
   ''' Process the all file listings. '''
-  msg = ("Processing all files.")
+  msg = "Processing all files and finding designs.."
   mc.writeOnWindow(mc.processWindow, msg)
   design = Design()
   design.binpath = topdir
