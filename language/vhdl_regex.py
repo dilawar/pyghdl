@@ -19,8 +19,7 @@ ENTITY testbench IS END;
 -------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
-USE std,textio.ALL;
-USE ieee.std_logic_textio.ALL;
+USE std.textio.ALL;
 USE work.ALL;
 
 ARCHITECTURE arch OF testbench IS 
@@ -34,6 +33,7 @@ ARCHITECTURE arch OF testbench IS
 \t
 \t-- Signals in entity
 {1}
+BEGIN
 \t-- Instantiate a dut
 {2}
 \ttest : PROCESS 
@@ -223,7 +223,7 @@ def addATestBench(design) :
       signals += "\tSIGNAL " + port  \
            + ": " + design.objTopEntity.ports[port][1][0]+";\n"
 
-    dut = "\tdut : {0} ".format(_topmodule) + " PORT MAP (\n";
+    dut = "\tuut : dut ".format(_topmodule) + " PORT MAP (\n";
     portmap = ""
     for port in design.objTopEntity.ports :
       portmap += "\t\t{0} => {0},\n".format(port)
@@ -248,11 +248,11 @@ def generateAssertLines(design ) :
   assertLine = ""
   for port in design.objTopEntity.ports :
     assertLine += "\n\t\t\t-- read {0} value\n".format(port)
-    assertLine += "\t\t\tread(l, {0}, good_val)\n".format("tmp_"+port)
-    assertLine += '\t\t\tassert good_val REPORT "bad {0} value"\n'.format(port)
+    assertLine += "\t\t\tread(l, {0}, good_val);\n".format("tmp_"+port)
+    assertLine += '\t\t\tassert good_val REPORT "bad {0} value";\n'.format(port)
     if design.objTopEntity.ports[port][0] == "out" :
       # Out port. Assert the value.
-      line = "\t\t\tassert {0} = {1} REPORT \"vector mismatch\"\n".format( 
+      line = "\t\t\tassert {0} = {1} REPORT \"vector mismatch\";\n".format( 
           "tmp_"+port, port
           )
       assertLine += line
@@ -260,7 +260,7 @@ def generateAssertLines(design ) :
 
   assertLine += "\n\n\t\t\t-- Assign temp signals to ports \n" 
   for port in design.objTopEntity.ports :
-    assertLine += "\t\t\t{0} <= {1}\n".format(port, "tmp_"+port)
+    assertLine += "\t\t\t{0} <= {1};\n".format(port, "tmp_"+port)
   return assertLine
   
 
