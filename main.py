@@ -2,12 +2,15 @@
 import curses
 import argparse
 import os
+import sys
 import language.vhdl_regex as vhdl
 
 def findListings(dirs, regex=None) :
   listings = set()
+  i = 0
   for dir in dirs :
-    dir = dir.pop()
+    dir = dir[i]
+    i += 1
     for root, subdirPath, fileList in os.walk(dir) :
       for fname in fileList :
         fileFullPath = os.path.join(root, fname)
@@ -18,6 +21,13 @@ def findListings(dirs, regex=None) :
     import re
     return frozenset(filter(lambda x : re.match(regex, x), listings))
 
+def findTopDir(dirs) :
+  dList = list()
+  for dir in dirs :
+    for d in dir :
+      if os.path.isdir(d) :
+        dList.append(d)
+  return min(dList, key=len)
 
 if __name__=="__main__" :
   # Argument parser.
@@ -42,5 +52,6 @@ if __name__=="__main__" :
         +" {1}".format(regex,args.d))
     sys.exit();
   else :
-    vhdl.processTheFiles(files)
+    topDir = findTopDir(args.d)
+    vhdl.processTheFiles(topDir, files)
 

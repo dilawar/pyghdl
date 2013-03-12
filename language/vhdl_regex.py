@@ -8,10 +8,14 @@ import subprocess
 pp = pprint.PrettyPrinter(indent=2)
 
 testbench = '''
-
 ENTITY testbench IS END;
 -------------------------------------------------------------------------------
 -- This testbench is automatically generated. May not work.
+-- A file called vector.test must be generated in the same directory where
+-- this testbench is saved. Each value must be separed by a space. 
+
+-- time [in_port ] [out_port] 
+-- They must be in the same order in which they appear in entity.
 -------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
@@ -33,25 +37,37 @@ ARCHITECTURE arch OF testbench IS
 \t-- Instantiate a dut
 {2}
 \ttest : PROCESS 
-\t\tTYPE stim_vec IS 
-\t\t\tRECORD
-\t\t\t\tevent_time : time;
-{3}
-\t\t\tEND RECORD;
-\t\t-- generate the test vector
-{4}
-\t\tFOR i in stim_array\’RANGE LOOP
-\t\t\trev_time := stim_array(i).event_time;
-\t\t\tIF (now < ev_time) THEN
-\t\t\t\tWAIT FOR ev_time - now; -- wait until the next event.
+\t\t-- Declare variables to store the values stored in test files.
+{3} 
+\t\t-- File and its minions.
+\t\tFILE vector_file : text IS IN "vector.test";
+\t\tVARIABLE l : LINE;
+\t\tVARIABLE r : REAL;
+\t\tVARIABLE vector_time : TIME;
+\t\tVARIABLE space : CHARACTER;
+\t\tVARIABLE good_number, good_val : BOOLEAN;
+\tBEGIN
+\t\tWHILE NOT endfile(vector_file) LOOP 
+\t\t\treadline(vector_file, l);
+\t\t\t-- Read the time from the begining of the line. Skip the line if it doesn't
+\t\t\t-- start with a number.
+\t\t\tread(l, r, good => good_number);
+\t\t\tNEXT WHEN NOT good_number;
+\t\t\t-- Convert real number to time
+\t\t\tvector_time := r*1 ns;
+\t\t\tIF (now < vector_time) THEN
+\t\t\tWAIT FOR vector_time - now;
 \t\t\tEND IF;
-{5}
-\t\t\tEND LOOP;
-\t\t\tASSERT false REPORT “Test complete”;
-\t\t\tWAIT;
-\t\t\tEND PROCESS;
-\t\tEND;
+\t\t\t-- Skip a space
+\t\t\tread(l, space);
+\t\t\t-- Read other singals etc.
+{4}
+\t\tEND LOOP;
+\t\tASSERT false REPORT "Test complete";
+\t\tWAIT;
+\tEND PROCESS;
 END ARCHITECTURE arch;
+-- Testbech ends here.
 '''
 
 class Design :
@@ -65,7 +81,7 @@ class Design :
     # entity in design
     self.entities = list()
     # Root dir of design.
-    self.dirpath = ""
+    self.binpath = None
     self.entity_bodies = dict()
     # Architecture of an entity
     self.architectures = dict()
@@ -100,9 +116,8 @@ class Design :
     else :
       print("Found a top module.")
 
-design = Design()
 
-def parseTxt(txt) :
+def parseTxt(design, txt) :
   '''
   Parse the given 'txt'. Construct a design object which has topmodule.
   If this topmodule is not a test bench then write one. Compile and simulate.
@@ -136,7 +151,7 @@ def parseTxt(txt) :
     design.allcomponents += components
   
 
-def getDesign(files) :
+def getDesign(design, files) :
   ''' Process all files to get the heirarchy of design.
   '''
   for file in files :
@@ -147,17 +162,16 @@ def getDesign(files) :
         if(line.strip()[0:2] == "--") : pass 
         else : 
           txt += line
-      parseTxt(txt)
+      parseTxt(design, txt)
   design.findTopModule()
 
 ## Compile and run the design.
-def compileAndRun(files, topmodule) :
+def compileAndRun(design, files, topmodule) :
   command_string = "ghdl {0} --std=93 --workdir={1} --work=work --ieee=synopsys "
-  topentity = design.topmodule
+  topentity = design.objTopEntity.name
   for file in files :
     filename = os.path.basename(file)
     dirpath = os.path.dirname(file)
-    design.dirpath = dirpath
     # create the work dir.
     workdir = dirpath+"/work"
     try :
@@ -171,21 +185,21 @@ def compileAndRun(files, topmodule) :
   
   print("Elaborating : {0}".format(topentity))
   command = command_string.format('-e', workdir)
-  binpath = dirpath+"/"+topentity
+  bin = dirpath+"/"+topentity
   subprocess.check_call(("{0} -o {2} {1}".format(
      command
     ,topentity
-    , binpath
+    , bin
     )), shell=True)
-  command = '{0} --vcd={1} --stop-time=1ms'.format(binpath
+  command = '{0} --vcd={1} --stop-time=1ms'.format(bin
       , dirpath+"/"+topentity+".vcd")
   subprocess.check_call(command, shell=True)
 
 
-def addATestBench(_topmodule) :
+def addATestBench(design) :
   ''' Add a test-bench '''
   global testbench
-  design.objTopEntity.name = _topmodule
+  _topmodule = design.objTopEntity.name
   print("Writing test-bench for entity {0}".format(design.topmodule))
   entityBody = design.entity_bodies[_topmodule]
   port_regex = re.compile(r'port\s*\((?P<port_body>.*)\s*\)\s*;'
@@ -216,41 +230,59 @@ def addATestBench(_topmodule) :
 
     portmap = portmap[0:-2]
     dut += (portmap + "\n\t);")
-    record = ""
+    variables = ""
     for port in design.objTopEntity.ports :
-      record += ("\t\t\t\t" + port + " : " + 
+      variables += ("\t\tVARIABLE " + "tmp_"+port + " : " + 
           design.objTopEntity.ports[port][1][0] + ";\n")
-    test_vec = generateTestData(design.computeFun)
+    assertLines = generateAssertLines(design)
     assignStatements = "\t\t\t--Assign the values"
+    # Fill the testbench.
     testbench = testbench.format(entityBody, signals, dut
-          , record, test_vec
-          , assignStatements
+          , variables, assertLines
           )
-    print(testbench)
   else :
     print("No port is found. This is an error.")
     sys.exit(1)
 
-def generateTestData(computeFun, *args) :
-  noOfTestVectors = 100
-  test = "\t\tTYPE vec_array IS ARRAY (0, {0}) of stim_vec;\n".format(noOfTestVectors)
-  test += "\t\tVARIABLE stim_array : vec_array := (\n"
-  test += "\t\t)"
-  return test
+def generateAssertLines(design ) :
+  assertLine = ""
+  for port in design.objTopEntity.ports :
+    assertLine += "\n\t\t\t-- read {0} value\n".format(port)
+    assertLine += "\t\t\tread(l, {0}, good_val)\n".format("tmp_"+port)
+    assertLine += '\t\t\tassert good_val REPORT "bad {0} value"\n'.format(port)
+    if design.objTopEntity.ports[port][0] == "out" :
+      # Out port. Assert the value.
+      line = "\t\t\tassert {0} = {1} REPORT \"vector mismatch\"\n".format( 
+          "tmp_"+port, port
+          )
+      assertLine += line
+    assertLine += '\t\t\tread(l, space); -- skip a space\n'
+
+  assertLine += "\n\n\t\t\t-- Assign temp signals to ports \n" 
+  for port in design.objTopEntity.ports :
+    assertLine += "\t\t\t{0} <= {1}\n".format(port, "tmp_"+port)
+  return assertLine
   
 
-def processTheFiles(files) :
+def processTheFiles(topdir, files) :
   ''' Process the all file listings. '''
   print("Processing all files.")
-  getDesign(files)
+  design = Design()
+  getDesign(design, files)
   topmodule = design.topmodule
+  design.objTopEntity.name = topmodule
   # get the port information out of topmodule.
   topentity = design.entity_bodies[topmodule]
   port_regex = r'port\s*\(.*\)\s*;'
   m = re.search(port_regex, topentity, re.IGNORECASE | re.DOTALL)
   if not m :
-    print("No port specified in this entity. Looks like it is testbench.")
+    print("NOTICE : No port specified in this entity. Looks like it is testbench.")
     print("-- Compile and run it.")
-    compileAndRun(files, topmodule)
+    compileAndRun(design, files, topmodule)
   else :
-    addATestBench(topmodule)
+    addATestBench(design)
+    with open("{0}/testbench.vhd".format(topdir), "w") as testF :
+      testF.write(testbench)
+    # Now, we should generate a file which contains test-vectors. This file must
+    # be named vector.test. Ordering of port must be the same as it is in entity
+    # declaration. Then we can compile the testbench and run it.
