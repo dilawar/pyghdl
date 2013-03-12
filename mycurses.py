@@ -62,6 +62,7 @@ def initCurses() :
   dataWindow.refresh()
 
 def writeOnWindow(win, msg, indent=1, overwrite=False
+    , raw = False
     , appendNewLine=False, opt=None) :
   y, x = win.getyx()
   if appendNewLine :
@@ -70,7 +71,8 @@ def writeOnWindow(win, msg, indent=1, overwrite=False
   maxY, maxX = win.getmaxyx()
   y, x = win.getyx()
   
-  lines, msg = formatString(msg, maxX-3-indent)
+  if not raw :
+    lines, msg = formatString(msg, maxX-3-indent)
   if overwrite : 
     x = 0
     y -= 2

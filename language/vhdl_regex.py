@@ -7,6 +7,7 @@ import shlex
 import subprocess
 import mycurses as mc
 from language.vcd import parse_vcd
+from IPython import embed
 
 testbench = '''
 ENTITY testbench IS END;
@@ -177,7 +178,7 @@ def getDesign(design, files) :
   design.findTopModule()
 
 ## Compile and run the design.
-def compileAndRun(design, files, topmodule, topdir) :
+def compileAndRun(design, files, topmodule, topdir, testVectors) :
   workdir = topdir+"/work"
   command_string = "ghdl {0} --workdir={1} --work=work --ieee=synopsys "
   topentity = design.objTopEntity.name
@@ -208,7 +209,6 @@ def compileAndRun(design, files, topmodule, topdir) :
       msg = "Compile : {0}".format(file)
       mc.writeOnWindow(mc.msgWindow
           , msg
-          , overwrite = True
           )
 
   msg = "Elaborating : {0}".format(topentity)
@@ -223,7 +223,7 @@ def compileAndRun(design, files, topmodule, topdir) :
     os.remove(bin)
   elabCommand = "{0} -o {2} {1}".format(command, topentity, bin)
   msg = "Executing :\n\t {0} ".format(elabCommand)
-  mc.writeOnWindow(mc.dataWindow
+  mc.writeOnWindow(mc.processWindow
       , msg 
       , opt=mc.curses.color_pair(1)
       )
@@ -252,12 +252,24 @@ def compileAndRun(design, files, topmodule, topdir) :
       os.makedirs(vcddir)
     vcdfile = vcddir+"/"+topentity+".vcd"
     vcdfile = "/"+"/".join([x for x in vcdfile.split("/") if len(x) > 1])
-    command = '{0} --vcd={1} --stop-time=1ms'.format(bin, vcdfile)
+    command = '{0} --vcd={1} --stop-time=1000ns'.format(bin, vcdfile)
     p3 = subprocess.Popen(shlex.split(command)
         , stdout = subprocess.PIPE
         , stderr = subprocess.PIPE 
         )
     p3.wait()
+    if testVectors :
+      mc.writeOnWindow(mc.msgWindow, "Testing with test-vectors."
+          , opt=mc.curses.color_pair(1))
+    else :
+      mc.writeOnWindow(mc.msgWindow, "Testing with user-provided test bench."
+          , opt=mc.curses.color_pair(1))
+      vcddata = parse_vcd(vcdfile)
+      vcds = dict()
+      for i in vcddata :
+        if vcddata[i]['nets'][0]['hier'] == 'dut' :
+          sigName = vcddata[i]['nets'][0]['name']
+          vcds[sigName] = vcddata[i]['tv']
 
 def addATestBench(design) :
   ''' Add a test-bench '''
@@ -332,7 +344,10 @@ def generateAssertLines(design ) :
   return assertLine
   
 
-def compileAndRunATopModule(design, topDir, files, topModule) :
+def compileAndRunATopModule(design, topDir
+    , files
+    , topModule
+    , testVectors = False) :
   # get the port information out of topmodule.
   msg = "Compiling a top module : {0}".format(topModule)
   mc.writeOnWindow(mc.processWindow, msg)
@@ -344,11 +359,11 @@ def compileAndRunATopModule(design, topDir, files, topModule) :
   port_regex = r'port\s*\(.*\)\s*;'
   m = re.search(port_regex, topentity, re.IGNORECASE | re.DOTALL)
   if not m :
-    msg = "+ No port specified in this entity. Looks like it is testbench."
-    mc.writeOnWindow(mc.msgWindow, msg, indent=2)
+    msg = "Found a testbench."
+    mc.writeOnWindow(mc.msgWindow, msg, indent=3)
     msg = "|- Compile and run it."
-    mc.writeOnWindow(mc.msgWindow, msg, indent=2)
-    compileAndRun(design, files, topModule, topEntityDir)
+    mc.writeOnWindow(mc.msgWindow, msg, indent=3)
+    compileAndRun(design, files, topModule, topEntityDir, testVectors=False)
   else :
     msg = "Notice : No testbench found. Generating one."
     mc.writeOnWindow(mc.processWindow, msg, indent=1)
@@ -361,8 +376,7 @@ def compileAndRunATopModule(design, topDir, files, topModule) :
     # Now, we should generate a file which contains test-vectors. This file must
     # be named vector.test. Ordering of port must be the same as it is in entity
     # declaration. Then we can compile the testbench and run it.
-    compileAndRunATopModule(design, topDir, files, topModule)
-
+    compileAndRunATopModule(design, topDir, files, topModule, testVectors=True)
 
 def processTheFiles(topdir, files) :
   ''' Process the all file listings. '''
