@@ -1,3 +1,4 @@
+import time
 import sys
 import re
 import os
@@ -217,7 +218,7 @@ def compileAndRun(design, files, topmodule, topdir) :
   bin = "/"+"/".join([x for x in bin.split("/") if len(x) > 1])
   
   # Before elaboration, check if binary already exists. If yes then remove it.
-  if os.path.isfile(bin) :
+  if os.path.exists(bin) :
     os.remove(bin)
   elabCommand = "{0} -o {2} {1}".format(command, topentity, bin)
   msg = "Executing :\n\t {0} ".format(elabCommand)
@@ -230,12 +231,14 @@ def compileAndRun(design, files, topmodule, topdir) :
       , stderr = subprocess.PIPE
       )
   # If a binary is not created 
+  time.sleep(0.3)
   if not os.path.isfile(bin) :
     mc.writeOnWindow(mc.dataWindow
         , "ERROR : Could not elaborate entity : {0}".format(topentity)
         , opt=mc.curses.color_pair(2))
-    output = p2.stderr.readline() 
-    mc.writeOnWindow(mc.dataWindow, "Failed with :"+str(output), indent=2
+    output = "{0} does not exists.\n Or failed with : {1}".format(bin
+        , p2.stderr.readline())
+    mc.writeOnWindow(mc.dataWindow, output, indent=2
       , opt=mc.curses.color_pair(1))
   else :
     mc.writeOnWindow(mc.dataWindow
