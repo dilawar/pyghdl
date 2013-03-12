@@ -4,6 +4,7 @@ import pprint
 import os
 import errno
 import subprocess
+from language.vcd import parse_vcd
 
 pp = pprint.PrettyPrinter(indent=2)
 
@@ -187,14 +188,17 @@ def compileAndRun(design, files, topmodule) :
   
   print("Elaborating : {0}".format(topentity))
   command = command_string.format('-e', workdir)
-  bin = dirpath+"/"+topentity
+  bin = design.binpath+"/"+topentity
   subprocess.check_call(("{0} -o {2} {1}".format(
      command
     ,topentity
     , bin
     )), shell=True)
-  command = '{0} --vcd={1} --stop-time=1ms'.format(bin
-      , dirpath+"/"+topentity+".vcd")
+  vcddir = design.binpath+"/waveforms"
+  if not os.path.exists(vcddir) :
+    os.makedirs(vcddir)
+  vcdfile = vcddir+"/"+topentity+".vcd"
+  command = '{0} --vcd={1} --stop-time=1ms'.format(bin, vcdfile)
   subprocess.check_call(command, shell=True)
 
 
