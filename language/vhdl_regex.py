@@ -7,7 +7,7 @@ import shlex
 import subprocess
 import mycurses as mc
 from language.vcd import parse_vcd
-from IPython import embed
+from language.test import testVCD
 
 testbench = '''
 ENTITY testbench IS END;
@@ -270,6 +270,7 @@ def compileAndRun(design, files, topmodule, topdir, testVectors) :
         if vcddata[i]['nets'][0]['hier'] == 'dut' :
           sigName = vcddata[i]['nets'][0]['name']
           vcds[sigName] = vcddata[i]['tv']
+      testVCD(vcds)
 
 def addATestBench(design) :
   ''' Add a test-bench '''
@@ -318,7 +319,7 @@ def addATestBench(design) :
         , component_name = _topmodule
         )
   else :
-    msg = ("No port is found. This is an error.")
+    msg = "No port is found. This is an error."
     mc.writeOnWindow(mc.msgWindow, msg)
     mc.msgWindow.getch()
     mc.killCurses()
@@ -371,8 +372,10 @@ def compileAndRunATopModule(design, topDir
     testbenchFile = "{0}/testbench.vhd".format(topdir)
     with open(testbenchFile, "w") as testF :
       testF.write(testbench)
+
     # Add this testbench file to other files and compile the design.
     set(files).add(testbenchFile)
+
     # Now, we should generate a file which contains test-vectors. This file must
     # be named vector.test. Ordering of port must be the same as it is in entity
     # declaration. Then we can compile the testbench and run it.
