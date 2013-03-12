@@ -15,7 +15,7 @@ def formatString(msg, width) :
     else :
       newmsg += msg[width*i : (i+1)*width+1]
       newmsg += "\n"
-  return newmsg
+  return loopIndex, newmsg
 
 
 def killCurses() :
@@ -62,19 +62,25 @@ def initCurses() :
   dataWindow.refresh()
 
 def writeOnWindow(win, msg, indent=1, overwrite=False
-    , appendNewLine=True, opt=None) :
+    , appendNewLine=False, opt=None) :
+  y, x = win.getyx()
+  if appendNewLine :
+    win.addstr(y, x, "\n")
+    win.refresh()
   maxY, maxX = win.getmaxyx()
   y, x = win.getyx()
+  
+  lines, msg = formatString(msg, maxX-3-indent)
   if overwrite : 
     x = 0
-  if appendNewLine :
-    msg += "\n"
+    y -= 2
   assert y >= 0, x >= 0
-  msg = formatString(msg, maxX-3-indent)
+  
   if opt :
-    win.addstr(int(y),int(x+indent),str(msg), opt)
+    win.addstr(int(y),int(x+1+indent),str(msg), opt)
   else :
-    win.addstr(int(y),int(x+indent),str(msg))
+    win.addstr(int(y),int(x+1+indent),str(msg))
   win.box()
   win.refresh()
+
 

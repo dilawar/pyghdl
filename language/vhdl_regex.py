@@ -80,8 +80,8 @@ class Design :
   def __init__(self) :
     # entity in design
     self.entities = list()
+    self.entity_files = dict()
     # Root dir of design.
-    self.binpath = None
     self.entity_bodies = dict()
     # Architecture of an entity
     self.architectures = dict()
@@ -91,6 +91,7 @@ class Design :
     self.allcomponents = list()
 
     self.topmodule = None
+    self.topModuleFile = dict()
     self.topModules = list()
     self.objTopEntity = self.TopEntity()
 
@@ -124,7 +125,7 @@ class Design :
       msg = "Found a top module."
       mc.writeOnWindow(mc.msgWindow, msg)
 
-def parseTxt(design, txt) :
+def parseTxt(design, txt, fileName) :
   '''
   Parse the given 'txt'. Construct a design object which has topmodule.
   If this topmodule is not a test bench then write one. Compile and simulate.
@@ -136,6 +137,7 @@ def parseTxt(design, txt) :
     match = i.groupdict()
     design.entities.append(match['name'])
     design.entity_bodies[match['name']] = match['body']
+    design.entity_files[match['name']] = fileName
 
   #architecture_body = '.*(component\s+(?P<component_name>\w+)\s+(.*)end\s+component.*)*.*'
   architecture_body = '(?P<arch_body>.*)'
@@ -170,65 +172,87 @@ def getDesign(design, files) :
         if(line.strip()[0:2] == "--") : pass 
         else : 
           txt += line
-      parseTxt(design, txt)
+      parseTxt(design, txt, file)
   design.findTopModule()
 
 ## Compile and run the design.
-def compileAndRun(design, files, topmodule) :
+def compileAndRun(design, files, topmodule, topdir) :
+  workdir = topdir+"/work"
   command_string = "ghdl {0} --workdir={1} --work=work --ieee=synopsys "
   topentity = design.objTopEntity.name
+  workdir = "/"+"/".join([x for x in workdir.split("/") if len(x) > 1])
   for file in files :
     filename = os.path.basename(file)
-    dirpath = os.path.dirname(file)
     # create the work dir.
-    workdir = design.binpath+"/work"
-    workdir = "/".join([x for x in workdir.split("/") if len(x) > 1])
     try :
       os.makedirs(workdir)
     except OSError as exception :
       if exception.errno != errno.EEXIST :
         raise
+
     command = command_string.format( '-a', workdir)
-    p1 = subprocess.Popen(shlex.split("{0} {1}".format(command, file))
+    analyzeCommand = "{0} {1}".format(command, file)
+    p1 = subprocess.Popen(shlex.split(analyzeCommand)
         , stdout = subprocess.PIPE
         , stderr = subprocess.PIPE
         )
-    msg = "Compilation successful : {0}".format(file)
-    mc.writeOnWindow(mc.dataWindow, str(msg))
-  
-  msg = ("Elaborating : {0}".format(topentity))
+    status = p1.stderr.readline()
+    if status.__len__() > 0 :
+      mc.writeOnWindow(mc.dataWindow
+          , "Compilation failed with error :  {0}".format(str(status))
+          , indent=2
+          )
+    else :
+      msg = "Compile : {0}".format(file)
+      mc.writeOnWindow(mc.msgWindow
+          , msg
+          , overwrite = True
+          )
+
+  msg = "Elaborating : {0}".format(topentity)
   mc.writeOnWindow(mc.msgWindow, msg)
 
   command = command_string.format('-e', workdir)
-  bin = design.binpath+"/"+topentity
-  bin = "/".join([x for x in bin.split("/") if len(x) > 1])
+  bin = topdir+"/"+topentity
+  bin = "/"+"/".join([x for x in bin.split("/") if len(x) > 1])
+  
+  # Before elaboration, check if binary already exists. If yes then remove it.
   if os.path.isfile(bin) :
     os.remove(bin)
   elabCommand = "{0} -o {2} {1}".format(command, topentity, bin)
-  mc.writeOnWindow(mc.dataWindow, "Executing : {0}".format(elabCommand)
-      , opt=mc.curses.color_pair(1))
-  p2 = subprocess.Popen(shlex.split(elabCommand),
-    stdout = subprocess.PIPE
-    , stderr = subprocess.PIPE)
-  output = p2.stderr.readline()
+  msg = "Executing :\n\t {0} ".format(elabCommand)
+  mc.writeOnWindow(mc.dataWindow
+      , msg 
+      , opt=mc.curses.color_pair(1)
+      )
+  p2 = subprocess.Popen(shlex.split(elabCommand)
+      , stdout = subprocess.PIPE
+      , stderr = subprocess.PIPE
+      )
+  # If a binary is not created 
   if not os.path.isfile(bin) :
     mc.writeOnWindow(mc.dataWindow
         , "ERROR : Could not elaborate entity : {0}".format(topentity)
         , opt=mc.curses.color_pair(2))
+    output = p2.stderr.readline() 
     mc.writeOnWindow(mc.dataWindow, "Failed with :"+str(output), indent=2
       , opt=mc.curses.color_pair(1))
-    return
- 
-  vcddir = design.binpath+"/waveforms"
-  if not os.path.exists(vcddir) :
-    os.makedirs(vcddir)
-  vcdfile = vcddir+"/"+topentity+".vcd"
-  command = '{0} --vcd={1} --stop-time=1ms'.format(bin, vcdfile)
-  p3 = subprocess.Popen(shlex.split(command), 
-      stdout = subprocess.PIPE
-      , stderr = subprocess.PIPE 
-   )
-
+  else :
+    mc.writeOnWindow(mc.dataWindow
+        , "Elaborated successfully!"
+        , opt=mc.curses.color_pair(2)
+        )
+    # Run the simulation.
+    vcddir = topdir+"/waveforms"
+    if not os.path.exists(vcddir) :
+      os.makedirs(vcddir)
+    vcdfile = vcddir+"/"+topentity+".vcd"
+    vcdfile = "/"+"/".join([x for x in vcdfile.split("/") if len(x) > 1])
+    command = '{0} --vcd={1} --stop-time=1ms'.format(bin, vcdfile)
+    p3 = subprocess.Popen(shlex.split(command)
+        , stdout = subprocess.PIPE
+        , stderr = subprocess.PIPE 
+     )
 
 def addATestBench(design) :
   ''' Add a test-bench '''
@@ -309,6 +333,9 @@ def compileAndRunATopModule(design, topDir, files, topModule) :
   mc.writeOnWindow(mc.processWindow, msg)
 
   topentity = design.entity_bodies[topModule]
+  topEntityFileName = design.entity_files[topModule]
+  topEntityDir = os.path.dirname(topEntityFileName)
+
   port_regex = r'port\s*\(.*\)\s*;'
   m = re.search(port_regex, topentity, re.IGNORECASE | re.DOTALL)
   if not m :
@@ -316,7 +343,7 @@ def compileAndRunATopModule(design, topDir, files, topModule) :
     mc.writeOnWindow(mc.msgWindow, msg, indent=2)
     msg = "|- Compile and run it."
     mc.writeOnWindow(mc.msgWindow, msg, indent=2)
-    compileAndRun(design, files, topModule)
+    compileAndRun(design, files, topModule, topEntityDir)
   else :
     msg = "Notice : No testbench found. Generating one."
     mc.writeOnWindow(mc.processWindow, msg, indent=1)
@@ -337,7 +364,6 @@ def processTheFiles(topdir, files) :
   msg = "Processing all files and finding designs.."
   mc.writeOnWindow(mc.processWindow, msg)
   design = Design()
-  design.binpath = topdir
   getDesign(design, files)
   for topmodule in design.topModules :
     design.objTopEntity.name = topmodule
