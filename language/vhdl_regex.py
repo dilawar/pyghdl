@@ -40,7 +40,7 @@ BEGIN
 \t\t-- Declare variables to store the values stored in test files.
 {3} 
 \t\t-- File and its minions.
-\t\tFILE vector_file : text IS IN "vector.test";
+\t\tFILE vector_file : text read_mode IS "vector.test";
 \t\tVARIABLE l : LINE;
 \t\tVARIABLE r : REAL;
 \t\tVARIABLE vector_time : TIME;
@@ -91,6 +91,7 @@ class Design :
     self.allcomponents = list()
 
     self.topmodule = None
+    self.topModules = list()
     self.objTopEntity = self.TopEntity()
 
 
@@ -109,10 +110,11 @@ class Design :
       else :
         noOfTopModules += 1
         self.topmodule = en
+        self.topModules.append(en)
 
     if noOfTopModules != 1 :
-      print("Not a single topmodule found.")
-      sys.exit(0)
+      print("More than one topmodule are found.")
+      print("We'll try to compile all of them.")
     else :
       print("Found a top module.")
 
@@ -167,13 +169,13 @@ def getDesign(design, files) :
 
 ## Compile and run the design.
 def compileAndRun(design, files, topmodule) :
-  command_string = "ghdl {0} --std=93 --workdir={1} --work=work --ieee=synopsys "
+  command_string = "ghdl {0} --workdir={1} --work=work --ieee=synopsys "
   topentity = design.objTopEntity.name
   for file in files :
     filename = os.path.basename(file)
     dirpath = os.path.dirname(file)
     # create the work dir.
-    workdir = dirpath+"/work"
+    workdir = design.binpath+"/work"
     try :
       os.makedirs(workdir)
     except OSError as exception :
@@ -264,25 +266,36 @@ def generateAssertLines(design ) :
   return assertLine
   
 
-def processTheFiles(topdir, files) :
-  ''' Process the all file listings. '''
-  print("Processing all files.")
-  design = Design()
-  getDesign(design, files)
-  topmodule = design.topmodule
-  design.objTopEntity.name = topmodule
+def compileAndRunATopModule(design, topDir, files, topModule) :
   # get the port information out of topmodule.
-  topentity = design.entity_bodies[topmodule]
+  topentity = design.entity_bodies[topModule]
   port_regex = r'port\s*\(.*\)\s*;'
   m = re.search(port_regex, topentity, re.IGNORECASE | re.DOTALL)
   if not m :
     print("NOTICE : No port specified in this entity. Looks like it is testbench.")
     print("-- Compile and run it.")
-    compileAndRun(design, files, topmodule)
+    compileAndRun(design, files, topModule)
   else :
+    print("Notice : No testbench found. Generating one.")
     addATestBench(design)
-    with open("{0}/testbench.vhd".format(topdir), "w") as testF :
+    testbenchFile = "{0}/testbench.vhd".format(topdir)
+    with open(testbenchFile, "w") as testF :
       testF.write(testbench)
+    # Add this testbench file to other files and compile the design.
+    set(files).add(testbenchFile)
     # Now, we should generate a file which contains test-vectors. This file must
     # be named vector.test. Ordering of port must be the same as it is in entity
     # declaration. Then we can compile the testbench and run it.
+    compileAndRunATopModule(design, topDir, files, topModule)
+
+
+def processTheFiles(topdir, files) :
+  ''' Process the all file listings. '''
+  print("Processing all files.")
+  design = Design()
+  design.binpath = topdir
+  getDesign(design, files)
+  for topmodule in design.topModules :
+    design.objTopEntity.name = topmodule
+    compileAndRunATopModule(design, topdir, files, topmodule)
+  
