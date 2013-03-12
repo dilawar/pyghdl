@@ -183,6 +183,7 @@ def compileAndRun(design, files, topmodule) :
     dirpath = os.path.dirname(file)
     # create the work dir.
     workdir = design.binpath+"/work"
+    workdir = "/".join([x for x in workdir.split("/") if len(x) > 1])
     try :
       os.makedirs(workdir)
     except OSError as exception :
@@ -194,28 +195,31 @@ def compileAndRun(design, files, topmodule) :
         , stderr = subprocess.PIPE
         )
     msg = "Compilation successful : {0}".format(file)
-    mc.writeOnWindow(mc.msgWindow, msg)
+    mc.writeOnWindow(mc.dataWindow, str(msg))
   
   msg = ("Elaborating : {0}".format(topentity))
   mc.writeOnWindow(mc.msgWindow, msg)
 
   command = command_string.format('-e', workdir)
   bin = design.binpath+"/"+topentity
-  bin = "/".join(bin.split("/"))
-  p2 = subprocess.Popen(shlex.split("{0} -o {2} {1}".format(
-     command
-    ,topentity
-    , bin)),
+  bin = "/".join([x for x in bin.split("/") if len(x) > 1])
+  if os.path.isfile(bin) :
+    os.remove(bin)
+  elabCommand = "{0} -o {2} {1}".format(command, topentity, bin)
+  mc.writeOnWindow(mc.dataWindow, "Executing : {0}".format(elabCommand)
+      , opt=mc.curses.color_pair(1))
+  p2 = subprocess.Popen(shlex.split(elabCommand),
     stdout = subprocess.PIPE
     , stderr = subprocess.PIPE)
   output = p2.stderr.readline()
-  mc.writeOnWindow(mc.msgWindow, str(output), indent=2)
- 
   if not os.path.isfile(bin) :
-    mc.writeOnWindow(mc.msgWindow, "No such file {0}".format(bin))
-    mc.msgWindow.getch()
-    mc.killCurses()
+    mc.writeOnWindow(mc.dataWindow
+        , "ERROR : Could not elaborate entity : {0}".format(topentity)
+        , opt=mc.curses.color_pair(2))
+    mc.writeOnWindow(mc.dataWindow, "Failed with :"+str(output), indent=2
+      , opt=mc.curses.color_pair(1))
     return
+ 
   vcddir = design.binpath+"/waveforms"
   if not os.path.exists(vcddir) :
     os.makedirs(vcddir)
@@ -275,6 +279,7 @@ def addATestBench(design) :
   else :
     msg = ("No port is found. This is an error.")
     mc.writeOnWindow(mc.msgWindow, msg)
+    mc.msgWindow.getch()
     mc.killCurses()
     sys.exit(1)
 
@@ -300,21 +305,21 @@ def generateAssertLines(design ) :
 
 def compileAndRunATopModule(design, topDir, files, topModule) :
   # get the port information out of topmodule.
-  msg = "Compile and run a top module."
+  msg = "Compiling a top module : {0}".format(topModule)
   mc.writeOnWindow(mc.processWindow, msg)
 
   topentity = design.entity_bodies[topModule]
   port_regex = r'port\s*\(.*\)\s*;'
   m = re.search(port_regex, topentity, re.IGNORECASE | re.DOTALL)
   if not m :
-    msg = "NOTICE : No port specified in this entity. Looks like it is testbench."
-    mc.writeOnWindow(mc.msgWindow, msg)
+    msg = "+ No port specified in this entity. Looks like it is testbench."
+    mc.writeOnWindow(mc.msgWindow, msg, indent=2)
     msg = "|- Compile and run it."
-    mc.writeOnWindow(mc.msgWindow, msg)
+    mc.writeOnWindow(mc.msgWindow, msg, indent=2)
     compileAndRun(design, files, topModule)
   else :
     msg = "Notice : No testbench found. Generating one."
-    mc.writeOnWindow(mc.processWindow, msg)
+    mc.writeOnWindow(mc.processWindow, msg, indent=1)
     addATestBench(design)
     testbenchFile = "{0}/testbench.vhd".format(topdir)
     with open(testbenchFile, "w") as testF :
