@@ -197,6 +197,7 @@ def compileAndRun(design, files, topmodule, topdir) :
         , stdout = subprocess.PIPE
         , stderr = subprocess.PIPE
         )
+    p1.wait()
     status = p1.stderr.readline()
     if status.__len__() > 0 :
       mc.writeOnWindow(mc.dataWindow
@@ -230,8 +231,8 @@ def compileAndRun(design, files, topmodule, topdir) :
       , stdout = subprocess.PIPE
       , stderr = subprocess.PIPE
       )
-  # If a binary is not created 
-  time.sleep(0.3)
+  # Wait for some time. Let the file being saved.
+  p2.wait()
   if not os.path.isfile(bin) :
     mc.writeOnWindow(mc.dataWindow
         , "ERROR : Could not elaborate entity : {0}".format(topentity)
@@ -255,7 +256,8 @@ def compileAndRun(design, files, topmodule, topdir) :
     p3 = subprocess.Popen(shlex.split(command)
         , stdout = subprocess.PIPE
         , stderr = subprocess.PIPE 
-     )
+        )
+    p3.wait()
 
 def addATestBench(design) :
   ''' Add a test-bench '''
