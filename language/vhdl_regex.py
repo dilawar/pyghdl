@@ -42,7 +42,7 @@ BEGIN
 \t\t-- Declare variables to store the values stored in test files.
 {3} 
 \t\t-- File and its minions.
-\t\tFILE vector_file : text read_mode IS "vector.test";
+\t\tFILE vector_file : TEXT OPEN read_mode IS "vector.test";
 \t\tVARIABLE l : LINE;
 \t\tVARIABLE r : REAL;
 \t\tVARIABLE vector_time : TIME;
@@ -290,15 +290,17 @@ def addATestBench(design) :
       port = port.strip()
       portlist, dirAndType = port.split(":")
       portlist = portlist.split(",")
-      dir = dirAndType.split()[0]
-      type = dirAndType.split()[1:]
+      dirAndType = dirAndType.strip()
+      dir = dirAndType.split()[0].strip()
+      type = " ".join(dirAndType.split()[1:])
+
       for p in portlist :
         portDict[p.strip()] = (dir, type)
     design.objTopEntity.ports = portDict
     signals = ""
     for port in design.objTopEntity.ports :
       signals += "\tSIGNAL " + port  \
-           + ": " + design.objTopEntity.ports[port][1][0]+";\n"
+          + ": " + design.objTopEntity.ports[port][1] +";\n"
 
     dut = "\tdut : {0} ".format(_topmodule) + " PORT MAP (\n";
     portmap = ""
@@ -310,7 +312,7 @@ def addATestBench(design) :
     variables = ""
     for port in design.objTopEntity.ports :
       variables += ("\t\tVARIABLE " + "tmp_"+port + " : " + 
-          design.objTopEntity.ports[port][1][0] + ";\n")
+          design.objTopEntity.ports[port][1] + ";\n")
     assertLines = generateAssertLines(design)
     assignStatements = "\t\t\t--Assign the values"
     # Fill the testbench.
@@ -348,38 +350,42 @@ def generateAssertLines(design ) :
 def compileAndRunATopModule(design, topDir
     , files
     , topModule
-    , testVectors = False) :
+    , userTestBench = False) :
   # get the port information out of topmodule.
   msg = "Compiling a top module : {0}".format(topModule)
   mc.writeOnWindow(mc.processWindow, msg)
 
-  topentity = design.entity_bodies[topModule]
-  topEntityFileName = design.entity_files[topModule]
-  topEntityDir = os.path.dirname(topEntityFileName)
+  if not userTestBench :
+    topentity = design.entity_bodies[topModule]
+    topEntityFileName = design.entity_files[topModule]
+    topEntityDir = os.path.dirname(topEntityFileName)
 
-  port_regex = r'port\s*\(.*\)\s*;'
-  m = re.search(port_regex, topentity, re.IGNORECASE | re.DOTALL)
-  if not m :
-    msg = "Found a testbench."
-    mc.writeOnWindow(mc.msgWindow, msg, indent=3)
-    msg = "|- Compile and run it."
-    mc.writeOnWindow(mc.msgWindow, msg, indent=3)
-    compileAndRun(design, files, topModule, topEntityDir, testVectors=False)
+    port_regex = r'port\s*\(.*\)\s*;'
+    m = re.search(port_regex, topentity, re.IGNORECASE | re.DOTALL)
+    if not m :
+      msg = "Found a testbench in {0}".format(topModule)
+      mc.writeOnWindow(mc.msgWindow, msg, indent=3)
+      msg = "|- Compile and run it."
+      mc.writeOnWindow(mc.msgWindow, msg, indent=3)
+      compileAndRun(design, files, topModule, topEntityDir, testVectors=False)
+    else :
+      msg = "Notice : No testbench found. Generating one."
+      mc.writeOnWindow(mc.processWindow, msg, indent=1)
+      addATestBench(design)
+      testbenchFile = "{0}/testbench.vhd".format(topDir)
+      with open(testbenchFile, "w") as testF :
+        testF.write(testbench)
+
+      # Add this testbench file to other files and compile the design.
+      set(files).add(testbenchFile)
+
+      # Now, we should generate a file which contains test-vectors. This file must
+      # be named vector.test. Ordering of port must be the same as it is in entity
+      # declaration. Then we can compile the testbench and run it.
+      topModule = "testbench"
+      compileAndRunATopModule(design, topDir, files, topModule, userTestBench=True)
   else :
-    msg = "Notice : No testbench found. Generating one."
-    mc.writeOnWindow(mc.processWindow, msg, indent=1)
-    addATestBench(design)
-    testbenchFile = "{0}/testbench.vhd".format(topdir)
-    with open(testbenchFile, "w") as testF :
-      testF.write(testbench)
-
-    # Add this testbench file to other files and compile the design.
-    set(files).add(testbenchFile)
-
-    # Now, we should generate a file which contains test-vectors. This file must
-    # be named vector.test. Ordering of port must be the same as it is in entity
-    # declaration. Then we can compile the testbench and run it.
-    compileAndRunATopModule(design, topDir, files, topModule, testVectors=True)
+    compileAndRun(design, files, topModule, topDir, testVectors=True)
 
 def processTheFiles(topdir, files) :
   ''' Process the all file listings. '''
