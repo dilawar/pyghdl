@@ -2,16 +2,18 @@ import sql as sql
 import os
 from pyparsing import *
 
+vhdlcomment = "--" + restOfLine
 identifier = Word(alphas, alphanums+"_")
 begin = Literal("begin")
 end = Literal("end")
 word = Word(alphas+"'.")
 number = Word(nums+".")
-parenOpen = Literal("(")
-parenClose = Literal(")")
-semicolon = Literal(";")
-comma = Literal(",")
-colon = Literal(":")
+digit = Word(nums)
+parenOpen = Suppress("(")
+parenClose = Suppress(")")
+semicolon = Suppress(";")
+comma = Suppress(",")
+colon = Suppress(":")
 
 plus = Literal('+')
 minus = Literal('-')
@@ -19,12 +21,16 @@ divide = Literal('/')
 mult = Literal('*')
 init = Literal(":=")
 assign = Literal("<=")
-
+  
+#sigType = Keyword("bit_vector") | Literal("std_logic_vector") \
+#    | Keyword("integer") \
+#    | Keyword("boolean") | Literal("bit") | Literal("std_logic")
+#
 specialChar = oneOf("! @ # $ % ^ & ")
 operator  = plus | minus | divide | mult | assign | init 
 
 anyWord = identifier | number | parenClose | parenOpen | semicolon \
-    | comma | colon | operator | specialChar
+    | comma | colon | operator | specialChar 
 
 def processFilesAndBuildDb() :
   conn = sql.conn 
@@ -38,36 +44,41 @@ def processFilesAndBuildDb() :
 def parseFile(name, path, topDir) :
   ''' Parse files and build elements table. '''
   filepath = path+"/"+name 
+  print("Parsing : \n {0}".format(filepath))
   if not os.path.isfile(filepath) :
     print("File {0} does not exists on disk. Path \n : \t {1}".format(
       name, filepath))
     return
   else :
+    txt = ""
     with open(filepath, "r") as vhdlFile :
       txt = vhdlFile.read()
-    
-  ## Great, now look out for entities. 
-  
+          
+  ## Types 
   ## This is port
-  portType = Group(identifier | identifier + parenOpen + OneOrMore(identifier) \
-      + parenClose)
-  portDirection = Group(identifier)
-  port =  Group(identifier + Optional(comma + identifier) + colon \
-      + portDirection + portType )
-  ports = port + Optional( semicolon + port)
-  portExpr = Group(Literal("port") + parenOpen + ports + parenClose + semicolon)
+  portName = identifier.setResultsName("portName")
+
+  portType = identifier + Optional(parenOpen + digit + identifier \
+      + digit + parenClose)
+  
+  portDirection = identifier
+  portList =  portName + ZeroOrMore(comma + portName) 
+  port =  portList + colon + portDirection + portType 
+  ports = port + ZeroOrMore( semicolon + port)
+  portExpr = Group(Keyword("port") + parenOpen + ports \
+      + parenClose + semicolon)
   
   ## This is generic 
   genericDeclaration = identifier + colon + portType \
       + Optional( init + identifier)
-  genericExpr = Literal("generic") + parenOpen + genericDeclaration \
+  genericExpr = Keyword("generic") + parenOpen + genericDeclaration \
       + parenClose + semicolon
   # This is entity 
-  entityBodyExpr = ZeroOrMore(genericExpr | portExpr)
+  entityBodyExpr = Optional(genericExpr) + ZeroOrMore(portExpr)
   entityName = identifier
-  entityExpr = Literal("entity") + entityName + Literal("is") \
-      + entityBodyExpr + Literal("end") \
-      + Optional(Literal("entity")) + Optional(identifier) \
+  entityExpr = Keyword("entity") + entityName + Keyword("is") \
+      + entityBodyExpr + Keyword("end") \
+      + Optional(Keyword("entity")) + Optional(identifier) \
       + semicolon  
   
   # This is architecture 
@@ -82,7 +93,11 @@ def parseFile(name, path, topDir) :
       + Literal("end") + Optional(Literal("architecture")) \
       + Optional(archName) + semicolon 
 
-  for i in architectureExpr.scanString(txt) :
+  # Full design 
+  designExpr = OneOrMore( entityExpr + architectureExpr )
+  designExpr.ignore(vhdlcomment)
+
+  for i in entityExpr.searchString(txt) :
     print i
     
 
