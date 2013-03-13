@@ -4,8 +4,12 @@ from pyparsing import *
 
 vhdlcomment = "--" + restOfLine
 identifier = Word(alphas, alphanums+"_")
+
 begin = Literal("begin")
 end = Literal("end")
+isKeyword = Keyword("is")
+ofKeyword = Keyword("of")
+
 word = Word(alphas+"'.")
 number = Word(nums+".")
 digit = Word(nums)
@@ -13,13 +17,12 @@ parenOpen = Suppress("(")
 parenClose = Suppress(")")
 semicolon = Suppress(";")
 comma = Suppress(",")
+init = Literal(":=")
 colon = Suppress(":")
-
 plus = Literal('+')
 minus = Literal('-')
 divide = Literal('/')
 mult = Literal('*')
-init = Literal(":=")
 assign = Literal("<=")
   
 #sigType = Keyword("bit_vector") | Literal("std_logic_vector") \
@@ -55,26 +58,29 @@ def parseFile(name, path, topDir) :
       txt = vhdlFile.read()
           
   ## Types 
+  range = Group(Literal("natural") + Literal("range") + Literal("<>"))
+
   ## This is port
   portName = identifier.setResultsName("portName")
 
-  portType = identifier + Optional(parenOpen + digit + identifier \
-      + digit + parenClose)
+  portType = identifier + Optional(parenOpen \
+      + ((digit + identifier + digit) \
+      | (range) )+ parenClose)
   
   portDirection = identifier
-  portList =  portName + ZeroOrMore(comma + portName) 
+  portList =  Group(portName + ZeroOrMore(comma + portName))
   port =  portList + colon + portDirection + portType 
   ports = port + ZeroOrMore( semicolon + port)
   portExpr = Group(Keyword("port") + parenOpen + ports \
       + parenClose + semicolon)
   
   ## This is generic 
-  genericDeclaration = identifier + colon + portType \
+  genericDeclaration = portList + colon + portType \
       + Optional( init + identifier)
   genericExpr = Keyword("generic") + parenOpen + genericDeclaration \
       + parenClose + semicolon
   # This is entity 
-  entityBodyExpr = Optional(genericExpr) + ZeroOrMore(portExpr)
+  entityBodyExpr = ZeroOrMore(genericExpr) + ZeroOrMore(portExpr)
   entityName = identifier
   entityExpr = Keyword("entity") + entityName + Keyword("is") \
       + entityBodyExpr + Keyword("end") \
@@ -83,21 +89,31 @@ def parseFile(name, path, topDir) :
   
   # This is architecture 
   archName = identifier 
-  anyStmts = OneOrMore(anyWord)
-  archDecls = OneOrMore( anyStmts )
-  archStatements = OneOrMore( anyStmts)
+
+  # Declarations in architecture 
+  variable_decl = Keyword("variable") + identifier + colon \
+      + portType + semicolon
+  type_decl = Keyword("type") + identifier + isKeyword \
+      + portType + ofKeyword + portType + semicolon
+  archDecls = OneOrMore(type_decl | variable_decl )
+
+  archStatements = "lala"
   archBodyExpr = archDecls + begin + archStatements \
       + end + Optional(archName) + semicolon 
-  architectureExpr = Literal("architecture") + archName + Literal("of") \
+  architectureExpr = Keyword("architecture") + archName + Keyword("of") \
       + entityName + Literal("is") + archBodyExpr \
-      + Literal("end") + Optional(Literal("architecture")) \
+      + Keyword("end") + Optional(Keyword("architecture")) \
       + Optional(archName) + semicolon 
 
   # Full design 
+
+  # What we want to ignore
+  entityExpr.ignore(genericExpr)
   designExpr = OneOrMore( entityExpr + architectureExpr )
   designExpr.ignore(vhdlcomment)
 
-  for i in entityExpr.searchString(txt) :
+  archDecls.validate()
+  for i in archDecls.searchString(txt) :
     print i
     
 
