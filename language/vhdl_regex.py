@@ -8,6 +8,7 @@ import subprocess
 import mycurses as mc
 from language.vcd import parse_vcd
 from language.test import testVCD
+import sql as sql
 
 testbench = '''
 ENTITY testbench IS END;

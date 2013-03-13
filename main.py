@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2.7
 import argparse
 import os
 import sys
 import math
-import language.vhdl_regex as vhdl
-import mycurses as mc
+import language.vhdl as vhdl
 import sql
 
 def findListings(dirs, topDir, regex=None) :
@@ -66,7 +65,7 @@ if __name__=="__main__" :
   parser.parse_args(namespace=args)
   
   if args.l[0] == "vhdl" :
-    mc.initCurses()
+    #mc.initCurses()
     file_regex = ".*\.vhd$"
     
     topDir = findTopDir(args.d)
@@ -77,10 +76,12 @@ if __name__=="__main__" :
       print("No file is found with regex {0} in directories"
         +" {1}".format(regex, args.d))
       sys.exit();
-    vhdl.processTheFiles(topDir, files)
+    #vhdl.processTheFiles(topDir, files)
+    vhdl.processFilesAndBuildDb()
   else :
-    mc.initCurses()
+    #mc.initCurses()
     msg = "Unsupported language : {0}".format(args.l)
-    mc.writeOnWindow(mc.msgWindow, msg)
+    #mc.writeOnWindow(mc.msgWindow, msg)
+    print(msg)
   # close the db when done
   sql.closeDB()
