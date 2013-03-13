@@ -5,6 +5,7 @@ import sys
 import math
 import language.vhdl_regex as vhdl
 import mycurses as mc
+import sql
 
 def findListings(dirs, regex=None) :
   listings = set()
@@ -60,6 +61,7 @@ if __name__=="__main__" :
       sys.exit();
     mc.initCurses()
     topDir = findTopDir(args.d)
+    sql.initDB("vhdl", topDir)
     vhdl.processTheFiles(topDir, files)
   else :
     mc.initCurses()
