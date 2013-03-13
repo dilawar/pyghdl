@@ -3,7 +3,8 @@ import os
 from pyparsing import *
 
 identifier = Word(alphas, alphanums+"_")
-assign = Literal(":=")
+begin = Literal("begin")
+end = Literal("end")
 word = Word(alphas+"'.")
 number = Word(nums+".")
 parenOpen = Literal("(")
@@ -11,6 +12,19 @@ parenClose = Literal(")")
 semicolon = Literal(";")
 comma = Literal(",")
 colon = Literal(":")
+
+plus = Literal('+')
+minus = Literal('-')
+divide = Literal('/')
+mult = Literal('*')
+init = Literal(":=")
+assign = Literal("<=")
+
+specialChar = oneOf("! @ # $ % ^ & ")
+operator  = plus | minus | divide | mult | assign | init 
+
+anyWord = identifier | number | parenClose | parenOpen | semicolon \
+    | comma | colon | operator | specialChar
 
 def processFilesAndBuildDb() :
   conn = sql.conn 
@@ -33,6 +47,8 @@ def parseFile(name, path, topDir) :
       txt = vhdlFile.read()
     
   ## Great, now look out for entities. 
+  
+  ## This is port
   portType = Group(identifier | identifier + parenOpen + OneOrMore(identifier) \
       + parenClose)
   portDirection = Group(identifier)
@@ -40,17 +56,33 @@ def parseFile(name, path, topDir) :
       + portDirection + portType )
   ports = port + Optional( semicolon + port)
   portExpr = Group(Literal("port") + parenOpen + ports + parenClose + semicolon)
+  
+  ## This is generic 
   genericDeclaration = identifier + colon + portType \
-      + Optional( assign + identifier)
+      + Optional( init + identifier)
   genericExpr = Literal("generic") + parenOpen + genericDeclaration \
       + parenClose + semicolon
+  # This is entity 
   entityBodyExpr = ZeroOrMore(genericExpr | portExpr)
-  entityExpr = Literal("entity") + identifier + Literal("is") \
+  entityName = identifier
+  entityExpr = Literal("entity") + entityName + Literal("is") \
       + entityBodyExpr + Literal("end") \
       + Optional(Literal("entity")) + Optional(identifier) \
       + semicolon  
-       
-  for i in entityExpr.scanString(txt) :
+  
+  # This is architecture 
+  archName = identifier 
+  anyStmts = OneOrMore(anyWord)
+  archDecls = OneOrMore( anyStmts )
+  archStatements = OneOrMore( anyStmts)
+  archBodyExpr = archDecls + begin + archStatements \
+      + end + Optional(archName) + semicolon 
+  architectureExpr = Literal("architecture") + archName + Literal("of") \
+      + entityName + Literal("is") + archBodyExpr \
+      + Literal("end") + Optional(Literal("architecture")) \
+      + Optional(archName) + semicolon 
+
+  for i in architectureExpr.scanString(txt) :
     print i
     
 

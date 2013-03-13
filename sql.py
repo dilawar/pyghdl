@@ -1,7 +1,7 @@
 import sqlite3 as sql
 
 conn = None 
-dbName = 'design.sqlite3'
+dbName = ':memory:'
 
 def initDB(language, topDir) :
   global dbName
