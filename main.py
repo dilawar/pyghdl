@@ -7,7 +7,7 @@ import language.vhdl_regex as vhdl
 import mycurses as mc
 import sql
 
-def findListings(dirs, regex=None) :
+def findListings(dirs, topDir, regex=None) :
   listings = set()
   i = 0
   for dir in dirs :
@@ -16,14 +16,26 @@ def findListings(dirs, regex=None) :
     for root, subdirPath, fileList in os.walk(dir) :
       for fname in fileList :
         fileFullPath = os.path.join(root, fname)
-        listings.add(fileFullPath)
-  if not regex :
-    return frozenset(listings)
-  else :
-    import re
-    return frozenset(filter(lambda x : re.match(regex, x), listings))
+        query = '''INSERT INTO files 
+          (name_regex, name, path, top_dir)
+          VALUES (?, ?, ?, ?)'''
+        c = sql.conn.cursor()
+        if not regex :
+          c.execute(query, ('.*', fname, root, topDir,))
+          listings.add(fileFullPath)
+        else :
+          import re
+          if re.match(regex, fname) :
+            c.execute(query, (regex, fname, root, topDir,))
+            listings.add(fileFullPath)
+          else : pass
+
+  sql.conn.commit()
+  return frozenset(listings)
+  
 
 def findTopDir(dirs) :
+  ''' Return the top-most directory in a given list of directories '''
   dList = list()
   for dir in dirs :
     for d in dir :
@@ -52,18 +64,23 @@ if __name__=="__main__" :
   class Args: pass 
   args = Args()
   parser.parse_args(namespace=args)
+  
   if args.l[0] == "vhdl" :
+    mc.initCurses()
     file_regex = ".*\.vhd$"
-    files = findListings(args.d, regex=file_regex)
+    
+    topDir = findTopDir(args.d)
+    sql.initDB("vhdl", topDir)
+    
+    files = findListings(args.d, topDir, regex=file_regex)
     if len(files) < 1 :
       print("No file is found with regex {0} in directories"
         +" {1}".format(regex, args.d))
       sys.exit();
-    mc.initCurses()
-    topDir = findTopDir(args.d)
-    sql.initDB("vhdl", topDir)
     vhdl.processTheFiles(topDir, files)
   else :
     mc.initCurses()
     msg = "Unsupported language : {0}".format(args.l)
     mc.writeOnWindow(mc.msgWindow, msg)
+  # close the db when done
+  sql.closeDB()
