@@ -6,15 +6,18 @@ processWindow = None
 msgWindow = None
 dataWindow = None
 
-def formatString(msg, width) :
+def formatString(msg, width, indent) :
+  lIndent = " "*(indent)
   newmsg = ""
   loopIndex = int(len(msg) / width)
+  if loopIndex < 1 :
+    return 0, msg
   for i in range(0, loopIndex) :
     if i == loopIndex :
-      newmsg += msg[width*i:]
+      newmsg += (lIndent+msg[width*i:])
     else :
-      newmsg += msg[width*i : (i+1)*width+1]
-      newmsg += "\n"
+      newmsg += (msg[width*i : (i+1)*width])
+      newmsg += "\n"+lIndent
   return loopIndex, newmsg
 
 
@@ -41,7 +44,6 @@ def initCurses() :
   processWindow = curses.newwin(10,curses.COLS,0,0)
   processWindow.idlok(1)
   processWindow.scrollok(1)
-  processWindow.box()
   processWindow.refresh()
 
   py, px = processWindow.getmaxyx()
@@ -51,7 +53,6 @@ def initCurses() :
   msgWindow = curses.newwin(curses.LINES - py - 2
       , int(curses.COLS/3)
       , int(py + 1), 0)
-  msgWindow.box()
   msgWindow.idlok(1)
   msgWindow.scrollok(1)
   msgWindow.refresh()
@@ -61,11 +62,10 @@ def initCurses() :
       py+1, int(curses.COLS/3)+1)
   dataWindow.idlok(1)
   dataWindow.scrollok(1)
-  dataWindow.box()
   dataWindow.refresh()
 
 def writeOnWindow(win, msg, indent=1, overwrite=False
-    , raw = False
+    , raw = True
     , appendNewLine=False, opt=None) :
   y, x = win.getyx()
   if appendNewLine :
@@ -75,7 +75,7 @@ def writeOnWindow(win, msg, indent=1, overwrite=False
   y, x = win.getyx()
   
   if not raw :
-    lines, msg = formatString(msg, maxX-3-indent)
+    lines, msg = formatString(msg, maxX-indent, indent)
   if overwrite : 
     x = 0
     y -= 2
@@ -85,7 +85,5 @@ def writeOnWindow(win, msg, indent=1, overwrite=False
     win.addstr(int(y),int(x+1+indent),str(msg), opt)
   else :
     win.addstr(int(y),int(x+1+indent),str(msg))
-  win.box()
   win.refresh()
-
 

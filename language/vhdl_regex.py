@@ -10,7 +10,7 @@ from language.vcd import parse_vcd
 from language.test import testVCD
 import xml.etree.cElementTree as ET
 
-designXml = ET.Element("design")
+vhdlXml = ET.Element("design")
 
 testbench = '''
 ENTITY testbench IS END;
@@ -134,8 +134,8 @@ def parseTxt(elemXml, txt, fileName) :
   Parse the given 'txt'. Construct a design object which has topmodule.
   If this topmodule is not a test bench then write one. Compile and simulate.
   '''
-  global designXml
-  topdir = designXml.get('dir')
+  global vhdlXml
+  topdir = vhdlXml.get('dir')
   if not topdir :
     msg = "Can't fetched dir from designXMl. Got {0}".format(topdir)
     mc.writeOnWindow(mc.msgWindow, msg, indent = 3)
@@ -181,7 +181,7 @@ def parseTxt(elemXml, txt, fileName) :
     arch_name = match['arch_name']
     arch_body = match['arch_body']
     arch_of = match['arch_of']
-    archXml = ET.SubElement(designXml, "architecture")
+    archXml = ET.SubElement(elemXml, "architecture")
     archXml.attrib['name'] = arch_name
     archXml.attrib['of'] = arch_of
     parseArchitectureText(archXml, arch_body)
@@ -250,8 +250,8 @@ def toVHDLXML(elemXml, files) :
   '''
   for file in files :
     with open(file, "r") as f :
-      msg = "Parsing file {0}".format(file)
-      mc.writeOnWindow(mc.msgWindow, msg)
+      msg = "Parsing file {0} \n".format(file)
+      mc.writeOnWindow(mc.msgWindow, msg, indent=2)
       txt = ""
       for line in f :
         if(line.strip()[0:2] == "--") : pass 
@@ -471,20 +471,12 @@ def compileAndRunATopModule(design, topDir
 
 def processFiles(topdir, files) :
   ''' Process the all file listings. '''
-  msg = "Processing all files and finding designs.."
-  mc.writeOnWindow(mc.processWindow, msg)
-  design = Design()
-   
-  global designXml
+  global vhdlXml
   
   currentTime = time.strftime('%Y-%m-%d %H-%M')
-  designXml.attrib['langauge'] ="vhdl"
-  designXml.attrib['timestamp'] = currentTime
-  designXml.attrib['dir'] = topdir
-
-  compiler = ET.SubElement(designXml, "compiler")
-  compiler.text = "ghdl"
-  
-  toVHDLXML(designXml, files)
-  tree = ET.ElementTree(designXml)
+  vhdlXml.attrib['langauge'] ="vhdl"
+  vhdlXml.attrib['timestamp'] = currentTime
+  vhdlXml.attrib['dir'] = topdir
+  toVHDLXML(vhdlXml, files)
+  tree = ET.ElementTree(vhdlXml)
   tree.write("design.xml")
