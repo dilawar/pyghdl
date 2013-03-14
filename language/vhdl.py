@@ -18,8 +18,8 @@ def runDesign(simulator="ghdl") :
     # Files needed to elaborate the design.
     files = set()
     neededEntity = set()
-    entityName = te.attrib['name']
-    neededEntity.add(entityName)
+    topEntityName = te.attrib['name']
+    neededEntity.add(topEntityName)
     children = te.findall(".//*")
     for child in children :
       neededEntity.add(child.attrib['name'])
@@ -33,7 +33,7 @@ def runDesign(simulator="ghdl") :
         msg = "Horror : Entity not found \n"
         mc.writeOnWindow(mc.dataWindow, msg)
         return
-    fileDict[entityName] = files
+    fileDict[topEntityName] = files
   mc.writeOnWindow(mc.dataWindow, "\n")
   for entity in fileDict :
     runATopEntity(entity, fileDict[entity])
@@ -76,7 +76,9 @@ def elaborate(workdir, entityname) :
     os.remove(bin)
   command = "ghdl -e --workdir={0} --work=work -o {1} {2}".format(workdir
       , bin, entityname)
-  msg = "Executing :\n\t {0} \n".format(command)
+  msg = "Executing :\n"
+  mc.writeOnWindow(mc.msgWindow, msg, opt=mc.curses.color_pair(2))
+  msg = "{0} \n".format(command)
   mc.writeOnWindow(mc.msgWindow
       , msg 
       , opt=mc.curses.color_pair(1)
@@ -189,7 +191,7 @@ def execute(topdir, files) :
   vhdl.vhdlXml.append(hierXml)
   
   # Run each top-entity.
-  msg = "Simulating each design..."
+  msg = "Elaborating each design ..."
   mc.writeOnWindow(mc.processWindow, msg)
   runDesign(simulator="ghdl")
   msg = "Done \n"
