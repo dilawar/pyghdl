@@ -74,60 +74,6 @@ BEGIN
 END ARCHITECTURE arch;
 -- Testbech ends here.
 '''
-class Design :
-  
-  class TopEntity : 
-    def  __init__(self) :
-      self.name = ''
-      self.ports = dict()
-  
-  def __init__(self) :
-    # entity in design
-    self.entities = list()
-    self.entity_files = dict()
-    # Root dir of design.
-    self.entity_bodies = dict()
-    # Architecture of an entity
-    self.architectures = dict()
-    # Component inside architecture
-    self.components = dict()
-
-    self.allcomponents = list()
-
-    self.topmodule = None
-    self.topModuleFile = dict()
-    self.topModules = list()
-    self.objTopEntity = self.TopEntity()
-
-
-  def designPrint(self) :
-    for i in self.allcomponents :
-      msg = "Component : {0} ".format(i)
-      mc.writeOnWindow(mc.dataWin, msg)
-    for i in self.entities :
-      entity = i
-      msg = "Entity : {}".format(i)
-      mc.writeOnWindow(mc.dataWin, msg)
-      msg = " Body : {0}".format(self.entity_bodies[i])
-      mc.writeOnWindow(mc.dataWin, msg)
-
-  def findTopModule(self) :
-    noOfTopModules = 0
-    for en in self.entities :
-      if en in self.allcomponents : pass
-      else :
-        noOfTopModules += 1
-        self.topmodule = en
-        self.topModules.append(en)
-
-    if noOfTopModules != 1 :
-      msg = "More than one topmodule are found."
-      mc.writeOnWindow(mc.msgWindow, msg)
-      msg = ("We'll try to compile all of them.")
-      mc.writeOnWindow(mc.msgWindow, msg, indent=2)
-    else :
-      msg = "Found a top module."
-      mc.writeOnWindow(mc.msgWindow, msg)
 
 def parseTxt(elemXml, txt, fileName) :
   '''
@@ -260,60 +206,9 @@ def toVHDLXML(elemXml, files) :
       parseTxt(elemXml, txt, file)
 
  
-def addATestBench(design) :
+def addATestBench() :
   ''' Add a test-bench '''
   global testbench
-  _topmodule = design.objTopEntity.name
-  msg = ("Writing test-bench for entity {0}".format(design.topmodule))
-  mc.writeOnWindow(mc.processWindow, msg)
-  entityBody = design.entity_bodies[_topmodule]
-  port_regex = re.compile(r'port\s*\((?P<port_body>.*)\s*\)\s*;'
-      , re.IGNORECASE | re.DOTALL)
-  m = port_regex.search(entityBody)
-  if m :
-    portExpr = m.groupdict()['port_body']
-    ports = portExpr.split(";")
-    portDict = dict()
-    for port in ports :
-      port = port.strip()
-      portlist, dirAndType = port.split(":")
-      portlist = portlist.split(",")
-      dirAndType = dirAndType.strip()
-      dir = dirAndType.split()[0].strip()
-      type = " ".join(dirAndType.split()[1:])
-
-      for p in portlist :
-        portDict[p.strip()] = (dir, type)
-    design.objTopEntity.ports = portDict
-    signals = ""
-    for port in design.objTopEntity.ports :
-      signals += "\tSIGNAL " + port  \
-          + ": " + design.objTopEntity.ports[port][1] +";\n"
-
-    dut = "\tdut : {0} ".format(_topmodule) + " PORT MAP (\n";
-    portmap = ""
-    for port in design.objTopEntity.ports :
-      portmap += "\t\t{0} => {0},\n".format(port)
-
-    portmap = portmap[0:-2]
-    dut += (portmap + "\n\t);")
-    variables = ""
-    for port in design.objTopEntity.ports :
-      variables += ("\t\tVARIABLE " + "tmp_"+port + " : " + 
-          design.objTopEntity.ports[port][1] + ";\n")
-    assertLines = generateAssertLines(design)
-    assignStatements = "\t\t\t--Assign the values"
-    # Fill the testbench.
-    testbench = testbench.format( entityBody, signals, dut
-        , variables, assertLines
-        , component_name = _topmodule
-        )
-  else :
-    msg = "No port is found. This is an error."
-    mc.writeOnWindow(mc.msgWindow, msg)
-    mc.msgWindow.getch()
-    mc.killCurses()
-    sys.exit(1)
 
 def generateAssertLines(design ) :
   assertLine = ""
@@ -333,46 +228,6 @@ def generateAssertLines(design ) :
   for port in design.objTopEntity.ports :
     assertLine += "\t\t\t{0} <= {1};\n".format(port, "tmp_"+port)
   return assertLine
-  
-
-def compileAndRunATopModule(design, topDir
-    , files
-    , topModule
-    , userTestBench = False) :
-  # get the port information out of topmodule.
-  msg = "Compiling a top module : {0}".format(topModule)
-  mc.writeOnWindow(mc.processWindow, msg)
-
-  if not userTestBench :
-    topentity = design.entity_bodies[topModule]
-    topEntityFileName = design.entity_files[topModule]
-    topEntityDir = os.path.dirname(topEntityFileName)
-
-    port_regex = r'port\s*\(.*\)\s*;'
-    m = re.search(port_regex, topentity, re.IGNORECASE | re.DOTALL)
-    if not m :
-      msg = "Found a testbench in {0}".format(topModule)
-      mc.writeOnWindow(mc.msgWindow, msg, indent=3)
-      msg = "|- Compile and run it."
-      mc.writeOnWindow(mc.msgWindow, msg, indent=3)
-    else :
-      msg = "Notice : No testbench found. Generating one."
-      mc.writeOnWindow(mc.processWindow, msg, indent=1)
-      addATestBench(design)
-      testbenchFile = "{0}/testbench.vhd".format(topDir)
-      with open(testbenchFile, "w") as testF :
-        testF.write(testbench)
-
-      # Add this testbench file to other files and compile the design.
-      set(files).add(testbenchFile)
-
-      # Now, we should generate a file which contains test-vectors. This file must
-      # be named vector.test. Ordering of port must be the same as it is in entity
-      # declaration. Then we can compile the testbench and run it.
-      topModule = "testbench"
-      compileAndRunATopModule(design, topDir, files, topModule, userTestBench=True)
-  else :
-    compileAndRun(design, files, topModule, topDir, testVectors=True)
 
 def processFiles(topdir, files) :
   ''' Process the all file listings. '''
