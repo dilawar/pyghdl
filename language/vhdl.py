@@ -63,6 +63,12 @@ def getHierarchy(elemXml) :
               , component.attrib['name'])
           mc.writeOnWindow(mc.dataWindow, msg )
     mc.writeOnWindow(mc.dataWindow, str(entityRank))
+
+    ## Great now. We can write the hierarchy to hierXml element.
+    for i in entityRank :
+      if entityRank[i] == 1 :
+        hierXml.append(addedEntityXml[i])
+    
   else :
     msg = "Empty design... Quiting."
     mc.writeOnWindow(mc.msgWindow, msg)
