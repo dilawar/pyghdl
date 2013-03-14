@@ -1,5 +1,6 @@
 import errno
 import os
+import sys
 import xml.etree.cElementTree as ET
 import vhdl_regex as vhdl
 import mycurses as mc
@@ -8,7 +9,7 @@ import shlex
 
 hierXml = ET.Element("hier")
 
-def runDesign(simulator="ghdl") :
+def runDesign(generateTB, simulator="ghdl") :
   # set compiler analyze command.
   compileXml = ET.SubElement(vhdl.vhdlXml, "compiler")
   compileXml.attrib['name'] = 'ghdl'
@@ -35,6 +36,35 @@ def runDesign(simulator="ghdl") :
         return
     fileDict[topEntityName] = files
   mc.writeOnWindow(mc.dataWindow, "\n")
+
+  # If generateTB is set then ignore the previous TB and generate  a new one.
+  # Else execute the design as it is.
+  if generateTB :
+    mc.writeOnWindow(mc.processWindow, "\n")
+    newFileDict = dict()
+    for entity in fileDict :
+      # if this entity is already a testbench then remove it from the list and
+      # add a new one.
+      eXml = vhdl.vhdlXml.find(".//entity[@name='{0}']".format(entity))
+      msg = "|- Generating testbench for entity {0} \n".format(entity)
+      mc.writeOnWindow(mc.processWindow, msg)      
+      if eXml.attrib['noPort'] == "true" : #its a testbench
+        fileName = eXml.attrib['file']
+        msg = "   |- Ignoring existing one \n"
+        fileDict[entity].remove(fileName)
+        mc.writeOnWindow(mc.processWindow, msg)
+        # add a new testbench
+        fileSet = fileDict[entity]
+        fileSet.add( vhdl.generateTestBench(entity))
+        newFileDict[entity] = fileSet
+      else :                              # no testbench
+        fileSet = set(fileDict[entity])
+        fileSet.add( vhdl.generateTestBench(entity))
+        newFileDict['testbench_'+entity] = fileSet
+    # Copy the new file list to old one.
+    fileDict = newFileDict
+
+  # Great, now simulate.
   for entity in fileDict :
     runATopEntity(entity, fileDict[entity])
 
@@ -89,7 +119,9 @@ def analyze(workdir, filepath) :
   if status.__len__() > 0 :
     mc.writeOnWindow(mc.msgWindow
         , "Compilation failed with error :  {0}".format(str(status))
+        , opt=mc.curses.color_pair(1)
         , indent=2)
+    sys.exit(0)
   else :
     msg = "Compiled : {0}\n".format(filepath)
     mc.writeOnWindow(mc.msgWindow, msg)
@@ -111,20 +143,21 @@ def elaborate(workdir, entityname) :
       , msg 
       , opt=mc.curses.color_pair(1)
       )
-  p2 = subprocess.Popen(shlex.split(command)
+  p = subprocess.Popen(shlex.split(command)
       , stdout = subprocess.PIPE
       , stderr = subprocess.PIPE
       )
   # Wait for some time. Let the file being saved.
-  p2.wait()
+  p.wait()
   if not os.path.isfile(bin) :
     mc.writeOnWindow(mc.msgWindow
-        , "ERROR : Could not elaborate entity : {0}".format(topentity)
+        , "ERROR : Could not elaborate entity : {0}".format(entityname)
         , opt=mc.curses.color_pair(2))
-    output = "{0} does not exists.\n Or failed with : {1}".format(bin
-        , p2.stderr.readline())
-    mc.writeOnWindow(mc.msgWindow, output, indent=2
-      , opt=mc.curses.color_pair(1))
+    output = "\n\t|- Failed with : {1}".format(bin
+        , p.stderr.readline())
+    #mc.writeOnWindow(mc.msgWindow, output, indent=2
+    #  , opt=mc.curses.color_pair(1)
+    #  )
   else :
     mc.writeOnWindow(mc.msgWindow
         , "Elaborated successfully! \n"
@@ -202,7 +235,7 @@ def getHierarchy(elemXml) :
     mc.writeOnWindow(mc.msgWindow, msg)
     return
 
-def execute(topdir, files) :
+def execute(topdir, files, generateTB=True) :
   msg = "Building design out of files ..."
   mc.writeOnWindow(mc.processWindow, msg)
   msg = " Done \n"
@@ -221,7 +254,7 @@ def execute(topdir, files) :
   # Run each top-entity.
   msg = "Elaborating each design ..."
   mc.writeOnWindow(mc.processWindow, msg)
-  runDesign(simulator="ghdl")
+  runDesign(generateTB)
   msg = "Done \n"
   mc.writeOnWindow(mc.processWindow, msg
       , opt=mc.curses.color_pair(1))

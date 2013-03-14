@@ -196,7 +196,7 @@ def toVHDLXML(elemXml, files) :
   '''
   for file in files :
     with open(file, "r") as f :
-      msg = "Parsing file {0} \n".format(file)
+      msg = "Parsing file : {0} \n".format(file)
       mc.writeOnWindow(mc.msgWindow, msg, indent=2)
       txt = ""
       for line in f :
@@ -206,9 +206,11 @@ def toVHDLXML(elemXml, files) :
       parseTxt(elemXml, txt, file)
 
  
-def addATestBench() :
+def generateTestBench(entity) :
   ''' Add a test-bench '''
   global testbench
+  global vhdlXml
+  return "auto_generated_testbench_"+entity+".vhd"
 
 def generateAssertLines(design ) :
   assertLine = ""
