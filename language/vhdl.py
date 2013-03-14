@@ -1,8 +1,74 @@
+import errno
+import os
 import xml.etree.cElementTree as ET
 import vhdl_regex as vhdl
 import mycurses as mc
+import subprocess
+import shlex
 
 hierXml = ET.Element("hier")
+
+def runDesign(simulator="ghdl") :
+  # set compiler analyze command.
+  compileXml = ET.SubElement(vhdl.vhdlXml, "compiler")
+  compileXml.attrib['name'] = 'ghdl'
+  topEntities = vhdl.vhdlXml.findall(".//hier/module[@isTopmodule='True']")
+  fileDict = dict()
+  for te in topEntities :
+    # Files needed to elaborate the design.
+    files = set()
+    neededEntity = set()
+    entityName = te.attrib['name']
+    neededEntity.add(entityName)
+    children = te.findall(".//*")
+    for child in children :
+      neededEntity.add(child.attrib['name'])
+    # get files we need to compile to elaborate this entity.
+    for entityName in neededEntity :
+      entity = vhdl.vhdlXml.find(".//entity[@name='{0}']".format(entityName))
+      if entity is not None :
+        fileOfEntity = entity.attrib['file']
+        files.add(fileOfEntity)
+      else :
+        msg = "Horror : Entity not found \n"
+        mc.writeOnWindow(mc.dataWindow, msg)
+        return
+    fileDict[entityName] = files
+  mc.writeOnWindow(mc.dataWindow, "\n")
+  for entity in fileDict :
+    runATopEntity(entity, fileDict[entity])
+
+def runATopEntity(entityName, fileSet) :
+  topdir = vhdl.vhdlXml.attrib['dir']
+  workdir = topdir+"/work"
+  try :
+    os.makedirs(workdir)
+  except OSError as exception :
+    if exception.errno != errno.EEXIST :
+      raise
+  for file in fileSet : 
+    filepath = topdir+file
+    elaborate(workdir, filepath)
+
+def elaborate(workdir, filepath) :
+  command = "ghdl -a --workdir={0} --work=work \
+      --ieee=synopsys {1}".format(workdir, filepath)
+  p1 = subprocess.Popen(shlex.split(command)
+      , stdout = subprocess.PIPE
+      , stderr = subprocess.PIPE
+      )
+  p1.wait()
+  status = p1.stderr.readline()
+  if status.__len__() > 0 :
+    mc.writeOnWindow(mc.dataWindow
+        , "Compilation failed with error :  {0}".format(str(status))
+        , indent=2
+        )
+  else :
+    msg = "Compiled : {0}\n".format(filepath)
+    mc.writeOnWindow(mc.msgWindow
+        , msg
+        )
 
 def getHierarchy(elemXml) : 
   global hierXml
@@ -27,6 +93,7 @@ def getHierarchy(elemXml) :
       arch_of = archOfList.pop()
       if arch_of not in addedEntityXml.keys() :
         xml = ET.Element("module")
+        xml.attrib['isTopmodule'] = "False"
         xml.attrib['name'] = arch_of
         addedEntityXml[arch_of] = xml 
         entityRank[arch_of] = 0
@@ -42,7 +109,7 @@ def getHierarchy(elemXml) :
           # It has been addeded before. It can not be a top-entity in any case.
           entityRank[arch_of] = 0
         msg = "{0} has no component.\n".format(arch_of)
-        mc.writeOnWindow(mc.dataWindow, msg)
+        #mc.writeOnWindow(mc.dataWindow, msg)
       else :
         components = root.findall(".//*[@of='{0}']/component".format(arch_of))
         entityRank[arch_of] = 1
@@ -61,14 +128,14 @@ def getHierarchy(elemXml) :
 
           msg = "{0} has component : {1} \n".format(arch_of
               , component.attrib['name'])
-          mc.writeOnWindow(mc.dataWindow, msg )
-    mc.writeOnWindow(mc.dataWindow, str(entityRank))
+          #mc.writeOnWindow(mc.dataWindow, msg )
+    #mc.writeOnWindow(mc.dataWindow, str(entityRank))
 
     ## Great now. We can write the hierarchy to hierXml element.
     for i in entityRank :
       if entityRank[i] == 1 :
+        addedEntityXml[i].attrib['isTopmodule'] = "True"
         hierXml.append(addedEntityXml[i])
-    
   else :
     msg = "Empty design... Quiting."
     mc.writeOnWindow(mc.msgWindow, msg)
@@ -88,5 +155,15 @@ def execute(topdir, files) :
   msg = " Done \n"
   mc.writeOnWindow(mc.processWindow, msg
       , opt=mc.curses.color_pair(1))
-  tree = ET.ElementTree(hierXml)
-  tree.write("hier.xml")
+  vhdl.vhdlXml.append(hierXml)
+  
+  # Run each top-entity.
+  msg = "Simulating each design..."
+  mc.writeOnWindow(mc.processWindow, msg)
+  runDesign(simulator="ghdl")
+  msg = "Done \n"
+  mc.writeOnWindow(mc.processWindow, msg
+      , opt=mc.curses.color_pair(1))
+  
+  tree = ET.ElementTree(vhdl.vhdlXml)
+  tree.write("design.xml")

@@ -478,5 +478,3 @@ def processFiles(topdir, files) :
   vhdlXml.attrib['timestamp'] = currentTime
   vhdlXml.attrib['dir'] = topdir
   toVHDLXML(vhdlXml, files)
-  tree = ET.ElementTree(vhdlXml)
-  tree.write("design.xml")
