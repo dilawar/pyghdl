@@ -149,16 +149,28 @@ def parseTxt(elemXml, txt, fileName) :
     match = i.groupdict()
     body = match['body']
     entityXml = ET.SubElement(elemXml, "entity")
+    #entityXml.text = str(body)
     entityXml.attrib['name'] = match['name']
     baseName = fileName.replace(topdir,"")
     entityXml.attrib['file'] = baseName
     entityXml.attrib['noPort'] = 'false'
-    genericPattern = re.compile(r'generic\s+\(.+\)\s*;', re.IGNORECASE | re.DOTALL)
+    genericPattern = re.compile(r'generic\s*\(((?!port).)+\)\s*;'
+        , re.IGNORECASE | re.DOTALL)
     genericMatch = genericPattern.finditer(body) 
     for gi in genericMatch :
       genericText = gi.group(0)
       genericXml = ET.SubElement(entityXml, "generic")
       genericXml.text = genericText
+    portExpr = re.compile(r'port\s*\(((?!end).)+\)\s*;', re.IGNORECASE |
+        re.DOTALL)
+    portMatch = portExpr.search(body)
+    portXml = ET.SubElement(entityXml, "ports")
+    if portMatch :
+      portText = portMatch.group(0)
+      parsePortText(portXml, portText)
+    else :
+      portXml.text = ""
+      entityXml.attrib['noPort'] = "true"
 
   #architecture_body = '.*(component\s+(?P<component_name>\w+)\s+(.*)end\s+component.*)*.*'
   architecture_body = '(?P<arch_body>.*)'
@@ -180,6 +192,34 @@ def parseTxt(elemXml, txt, fileName) :
     #design.components[arch_name] = components
     #design.allcomponents += components
   
+
+def parsePortText(elemXml, portText) :
+  '''
+  Parse the port-text and add them to xml.
+  '''
+  pattern = re.compile(r'port\s*\((?P<port_body>.*)\s*\)\s*;'
+      , re.IGNORECASE | re.DOTALL)
+  m = pattern.match(portText)
+  if m :
+    ports = m.groupdict()['port_body']
+    ports = ports.split(";")
+    for portDecl in ports :
+      portList, typeAndDir = portDecl.split(":")
+      portList = portList.strip().split(",")
+      for port in portList :
+        portXml = ET.SubElement(elemXml, "port")
+        portXml.text = port.strip()
+        dirTypeExp = re.compile(r'(?P<dir>\w+)\s+(?P<type>.+)\s*'
+            , re.IGNORECASE | re.DOTALL)
+        dirTypeM = dirTypeExp.match(typeAndDir.strip())
+        dirTypeDict = dirTypeM.groupdict()
+        dir = dirTypeDict['dir']
+        type = dirTypeDict['type']
+        portXml.attrib['direction'] = dir
+        portXml.attrib['type'] = type
+  else :
+    mc.writeOnWindow(mc.msgWindow, "Error : Empty port list")
+    return
 
 def getDesign(elemXml, files) :
   ''' Process all files to get the heirarchy of design.
