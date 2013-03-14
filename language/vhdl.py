@@ -48,26 +48,57 @@ def runATopEntity(entityName, fileSet) :
       raise
   for file in fileSet : 
     filepath = topdir+file
-    elaborate(workdir, filepath)
+    analyze(workdir, filepath)
+  elaborate(workdir, entityName)
 
-def elaborate(workdir, filepath) :
+def analyze(workdir, filepath) :
   command = "ghdl -a --workdir={0} --work=work \
       --ieee=synopsys {1}".format(workdir, filepath)
   p1 = subprocess.Popen(shlex.split(command)
       , stdout = subprocess.PIPE
-      , stderr = subprocess.PIPE
-      )
+      , stderr = subprocess.PIPE)
   p1.wait()
   status = p1.stderr.readline()
   if status.__len__() > 0 :
-    mc.writeOnWindow(mc.dataWindow
+    mc.writeOnWindow(mc.msgWindow
         , "Compilation failed with error :  {0}".format(str(status))
-        , indent=2
-        )
+        , indent=2)
   else :
     msg = "Compiled : {0}\n".format(filepath)
+    mc.writeOnWindow(mc.msgWindow, msg)
+
+def elaborate(workdir, entityname) :
+  msg = "Elaborating entity {0} \n".format(entityname)
+  mc.writeOnWindow(mc.msgWindow, msg)
+  bin = workdir+"/"+entityname
+  # Before elaboration, check if binary already exists. If yes then remove it.
+  if os.path.exists(bin) :
+    os.remove(bin)
+  command = "ghdl -e --workdir={0} --work=work -o {1} {2}".format(workdir
+      , bin, entityname)
+  msg = "Executing :\n\t {0} \n".format(command)
+  mc.writeOnWindow(mc.msgWindow
+      , msg 
+      , opt=mc.curses.color_pair(1)
+      )
+  p2 = subprocess.Popen(shlex.split(command)
+      , stdout = subprocess.PIPE
+      , stderr = subprocess.PIPE
+      )
+  # Wait for some time. Let the file being saved.
+  p2.wait()
+  if not os.path.isfile(bin) :
     mc.writeOnWindow(mc.msgWindow
-        , msg
+        , "ERROR : Could not elaborate entity : {0}".format(topentity)
+        , opt=mc.curses.color_pair(2))
+    output = "{0} does not exists.\n Or failed with : {1}".format(bin
+        , p2.stderr.readline())
+    mc.writeOnWindow(mc.msgWindow, output, indent=2
+      , opt=mc.curses.color_pair(1))
+  else :
+    mc.writeOnWindow(mc.msgWindow
+        , "Elaborated successfully! \n"
+        , opt=mc.curses.color_pair(2)
         )
 
 def getHierarchy(elemXml) : 

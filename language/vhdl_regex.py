@@ -259,101 +259,7 @@ def toVHDLXML(elemXml, files) :
           txt += line
       parseTxt(elemXml, txt, file)
 
-## Compile and run the design.
-def compileAndRun(design, files, topmodule, topdir, testVectors) :
-  workdir = topdir+"/work"
-  command_string = "ghdl {0} --workdir={1} --work=work --ieee=synopsys "
-  topentity = design.objTopEntity.name
-  workdir = "/"+"/".join([x for x in workdir.split("/") if len(x) > 1])
-  for file in files :
-    filename = os.path.basename(file)
-    # create the work dir.
-    try :
-      os.makedirs(workdir)
-    except OSError as exception :
-      if exception.errno != errno.EEXIST :
-        raise
-
-    command = command_string.format( '-a', workdir)
-    analyzeCommand = "{0} {1}".format(command, file)
-    p1 = subprocess.Popen(shlex.split(analyzeCommand)
-        , stdout = subprocess.PIPE
-        , stderr = subprocess.PIPE
-        )
-    p1.wait()
-    status = p1.stderr.readline()
-    if status.__len__() > 0 :
-      mc.writeOnWindow(mc.dataWindow
-          , "Compilation failed with error :  {0}".format(str(status))
-          , indent=2
-          )
-    else :
-      msg = "Compile : {0}".format(file)
-      mc.writeOnWindow(mc.msgWindow
-          , msg
-          )
-
-  msg = "Elaborating : {0}".format(topentity)
-  mc.writeOnWindow(mc.msgWindow, msg)
-
-  command = command_string.format('-e', workdir)
-  bin = topdir+"/"+topentity
-  bin = "/"+"/".join([x for x in bin.split("/") if len(x) > 1])
-  
-  # Before elaboration, check if binary already exists. If yes then remove it.
-  if os.path.exists(bin) :
-    os.remove(bin)
-  elabCommand = "{0} -o {2} {1}".format(command, topentity, bin)
-  msg = "Executing :\n\t {0} ".format(elabCommand)
-  mc.writeOnWindow(mc.processWindow
-      , msg 
-      , opt=mc.curses.color_pair(1)
-      )
-  p2 = subprocess.Popen(shlex.split(elabCommand)
-      , stdout = subprocess.PIPE
-      , stderr = subprocess.PIPE
-      )
-  # Wait for some time. Let the file being saved.
-  p2.wait()
-  if not os.path.isfile(bin) :
-    mc.writeOnWindow(mc.dataWindow
-        , "ERROR : Could not elaborate entity : {0}".format(topentity)
-        , opt=mc.curses.color_pair(2))
-    output = "{0} does not exists.\n Or failed with : {1}".format(bin
-        , p2.stderr.readline())
-    mc.writeOnWindow(mc.dataWindow, output, indent=2
-      , opt=mc.curses.color_pair(1))
-  else :
-    mc.writeOnWindow(mc.dataWindow
-        , "Elaborated successfully!"
-        , opt=mc.curses.color_pair(2)
-        )
-    # Run the simulation.
-    vcddir = topdir+"/waveforms"
-    if not os.path.exists(vcddir) :
-      os.makedirs(vcddir)
-    vcdfile = vcddir+"/"+topentity+".vcd"
-    vcdfile = "/"+"/".join([x for x in vcdfile.split("/") if len(x) > 1])
-    command = '{0} --vcd={1} --stop-time=1000ns'.format(bin, vcdfile)
-    p3 = subprocess.Popen(shlex.split(command)
-        , stdout = subprocess.PIPE
-        , stderr = subprocess.PIPE 
-        )
-    p3.wait()
-    if testVectors :
-      mc.writeOnWindow(mc.msgWindow, "Testing with test-vectors."
-          , opt=mc.curses.color_pair(1))
-    else :
-      mc.writeOnWindow(mc.msgWindow, "Testing with user-provided test bench."
-          , opt=mc.curses.color_pair(1))
-      vcddata = parse_vcd(vcdfile)
-      vcds = dict()
-      for i in vcddata :
-        if vcddata[i]['nets'][0]['hier'] == 'dut' :
-          sigName = vcddata[i]['nets'][0]['name']
-          vcds[sigName] = vcddata[i]['tv']
-      testVCD(vcds)
-
+ 
 def addATestBench(design) :
   ''' Add a test-bench '''
   global testbench
@@ -449,7 +355,6 @@ def compileAndRunATopModule(design, topDir
       mc.writeOnWindow(mc.msgWindow, msg, indent=3)
       msg = "|- Compile and run it."
       mc.writeOnWindow(mc.msgWindow, msg, indent=3)
-      compileAndRun(design, files, topModule, topEntityDir, testVectors=False)
     else :
       msg = "Notice : No testbench found. Generating one."
       mc.writeOnWindow(mc.processWindow, msg, indent=1)
