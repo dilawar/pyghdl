@@ -50,8 +50,35 @@ def runATopEntity(entityName, fileSet) :
     filepath = topdir+file
     analyze(workdir, filepath)
   elaborate(workdir, entityName)
+  run(workdir, entityName)
+
+def run(workdir, entityName, time=1000) :
+  ''' Running the binary '''
+  bin = workdir+"/"+entityName
+  if not os.path.isfile(bin) :
+    msg = "Error : Binary not found. Existing."
+    mc.writeOnWindow(mc.msgWindow, msg
+        , opt=mc.curses.color_pair(1))
+    return
+  # Else run the command.
+  command = "{0} --vcd={1}.vcd --stop-time={2}ns \n".format(
+      bin, workdir+"/"+entityName, time)
+  mc.writeOnWindow(mc.dataWindow, command)
+  p = subprocess.Popen(shlex.split(command)
+      , stdout = subprocess.PIPE
+      , stderr = subprocess.PIPE)
+  p.wait()
+  status = p.stderr.readline()
+  if status.__len__() > 0 :
+    mc.writeOnWindow(mc.msgWindow
+        , "Failed to run with error :  {0}".format(str(status))
+        , indent=2)
+  else :
+    msg = "Successfully executed \n"
+    mc.writeOnWindow(mc.msgWindow, msg)
 
 def analyze(workdir, filepath) :
+  ''' Analyze a file. '''
   command = "ghdl -a --workdir={0} --work=work \
       --ieee=synopsys {1}".format(workdir, filepath)
   p1 = subprocess.Popen(shlex.split(command)
@@ -68,6 +95,7 @@ def analyze(workdir, filepath) :
     mc.writeOnWindow(mc.msgWindow, msg)
 
 def elaborate(workdir, entityname) :
+  ''' Elaborate the file '''
   msg = "Elaborating entity {0} \n".format(entityname)
   mc.writeOnWindow(mc.msgWindow, msg)
   bin = workdir+"/"+entityname
