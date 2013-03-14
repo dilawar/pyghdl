@@ -245,7 +245,7 @@ def parsePortText(elemXml, portText) :
     mc.writeOnWindow(mc.msgWindow, "Error : Empty port list")
     return
 
-def getDesign(elemXml, files) :
+def toVHDLXML(elemXml, files) :
   ''' Process all files to get the heirarchy of design.
   '''
   for file in files :
@@ -469,7 +469,7 @@ def compileAndRunATopModule(design, topDir
   else :
     compileAndRun(design, files, topModule, topDir, testVectors=True)
 
-def processTheFiles(topdir, files) :
+def processFiles(topdir, files) :
   ''' Process the all file listings. '''
   msg = "Processing all files and finding designs.."
   mc.writeOnWindow(mc.processWindow, msg)
@@ -485,13 +485,6 @@ def processTheFiles(topdir, files) :
   compiler = ET.SubElement(designXml, "compiler")
   compiler.text = "ghdl"
   
-  getDesign(designXml, files)
-  #for topmodule in design.topModules :
-  #  design.objTopEntity.name = topmodule
-  #  compileAndRunATopModule(design, topdir, files, topmodule)
-  # 
-  # Finally dump the structure in a xml file.
+  toVHDLXML(designXml, files)
   tree = ET.ElementTree(designXml)
   tree.write("design.xml")
-
-

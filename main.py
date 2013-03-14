@@ -3,7 +3,7 @@ import argparse
 import os
 import sys
 import math
-import language.vhdl_regex as vhdl
+import language.vhdl as vhdl
 import mycurses as mc
 
 def findListings(dirs, regex=None) :
@@ -60,7 +60,7 @@ if __name__=="__main__" :
       sys.exit();
     mc.initCurses()
     topDir = findTopDir(args.d)
-    vhdl.processTheFiles(topDir, files)
+    vhdl.execute(topDir, files)
   else :
     mc.initCurses()
     msg = "Unsupported language : {0}".format(args.l)
