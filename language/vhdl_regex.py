@@ -142,7 +142,8 @@ def parseTxt(elemXml, txt, fileName) :
     return
   mc.writeOnWindow(mc.dataWindow, topdir)
 
-  pattern = r'entity\s+(?P<name>\w+)\s+is\s*(?P<body>.*)end\s*(entity)?\s*(?P=name)?\s*;'
+  pattern = r'entity\s+(?P<name>\w+)\s+is\s*(?P<body>.*)'\
+    +'end\s*(entity)?\s*(?P=name)?\s*;'
   entity = re.compile(pattern, re.IGNORECASE | re.DOTALL);
   m = entity.finditer(txt)
   for i in m :
@@ -164,18 +165,15 @@ def parseTxt(elemXml, txt, fileName) :
     portExpr = re.compile(r'port\s*\(((?!end).)+\)\s*;', re.IGNORECASE |
         re.DOTALL)
     portMatch = portExpr.search(body)
-    portXml = ET.SubElement(entityXml, "ports")
     if portMatch :
       portText = portMatch.group(0)
-      parsePortText(portXml, portText)
+      parsePortText(entityXml, portText)
     else :
-      portXml.text = ""
       entityXml.attrib['noPort'] = "true"
 
-  #architecture_body = '.*(component\s+(?P<component_name>\w+)\s+(.*)end\s+component.*)*.*'
-  architecture_body = '(?P<arch_body>.*)'
-  pattern = r'architecture\s+(?P<arch_name>\w+)\s+of\s+(?P<arch_of>\w+)\s+is\s+{0}'.format(
-      architecture_body)
+  architecture_body = '(?P<arch_body>((?!entity).)+)'
+  pattern = r'architecture\s+(?P<arch_name>\w+)\s+of\s+(?P<arch_of>\w+)'\
+      +'\s+is\s+{0}'.format( architecture_body)
   architecture = re.compile(pattern, re.IGNORECASE | re.DOTALL);
   m = architecture.finditer(txt)
   for i in m :
@@ -183,14 +181,40 @@ def parseTxt(elemXml, txt, fileName) :
     arch_name = match['arch_name']
     arch_body = match['arch_body']
     arch_of = match['arch_of']
-    del match['arch_body']
-    component_pat = r'\s*component\s+(?P<comp_name>\w+)(((?!component).)*)\s*end\s+component'
-    mm = re.findall(component_pat, arch_body, re.IGNORECASE | re.DOTALL)
-    components = []
-    for ii in mm :
-      components.append(ii[0])
-    #design.components[arch_name] = components
-    #design.allcomponents += components
+    archXml = ET.SubElement(designXml, "architecture")
+    archXml.attrib['name'] = arch_name
+    archXml.attrib['of'] = arch_of
+    parseArchitectureText(archXml, arch_body)
+
+def parseArchitectureText(elemXml, arch_body) :
+  ''' 
+  Parse the architecture text and find out which component is instantiated
+  in this architecture.
+  '''
+  instances = dict()
+  component_inst_expr = r'(?P<instance_name>\w+)\s*\:\s*'\
+      +'(?P<arch_name>\w+)\s+(port)\s+(map)'
+  pattern = re.compile(component_inst_expr
+      , re.IGNORECASE | re.DOTALL)
+  mm = pattern.finditer(arch_body) 
+  for ii in mm :
+    instanceName = ii.groupdict()['instance_name']
+    instanceOf = ii.groupdict()['arch_name']
+    instances[instanceOf] = instanceName
+
+  component_decl_pat = r'\s*component\s+(?P<comp_name>\w+)'\
+      +'(((?!component).)+)\s*end\s+component'
+  pattern = re.compile(component_decl_pat, re.IGNORECASE | re.DOTALL)
+  mm = pattern.finditer(arch_body)
+  for ii in mm :
+    compXml = ET.SubElement(elemXml, "component")
+    comp_name = ii.groupdict()['comp_name']
+    compXml.attrib['name'] = comp_name
+    if comp_name in instances.keys() :
+      compXml.attrib['isInstantiated'] = 'true'
+      compXml.attrib['intance_name'] = instances[comp_name]
+    else :
+      compXml.attrib['isInstantiated'] = 'false'
   
 
 def parsePortText(elemXml, portText) :
@@ -234,7 +258,6 @@ def getDesign(elemXml, files) :
         else : 
           txt += line
       parseTxt(elemXml, txt, file)
-  #design.findTopModule()
 
 ## Compile and run the design.
 def compileAndRun(design, files, topmodule, topdir, testVectors) :
@@ -462,8 +485,7 @@ def processTheFiles(topdir, files) :
   compiler = ET.SubElement(designXml, "compiler")
   compiler.text = "ghdl"
   
-  entitiesXml = ET.SubElement(designXml, "entities")
-  getDesign(entitiesXml, files)
+  getDesign(designXml, files)
   #for topmodule in design.topModules :
   #  design.objTopEntity.name = topmodule
   #  compileAndRunATopModule(design, topdir, files, topmodule)
