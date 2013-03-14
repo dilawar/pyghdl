@@ -8,6 +8,9 @@ import subprocess
 import mycurses as mc
 from language.vcd import parse_vcd
 from language.test import testVCD
+import xml.etree.cElementTree as ET
+
+designXml = ET.Element("design")
 
 testbench = '''
 ENTITY testbench IS END;
@@ -71,7 +74,6 @@ BEGIN
 END ARCHITECTURE arch;
 -- Testbech ends here.
 '''
-
 class Design :
   
   class TopEntity : 
@@ -127,19 +129,36 @@ class Design :
       msg = "Found a top module."
       mc.writeOnWindow(mc.msgWindow, msg)
 
-def parseTxt(design, txt, fileName) :
+def parseTxt(elemXml, txt, fileName) :
   '''
   Parse the given 'txt'. Construct a design object which has topmodule.
   If this topmodule is not a test bench then write one. Compile and simulate.
   '''
+  global designXml
+  topdir = designXml.get('dir')
+  if not topdir :
+    msg = "Can't fetched dir from designXMl. Got {0}".format(topdir)
+    mc.writeOnWindow(mc.msgWindow, msg, indent = 3)
+    return
+  mc.writeOnWindow(mc.dataWindow, topdir)
+
   pattern = r'entity\s+(?P<name>\w+)\s+is\s*(?P<body>.*)end\s*(entity)?\s*(?P=name)?\s*;'
   entity = re.compile(pattern, re.IGNORECASE | re.DOTALL);
   m = entity.finditer(txt)
   for i in m :
     match = i.groupdict()
-    design.entities.append(match['name'])
-    design.entity_bodies[match['name']] = match['body']
-    design.entity_files[match['name']] = fileName
+    body = match['body']
+    entityXml = ET.SubElement(elemXml, "entity")
+    entityXml.attrib['name'] = match['name']
+    baseName = fileName.replace(topdir,"")
+    entityXml.attrib['file'] = baseName
+    entityXml.attrib['noPort'] = 'false'
+    genericPattern = re.compile(r'generic\s+\(.+\)\s*;', re.IGNORECASE | re.DOTALL)
+    genericMatch = genericPattern.finditer(body) 
+    for gi in genericMatch :
+      genericText = gi.group(0)
+      genericXml = ET.SubElement(entityXml, "generic")
+      genericXml.text = genericText
 
   #architecture_body = '.*(component\s+(?P<component_name>\w+)\s+(.*)end\s+component.*)*.*'
   architecture_body = '(?P<arch_body>.*)'
@@ -158,11 +177,11 @@ def parseTxt(design, txt, fileName) :
     components = []
     for ii in mm :
       components.append(ii[0])
-    design.components[arch_name] = components
-    design.allcomponents += components
+    #design.components[arch_name] = components
+    #design.allcomponents += components
   
 
-def getDesign(design, files) :
+def getDesign(elemXml, files) :
   ''' Process all files to get the heirarchy of design.
   '''
   for file in files :
@@ -174,8 +193,8 @@ def getDesign(design, files) :
         if(line.strip()[0:2] == "--") : pass 
         else : 
           txt += line
-      parseTxt(design, txt, file)
-  design.findTopModule()
+      parseTxt(elemXml, txt, file)
+  #design.findTopModule()
 
 ## Compile and run the design.
 def compileAndRun(design, files, topmodule, topdir, testVectors) :
@@ -392,8 +411,25 @@ def processTheFiles(topdir, files) :
   msg = "Processing all files and finding designs.."
   mc.writeOnWindow(mc.processWindow, msg)
   design = Design()
-  getDesign(design, files)
-  for topmodule in design.topModules :
-    design.objTopEntity.name = topmodule
-    compileAndRunATopModule(design, topdir, files, topmodule)
+   
+  global designXml
   
+  currentTime = time.strftime('%Y-%m-%d %H-%M')
+  designXml.attrib['langauge'] ="vhdl"
+  designXml.attrib['timestamp'] = currentTime
+  designXml.attrib['dir'] = topdir
+
+  compiler = ET.SubElement(designXml, "compiler")
+  compiler.text = "ghdl"
+  
+  entitiesXml = ET.SubElement(designXml, "entities")
+  getDesign(entitiesXml, files)
+  #for topmodule in design.topModules :
+  #  design.objTopEntity.name = topmodule
+  #  compileAndRunATopModule(design, topdir, files, topmodule)
+  # 
+  # Finally dump the structure in a xml file.
+  tree = ET.ElementTree(designXml)
+  tree.write("design.xml")
+
+

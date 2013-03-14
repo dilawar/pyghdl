@@ -8,7 +8,7 @@ dataWindow = None
 
 def formatString(msg, width) :
   newmsg = ""
-  loopIndex = math.ceil(len(msg) / width)
+  loopIndex = int(len(msg) / width)
   for i in range(0, loopIndex) :
     if i == loopIndex :
       newmsg += msg[width*i:]
@@ -45,17 +45,20 @@ def initCurses() :
   processWindow.refresh()
 
   py, px = processWindow.getmaxyx()
+  py = int(py)
+  px = int(px)
   global msgWindow
-  msgWindow = curses.newwin(curses.LINES - py - 2, math.ceil(curses.COLS/3),
-      py + 1, 0)
+  msgWindow = curses.newwin(curses.LINES - py - 2
+      , int(curses.COLS/3)
+      , int(py + 1), 0)
   msgWindow.box()
   msgWindow.idlok(1)
   msgWindow.scrollok(1)
   msgWindow.refresh()
 
   global dataWindow
-  dataWindow = curses.newwin(curses.LINES - py -2, math.ceil(curses.COLS*2/3),
-      py+1, math.ceil(curses.COLS/3)+1)
+  dataWindow = curses.newwin(curses.LINES - py -2, int(curses.COLS*2/3),
+      py+1, int(curses.COLS/3)+1)
   dataWindow.idlok(1)
   dataWindow.scrollok(1)
   dataWindow.box()
