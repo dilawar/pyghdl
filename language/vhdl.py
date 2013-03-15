@@ -67,13 +67,13 @@ def runDesign(topModule, generateTB, simulator="ghdl") :
         compXml = vhdl.vhdlXml.find(".//architecture[@of='{0}']/component"\
             .format(entity))
         entityInTb = compXml.attrib['name']
-        tbName = "auto_generated_"+entityInTb
+        tbName = "auto_generated_"+entityInTb+".vhd"
         fileSet.add( vhdl.generateTestBench(entityInTb, tbName))
         tbEntity = "tb_"+entityInTb
         newFileDict[tbEntity] = fileSet
       else :                              # no testbench
         fileSet = set(fileDict[entity])
-        tbName = "auto_generated_"+entity
+        tbName = "auto_generated_"+entity+".vhd"
         tbEntity = "tb_"+entity
         fileSet.add(vhdl.generateTestBench(entity, tbName))
         newFileDict[tbEntity] = fileSet
@@ -97,17 +97,19 @@ def runATopEntity(entityName, fileSet) :
     filepath = topdir+file
     analyze(workdir, filepath)
   elaborate(workdir, entityName)
-  test.generateTestVector()
-  run(workdir, entityName)
+  generateTestVector(entityName)
+  run(topdir, entityName)
 
-def run(workdir, entityName, time=1000) :
+def run(topdir, entityName, time=1000) :
   ''' Running the binary '''
+  workdir = topdir+"/work"
   bin = workdir+"/"+entityName
   testVecPath = workdir+"/vector.test"
   msg = "Simulating design ...\n"
   mc.writeOnWindow(mc.msgWindow, msg, opt=mc.curses.color_pair(2))
   if not os.path.exists(testVecPath) :
-    msg = "Error : Test vector is not generated. Existing...\n"
+    msg = "Error : Test vector is not generated. Existing...\n\
+    Expecting {0}".format(testVecPath)
     mc.writeOnWindow(mc.msgWindow
         , msg
         , opt=mc.curses.color_pair(1))
@@ -164,11 +166,10 @@ def elaborate(workdir, entityname) :
     os.remove(bin)
   command = "ghdl -e --workdir={0} --work=work -o {1} {2}".format(workdir
       , bin, entityname)
-  mc.writeOnWindow(mc.msgWindow, msg, opt=mc.curses.color_pair(2))
   msg = "{0} \n".format(command)
   mc.writeOnWindow(mc.msgWindow
       , msg 
-      , opt=mc.curses.color_pair(1)
+      #, opt=mc.curses.color_pair(1)
       )
   p = subprocess.Popen(shlex.split(command)
       , stdout = subprocess.PIPE
@@ -188,7 +189,7 @@ def elaborate(workdir, entityname) :
   else :
     mc.writeOnWindow(mc.msgWindow
         , "Elaborated successfully! \n"
-        , opt=mc.curses.color_pair(2)
+        #, opt=mc.curses.color_pair(2)
         )
 
 def getNextLevelsOfHier(archName, elemXml, hasParents, childLess,
@@ -303,3 +304,20 @@ def execute(topdir, files, top, generateTB) :
   
   #tree = ET.ElementTree(vhdl.vhdlXml)
   #tree.write("design.xml")
+
+
+def generateTestVector(entityName) :
+  top = vhdl.vhdlXml.attrib['dir']
+  testFunction = "test_"+entityName[3:]
+  if testFunction not in dir(test) :
+    msg = "Function {0} is not defined in test module.\n".format(testFunction)
+    msg += " Write this function to generate vector.test file " 
+    msg += " This file should be stored in {0}".format(top)
+    mc.writeOnWindow(mc.msgWindow, msg, opt=mc.curses.color_pair(1))
+    sys.exit()
+  else :
+    msg = "Generating vector.test file...\n"
+    mc.writeOnWindow(mc.msgWindow, msg)
+    # call this function now.
+    test.__getattribute__(testFunction)(entityName, top)
+    return

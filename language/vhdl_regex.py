@@ -57,7 +57,8 @@ BEGIN
   testbench += "{0}".format(tDict['variables'])
   testbench += '''
 \t\t-- File and its minions.
-\t\tFILE vector_file : TEXT OPEN read_mode IS "vector.test";
+\t\tFILE vector_file : TEXT OPEN read_mode IS "{0}";'''.format(tDict['vector_file_path'])
+  testbench += '''
 \t\tVARIABLE l : LINE;
 \t\tVARIABLE r : REAL;
 \t\tVARIABLE vector_time : TIME;
@@ -229,6 +230,7 @@ def generateTestBench(entity, tbName) :
   topDir = vhdlXml.attrib['dir']
   # Delete previous testbench 
   tbPath = topDir+tbName
+  tDict['vector_file_path'] = topDir+"/work/vector.test"
   try :
     os.remove(tbPath)
   except OSError, e: 
