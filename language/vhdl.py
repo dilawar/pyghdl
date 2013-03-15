@@ -56,11 +56,15 @@ def runDesign(generateTB, simulator="ghdl") :
         # add a new testbench
         fileSet = fileDict[entity]
         fileSet.add( vhdl.generateTestBench(entity))
-        newFileDict[entity] = fileSet
+        # Get the name of entity this tb contains.
+        compXml = vhdl.vhdlXml.find(".//architecture[@of='{0}']/component"\
+            .format(entity))
+        entityInTb = compXml.attrib['name']
+        newFileDict[entityInTb] = fileSet
       else :                              # no testbench
         fileSet = set(fileDict[entity])
-        fileSet.add( vhdl.generateTestBench(entity))
-        newFileDict['testbench_'+entity] = fileSet
+        fileSet.add(vhdl.generateTestBench(entity))
+        newFileDict[entity] = fileSet
     # Copy the new file list to old one.
     fileDict = newFileDict
 

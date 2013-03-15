@@ -12,7 +12,9 @@ import xml.etree.cElementTree as ET
 
 vhdlXml = ET.Element("design")
 
-testbench = '''
+
+def testbenchFromDict(tDict) :
+  testbench = '''
 ENTITY testbench IS END;
 -------------------------------------------------------------------------------
 -- This testbench is automatically generated. May not work.
@@ -32,18 +34,26 @@ ARCHITECTURE arch OF testbench IS
 \t----------------------------------------------------------------
 \t-- Component declaration.
 \t----------------------------------------------------------------
-\tCOMPONENT {component_name}
-\t\t{0}
+\tCOMPONENT ''' 
+  testbench += "{0}\n".format(tDict.get('comp_name'))
+  testbench += "{0}".format(tDict.get('comp_decl'))
+  testbench += '''
 \tEND COMPONENT;
 \t
-\t-- Signals in entity
-{1}
+\t-- Signals in entity 
+'''
+  testbench += "{0}".format(tDict.get('signal_decl'))
+  testbench += '''
 BEGIN
-\t-- Instantiate a dut
-{2}
+\t-- Instantiate a dut 
+'''
+  testbench += "{0}".format(tDict.get('dut_instance'))
+  testbench += '''
 \ttest : PROCESS 
-\t\t-- Declare variables to store the values stored in test files.
-{3} 
+\t\t-- Declare variables to store the values stored in test files. 
+'''
+  testbench += "{0}".format(tDict['variables'])
+  testbench += '''
 \t\t-- File and its minions.
 \t\tFILE vector_file : TEXT OPEN read_mode IS "vector.test";
 \t\tVARIABLE l : LINE;
@@ -65,15 +75,17 @@ BEGIN
 \t\t\tEND IF;
 \t\t\t-- Skip a space
 \t\t\tread(l, space);
-\t\t\t-- Read other singals etc.
-{4}
+\t\t\t-- Read other singals etc. '''
+  testbench += "{0}".format(tDict.get('asserts'))
+  testbench += '''
 \t\tEND LOOP;
 \t\tASSERT false REPORT "Test complete";
 \t\tWAIT;
 \tEND PROCESS;
 END ARCHITECTURE arch;
 -- Testbech ends here.
-'''
+  '''
+  return testbench
 
 def parseTxt(elemXml, txt, fileName) :
   '''
@@ -81,7 +93,7 @@ def parseTxt(elemXml, txt, fileName) :
   If this topmodule is not a test bench then write one. Compile and simulate.
   '''
   global vhdlXml
-  topdir = vhdlXml.get('dir')
+  topdir = vhdlXml.attrib['dir']
   if not topdir :
     msg = "Can't fetched dir from designXMl. Got {0}".format(topdir)
     mc.writeOnWindow(mc.msgWindow, msg, indent = 3)
@@ -161,7 +173,6 @@ def parseArchitectureText(elemXml, arch_body) :
       compXml.attrib['intance_name'] = instances[comp_name]
     else :
       compXml.attrib['isInstantiated'] = 'false'
-  
 
 def parsePortText(elemXml, portText) :
   '''
@@ -204,21 +215,65 @@ def toVHDLXML(elemXml, files) :
         else : 
           txt += line
       parseTxt(elemXml, txt, file)
-
  
 def generateTestBench(entity) :
   ''' Add a test-bench '''
-  global testbench
   global vhdlXml
-  return "auto_generated_testbench_"+entity+".vhd"
+  tDict = dict()        # To keep the data to create testbench.
+  tDict['comp_name'] = entity
+  topDir = vhdlXml.attrib['dir']
+  # Delete previous testbench 
+  tbName = "auto_generated_"+entity+".vhd"
+  tbPath = topDir+tbName
+  if os.path.exists(tbPath) :
+    os.remove(tbPath)
+  
+  # Fill in testbench
+  tDict['comp_decl'] = ""
+  ports = vhdlXml.findall(".//entity[@name='{0}']/port".format(entity))
+  for p in ports :
+    tDict['comp_decl'] += ("\t\t"+p.text+ " : "+p.attrib['direction']+ " "
+        + p.attrib['type']+";\n")
+  
+  # Signal declarations.
+  tDict['signal_decl'] = ''
+  for p in ports :
+    tDict['signal_decl'] += ("\tSIGNAL "+p.text+" : "+p.attrib['direction']
+        + " "+p.attrib['type']+";\n")
+    
+  dut = "\tdut : {0} PORT MAP( \n".format(entity)
+  for p in ports :
+    dut += "\t\t{0} => {0};\n".format(p.text)
 
-def generateAssertLines(design ) :
+  dut = dut[0:-2]+");"
+  tDict['dut_instance'] = dut
+  
+  # variables.
+  variables = ""
+  for p in ports :
+    portExpr = "tmp_"+p.text+" : "+p.attrib['direction'] \
+        +" "+p.attrib['type']
+    variables += "\t\tVARIABLE "+ portExpr +";\n"
+  tDict['variables'] = variables
+  
+  # Generate assert lines
+  tDict['assert'] = generateAssertLines(ports)
+  
+  # Create a testbench
+  testbench = testbenchFromDict(tDict)
+  with open(entity+"_testbench.vhdl", "w") as f :
+    f.write(testbench)
+  return tbName
+
+
+def generateAssertLines(ports ) :
   assertLine = ""
-  for port in design.objTopEntity.ports :
+  for p in ports :
+    port = p.text
     assertLine += "\n\t\t\t-- read {0} value\n".format(port)
     assertLine += "\t\t\tread(l, {0}, good_val);\n".format("tmp_"+port)
     assertLine += '\t\t\tassert good_val REPORT "bad {0} value";\n'.format(port)
-    if design.objTopEntity.ports[port][0] == "out" :
+    if p.attrib['direction'] == "out" :
       # Out port. Assert the value.
       line = "\t\t\tassert {0} = {1} REPORT \"vector mismatch\";\n".format( 
           "tmp_"+port, port
@@ -227,7 +282,8 @@ def generateAssertLines(design ) :
     assertLine += '\t\t\tread(l, space); -- skip a space\n'
 
   assertLine += "\n\n\t\t\t-- Assign temp signals to ports \n" 
-  for port in design.objTopEntity.ports :
+  for p in ports :
+    port = p.text
     assertLine += "\t\t\t{0} <= {1};\n".format(port, "tmp_"+port)
   return assertLine
 
