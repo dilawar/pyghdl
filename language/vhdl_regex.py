@@ -151,7 +151,7 @@ def parseArchitectureText(elemXml, arch_body) :
   '''
   instances = dict()
   component_inst_expr = r'(?P<instance_name>\w+)\s*\:\s*'\
-      +'(?P<arch_name>\w+)\s+(port)\s+(map)'
+      +'(?P<arch_name>\w+)\s+(generic|port)\s+(map)'
   pattern = re.compile(component_inst_expr
       , re.IGNORECASE | re.DOTALL)
   mm = pattern.finditer(arch_body) 
