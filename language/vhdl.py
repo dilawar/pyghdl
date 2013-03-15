@@ -168,119 +168,79 @@ def elaborate(workdir, entityname) :
         , opt=mc.curses.color_pair(2)
         )
 
+def getNextLevelsOfHier(archName, elemXml, hasParents, childLess,
+    alreadyAddedArcs) :
+  '''
+  Get the components of a xmlElem.
+  @param elemXml : Xml element of archName 
+  @param archName : name of the entity of this architecture
+  '''
+  if archName not in alreadyAddedArcs.keys() :
+    msg = "Funtion validations error : {0} should have been added to args 2"
+    mc.writeOnWindow(mc.msgWindow, msg, mc.curses.color_pair(2))
+    return None
+  comps = elemXml.findall(".//architecture[@of='{0}']/*"\
+      .format(archName))
+  #mc.writeOnWindow(mc.dataWindow, comps)
+  if len(comps) < 1 :
+    msg = "No component found for {0}\n".format(archName)
+    #mc.writeOnWindow(mc.dataWindow, msg)
+    childLess.add(archName)
+    return elemXml
+  for comp in comps :
+    compName = comp.attrib['name']
+    msg = "Component {0} found for entity {1}\n".format(compName, archName)
+    #mc.writeOnWindow(mc.dataWindow, msg)
+    if comp.attrib['isInstantiated'] == "true" :
+      hasParents.add(compName)
+      # Now check if architecture of this component was already added.
+      if compName in alreadyAddedArcs.keys() :
+        compXml = alreadyAddedArcs[compName]
+        elemXml.append(compXml)
+      else :
+        compXml = ET.Element("module")
+        compXml.attrib['name'] = compName 
+        alreadyAddedArcs[compName] = compXml
+        elemXml.append(compXml)
+    else :
+      msg = "{0} component is not instantited.\n".format(compName)
+      mc.writeOnWindow(mc.dataWindow, msg)
+  return elemXml
+
+
 def getHierarchy(elemXml) : 
   ''' Generate the hierarchy and store it in a xml element elemXml
   '''
-  
   global hierXml
+
+  allEntities = set()
   hasParents = set()
   childLess = set()
   # keep the aleady added xml elements of architecture in a dictionary.
   alreadyAddedArcs = dict()
+  # get the list of entities we have.
+  entities = elemXml.findall('entity')
+  # collect all entities
+  for entity in entities : 
+    entityName = entity.attrib['name']
+    allEntities.add(entityName)
+    # If this entity is already added to hierarchy then ignore it otherwise
+    # create an xml element of it.
+    if entityName not in alreadyAddedArcs.keys() :
+      entityXml = ET.Element("module")
+      entityXml.attrib['name'] = entityName 
+      alreadyAddedArcs[entityName] = entityXml
+    else :
+      entityXml = alreadyAddedArcs[entityName]
+    # Pass this name of entity along with root xmlElement to be processed.
+    getNextLevelsOfHier(entityName, elemXml, hasParents
+        , childLess , alreadyAddedArcs)
   
-  def getComponents(archName, elemXml) :
-    '''Get the components of a xmlElem.'''
-    global childLess
-    global hasParents
-    global alreadyAddedArcs
-    comps = xmlElem.findall("./architecture[@name='{0}'/component".format(archName))
-    if len(comps) == 0 :
-      childLess.add(archName)
-      return elemXml
-    for comp in comps :
-      compName = comp.attrib['name']
-      if comp.attrib['isInstantiated'] == "true" :
-        # Now check if architecture of this component was already added.
-        if compName in alreadyAddedArcs.keys() :
-          compXml = alreadyAddedArcs[compName]
-          elemXml.append(compXml)
-        else :
-          compXml = ET.Element("module")
-          compXml.attrib['name'] = compName 
-          alreadyAddedArcs[compName] = compXml
-        hasParents.add(compName)
+  # Here we should have two sets. Print them.
 
-
-  addedEntityXml = dict()
-  entityRank = dict()
-  elemXml = ET.ElementTree(elemXml)
-  entityList = list()
-  root = elemXml.getroot()
-  if elemXml :
-    entities = elemXml.findall('entity')
-    # collect all entities
-    for entity in entities : 
-      entityList.append(entity.attrib['name'])
-     
-    archs = elemXml.findall('architecture')
-    
-    # Names of all architectures available. 
-    listEntityOfArchs = list()
-    for arch in archs :
-      listEntityOfArchs.append(arch.attrib['of'])
-
-    # build the hierarchy. Using listEntityOfArchs as stack.
-    while(len(listEntityOfArchs) > 0) : 
-      arch_of = listEntityOfArchs.pop()
-      if arch_of not in addedEntityXml.keys() :
-        # If arch_of is never added to hierarchy, then we should create its
-        # element in hierXml. Its rank is 0 and add this entity (arch_of) to a
-        # list. By default, this is not a top-module.
-        xml = ET.Element("module")
-        xml.attrib['isTopmodule'] = "False"
-        xml.attrib['name'] = arch_of
-        addedEntityXml[arch_of] = xml 
-        entityRank[arch_of] = 0
-      else :
-        # This entity is already present in hierarchy therefore do not create a
-        # new xml element and fetch the old one.
-        xml = addedEntityXml[arch_of]
-
-      if root.find(".//*[@of='{0}']/component".format(arch_of)) is None :
-        # There is no component in architecture of given entity. It means it has
-        # not children in hierarchy but it does not follow that it has not
-        # parent.
-        if arch_of not in addedEntityXml.keys() :
-          # This is never added. It means it is independent and should have
-          # non-zero rank.
-          entityRank[arch_of] = 1
-        else :
-          # It has been addeded before. It can not be a top-entity in any case.
-          entityRank[arch_of] = 0
-        msg = "{0} has no component.\n".format(arch_of)
-        mc.writeOnWindow(mc.dataWindow, msg)
-      else : # There are components
-        components = root.findall(".//*[@of='{0}']/component".format(arch_of))
-        entityRank[arch_of] = 1
-        for component in components :
-          cName = component.attrib['name']
-          listEntityOfArchs.append(cName)
-          if cName not in addedEntityXml.keys() :
-            cXml = ET.Element("module")
-            cXml.attrib['name'] = cName
-            entityRank[cName] = 0
-            xml.append(cXml)
-            addedEntityXml[cName] = cXml
-          else :
-            entityRank[cName] = 0
-            cXml = addedEntityXml[cName]
-            xml.append(cXml)
-            addedEntityXml[cName] = cXml
-          
-          msg = "{0} has component : {1} \n".format(arch_of
-              , component.attrib['name'])
-          #mc.writeOnWindow(mc.dataWindow, msg )
-    mc.writeOnWindow(mc.dataWindow, str(entityRank))
-
-    ## Great now. We can write the hierarchy to hierXml element.
-    for i in entityRank :
-      if entityRank[i] == 1 :
-        addedEntityXml[i].attrib['isTopmodule'] = "True"
-        hierXml.append(addedEntityXml[i])
-  else :
-    msg = "Empty design... Quiting."
-    mc.writeOnWindow(mc.msgWindow, msg)
-    return
+  mc.writeOnWindow(mc.dataWindow, str(hasParents))
+  mc.writeOnWindow(mc.dataWindow, str(childLess))
+  
 
 def execute(topdir, files, generateTB=True) :
   msg = "Building design out of files ..."
