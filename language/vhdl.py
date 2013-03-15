@@ -51,7 +51,7 @@ def runDesign(generateTB, simulator="ghdl") :
       eXml = vhdl.vhdlXml.find(".//entity[@name='{0}']".format(entity))
       msg = "|- Generating testbench for entity {0} \n".format(entity)
       mc.writeOnWindow(mc.processWindow, msg)      
-      if eXml.attrib['noPort'] == "true" : #its a testbench
+      if eXml.attrib['noPort'] == "true" : # It's a testbench.
         fileName = eXml.attrib['file']
         msg = "   |- Ignoring existing one \n"
         fileDict[entity].remove(fileName)
@@ -64,16 +64,19 @@ def runDesign(generateTB, simulator="ghdl") :
         entityInTb = compXml.attrib['name']
         tbName = "auto_generated_"+entityInTb
         fileSet.add( vhdl.generateTestBench(entityInTb, tbName))
-        newFileDict[entityInTb] = fileSet
+        tbEntity = "tb_"+entityInTb
+        newFileDict[tbEntity] = fileSet
       else :                              # no testbench
         fileSet = set(fileDict[entity])
         tbName = "auto_generated_"+entity
+        tbEntity = "tb_"+entity
         fileSet.add(vhdl.generateTestBench(entity, tbName))
-        newFileDict[entity] = fileSet
+        newFileDict[tbEntity] = fileSet
     # Copy the new file list to old one.
     fileDict = newFileDict
 
   # Great, now simulate.
+  mc.writeOnWindow(mc.dataWindow, str(fileDict))
   for entity in fileDict :
     runATopEntity(entity, fileDict[entity])
 
@@ -283,5 +286,5 @@ def execute(topdir, files, generateTB=True) :
   mc.writeOnWindow(mc.processWindow, msg
       , opt=mc.curses.color_pair(1))
   
-  tree = ET.ElementTree(vhdl.vhdlXml)
-  tree.write("design.xml")
+  #tree = ET.ElementTree(vhdl.vhdlXml)
+  #tree.write("design.xml")

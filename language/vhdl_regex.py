@@ -219,7 +219,9 @@ def toVHDLXML(elemXml, files) :
       parseTxt(elemXml, txt, file)
  
 def generateTestBench(entity, tbName) :
-  ''' Add a test-bench '''
+  ''' Add a test-bench 
+  tbName : file name of tb
+  '''
   mc.writeOnWindow(mc.dataWindow, "\n")
   global vhdlXml
   tDict = dict()        # To keep the data to create testbench.
