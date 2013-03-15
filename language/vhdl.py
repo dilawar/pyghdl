@@ -6,11 +6,14 @@ import vhdl_regex as vhdl
 import mycurses as mc
 import subprocess
 import shlex
+import re
 
 hierXml = ET.Element("hier")
 
 def runDesign(generateTB, simulator="ghdl") :
   # set compiler analyze command.
+  topDir = vhdl.vhdlXml.attrib['dir']
+  mc.writeOnWindow(mc.dataWindow, "\n")
   compileXml = ET.SubElement(vhdl.vhdlXml, "compiler")
   compileXml.attrib['name'] = 'ghdl'
   topEntities = vhdl.vhdlXml.findall(".//hier/module[@topEntity='true']")
@@ -53,17 +56,19 @@ def runDesign(generateTB, simulator="ghdl") :
         msg = "   |- Ignoring existing one \n"
         fileDict[entity].remove(fileName)
         mc.writeOnWindow(mc.processWindow, msg)
-        # add a new testbench
+        # add a new testbench. Need to find an entity which is its children.
         fileSet = fileDict[entity]
-        fileSet.add( vhdl.generateTestBench(entity))
         # Get the name of entity this tb contains.
         compXml = vhdl.vhdlXml.find(".//architecture[@of='{0}']/component"\
             .format(entity))
         entityInTb = compXml.attrib['name']
+        tbName = "auto_generated_"+entityInTb
+        fileSet.add( vhdl.generateTestBench(entityInTb, tbName))
         newFileDict[entityInTb] = fileSet
       else :                              # no testbench
         fileSet = set(fileDict[entity])
-        fileSet.add(vhdl.generateTestBench(entity))
+        tbName = "auto_generated_"+entity
+        fileSet.add(vhdl.generateTestBench(entity, tbName))
         newFileDict[entity] = fileSet
     # Copy the new file list to old one.
     fileDict = newFileDict
@@ -247,6 +252,14 @@ def getHierarchy(elemXml) :
     hierXml.append(x)
 
 def execute(topdir, files, generateTB=True) :
+  ''' Top most function in this folder.'''
+  # We must delete all files automatically generated before (if any). All such
+  # files have auto_generated_ prefix.
+  newFiles = set()
+  for file in files :
+    if re.search(r"auto_generated_", file) : pass 
+    else : newFiles.add(file)
+  files = newFiles
   msg = "Building design out of files ..."
   mc.writeOnWindow(mc.processWindow, msg)
   msg = " Done \n"

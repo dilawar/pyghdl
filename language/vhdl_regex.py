@@ -9,13 +9,14 @@ import mycurses as mc
 from language.vcd import parse_vcd
 from language.test import testVCD
 import xml.etree.cElementTree as ET
+import errno
 
 vhdlXml = ET.Element("design")
 
 
 def testbenchFromDict(tDict) :
   testbench = '''
-ENTITY testbench IS END;
+ENTITY tb_{0} IS END;
 -------------------------------------------------------------------------------
 -- This testbench is automatically generated. May not work.
 -- A file called vector.test must be generated in the same directory where
@@ -29,15 +30,16 @@ USE ieee.std_logic_1164.ALL;
 USE std.textio.ALL;
 USE work.ALL;
 
-ARCHITECTURE arch OF testbench IS 
+ARCHITECTURE arch OF tb_{0} IS 
 
 \t----------------------------------------------------------------
 \t-- Component declaration.
 \t----------------------------------------------------------------
-\tCOMPONENT ''' 
-  testbench += "{0}\n".format(tDict.get('comp_name'))
+\tCOMPONENT {0} 
+\t\tPORT ( \n'''.format(tDict.get('comp_name'))
   testbench += "{0}".format(tDict.get('comp_decl'))
-  testbench += '''
+  testbench = testbench[0:-2]
+  testbench += ''');
 \tEND COMPONENT;
 \t
 \t-- Signals in entity 
@@ -216,18 +218,20 @@ def toVHDLXML(elemXml, files) :
           txt += line
       parseTxt(elemXml, txt, file)
  
-def generateTestBench(entity) :
+def generateTestBench(entity, tbName) :
   ''' Add a test-bench '''
+  mc.writeOnWindow(mc.dataWindow, "\n")
   global vhdlXml
   tDict = dict()        # To keep the data to create testbench.
   tDict['comp_name'] = entity
   topDir = vhdlXml.attrib['dir']
   # Delete previous testbench 
-  tbName = "auto_generated_"+entity+".vhd"
   tbPath = topDir+tbName
-  if os.path.exists(tbPath) :
+  try :
     os.remove(tbPath)
-  
+  except OSError, e: 
+    if e.errno != errno.ENOENT:
+      raise
   # Fill in testbench
   tDict['comp_decl'] = ""
   ports = vhdlXml.findall(".//entity[@name='{0}']/port".format(entity))
@@ -238,12 +242,12 @@ def generateTestBench(entity) :
   # Signal declarations.
   tDict['signal_decl'] = ''
   for p in ports :
-    tDict['signal_decl'] += ("\tSIGNAL "+p.text+" : "+p.attrib['direction']
+    tDict['signal_decl'] += ("\tSIGNAL "+p.text+" : "
         + " "+p.attrib['type']+";\n")
     
   dut = "\tdut : {0} PORT MAP( \n".format(entity)
   for p in ports :
-    dut += "\t\t{0} => {0};\n".format(p.text)
+    dut += "\t\t{0} => {0},\n".format(p.text)
 
   dut = dut[0:-2]+");"
   tDict['dut_instance'] = dut
@@ -251,7 +255,7 @@ def generateTestBench(entity) :
   # variables.
   variables = ""
   for p in ports :
-    portExpr = "tmp_"+p.text+" : "+p.attrib['direction'] \
+    portExpr = "tmp_"+p.text+" : "\
         +" "+p.attrib['type']
     variables += "\t\tVARIABLE "+ portExpr +";\n"
   tDict['variables'] = variables
@@ -261,7 +265,7 @@ def generateTestBench(entity) :
   
   # Create a testbench
   testbench = testbenchFromDict(tDict)
-  with open(entity+"_testbench.vhdl", "w") as f :
+  with open(tbPath, "w") as f :
     f.write(testbench)
   return tbName
 
