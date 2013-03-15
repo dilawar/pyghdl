@@ -169,7 +169,38 @@ def elaborate(workdir, entityname) :
         )
 
 def getHierarchy(elemXml) : 
+  ''' Generate the hierarchy and store it in a xml element elemXml
+  '''
+  
   global hierXml
+  hasParents = set()
+  childLess = set()
+  # keep the aleady added xml elements of architecture in a dictionary.
+  alreadyAddedArcs = dict()
+  
+  def getComponents(archName, elemXml) :
+    '''Get the components of a xmlElem.'''
+    global childLess
+    global hasParents
+    global alreadyAddedArcs
+    comps = xmlElem.findall("./architecture[@name='{0}'/component".format(archName))
+    if len(comps) == 0 :
+      childLess.add(archName)
+      return elemXml
+    for comp in comps :
+      compName = comp.attrib['name']
+      if comp.attrib['isInstantiated'] == "true" :
+        # Now check if architecture of this component was already added.
+        if compName in alreadyAddedArcs.keys() :
+          compXml = alreadyAddedArcs[compName]
+          elemXml.append(compXml)
+        else :
+          compXml = ET.Element("module")
+          compXml.attrib['name'] = compName 
+          alreadyAddedArcs[compName] = compXml
+        hasParents.add(compName)
+
+
   addedEntityXml = dict()
   entityRank = dict()
   elemXml = ET.ElementTree(elemXml)
@@ -182,23 +213,33 @@ def getHierarchy(elemXml) :
       entityList.append(entity.attrib['name'])
      
     archs = elemXml.findall('architecture')
-    archOfList = list()
+    
+    # Names of all architectures available. 
+    listEntityOfArchs = list()
     for arch in archs :
-      archOfList.append(arch.attrib['of'])
+      listEntityOfArchs.append(arch.attrib['of'])
 
-    # build the hierarchy
-    while(len(archOfList) > 0) : 
-      arch_of = archOfList.pop()
+    # build the hierarchy. Using listEntityOfArchs as stack.
+    while(len(listEntityOfArchs) > 0) : 
+      arch_of = listEntityOfArchs.pop()
       if arch_of not in addedEntityXml.keys() :
+        # If arch_of is never added to hierarchy, then we should create its
+        # element in hierXml. Its rank is 0 and add this entity (arch_of) to a
+        # list. By default, this is not a top-module.
         xml = ET.Element("module")
         xml.attrib['isTopmodule'] = "False"
         xml.attrib['name'] = arch_of
         addedEntityXml[arch_of] = xml 
         entityRank[arch_of] = 0
       else :
+        # This entity is already present in hierarchy therefore do not create a
+        # new xml element and fetch the old one.
         xml = addedEntityXml[arch_of]
 
       if root.find(".//*[@of='{0}']/component".format(arch_of)) is None :
+        # There is no component in architecture of given entity. It means it has
+        # not children in hierarchy but it does not follow that it has not
+        # parent.
         if arch_of not in addedEntityXml.keys() :
           # This is never added. It means it is independent and should have
           # non-zero rank.
@@ -207,27 +248,29 @@ def getHierarchy(elemXml) :
           # It has been addeded before. It can not be a top-entity in any case.
           entityRank[arch_of] = 0
         msg = "{0} has no component.\n".format(arch_of)
-        #mc.writeOnWindow(mc.dataWindow, msg)
-      else :
+        mc.writeOnWindow(mc.dataWindow, msg)
+      else : # There are components
         components = root.findall(".//*[@of='{0}']/component".format(arch_of))
         entityRank[arch_of] = 1
         for component in components :
           cName = component.attrib['name']
-          archOfList.append(cName)
+          listEntityOfArchs.append(cName)
           if cName not in addedEntityXml.keys() :
             cXml = ET.Element("module")
             cXml.attrib['name'] = cName
-            cXml = ET.SubElement(xml)
-            cXml.attrib['name'] = cName
             entityRank[cName] = 0
+            xml.append(cXml)
+            addedEntityXml[cName] = cXml
           else :
+            entityRank[cName] = 0
             cXml = addedEntityXml[cName]
             xml.append(cXml)
-
+            addedEntityXml[cName] = cXml
+          
           msg = "{0} has component : {1} \n".format(arch_of
               , component.attrib['name'])
           #mc.writeOnWindow(mc.dataWindow, msg )
-    #mc.writeOnWindow(mc.dataWindow, str(entityRank))
+    mc.writeOnWindow(mc.dataWindow, str(entityRank))
 
     ## Great now. We can write the hierarchy to hierXml element.
     for i in entityRank :
