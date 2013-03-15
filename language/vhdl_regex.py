@@ -100,7 +100,7 @@ def parseTxt(elemXml, txt, fileName) :
     msg = "Can't fetched dir from designXMl. Got {0}".format(topdir)
     mc.writeOnWindow(mc.msgWindow, msg, indent = 3)
     return
-  mc.writeOnWindow(mc.dataWindow, topdir)
+  #mc.writeOnWindow(mc.dataWindow, topdir)
 
   pattern = r'entity\s+(?P<name>\w+)\s+is\s*(?P<body>.*)'\
     +'end\s*(entity)?\s*(?P=name)?\s*;'
@@ -222,7 +222,7 @@ def generateTestBench(entity, tbName) :
   ''' Add a test-bench 
   tbName : file name of tb
   '''
-  mc.writeOnWindow(mc.dataWindow, "\n")
+  #mc.writeOnWindow(mc.dataWindow, "\n")
   global vhdlXml
   tDict = dict()        # To keep the data to create testbench.
   tDict['comp_name'] = entity

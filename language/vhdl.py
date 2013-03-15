@@ -7,17 +7,23 @@ import mycurses as mc
 import subprocess
 import shlex
 import re
+import language.test as test
 
 hierXml = ET.Element("hier")
 
-def runDesign(generateTB, simulator="ghdl") :
+def runDesign(topModule, generateTB, simulator="ghdl") :
   # set compiler analyze command.
   topDir = vhdl.vhdlXml.attrib['dir']
-  mc.writeOnWindow(mc.dataWindow, "\n")
   compileXml = ET.SubElement(vhdl.vhdlXml, "compiler")
   compileXml.attrib['name'] = 'ghdl'
   topEntities = vhdl.vhdlXml.findall(".//hier/module[@topEntity='true']")
   fileDict = dict()
+  if topModule :
+    topModule = topModule[0]
+    #mc.writeOnWindow(mc.dataWindow, topModule)
+    #mc.dataWindow.getch()
+    topEntities = vhdl.vhdlXml.findall(".//hier/module[@name='{0}']"\
+        .format(topModule))
   for te in topEntities :
     # Files needed to elaborate the design.
     files = set()
@@ -35,10 +41,9 @@ def runDesign(generateTB, simulator="ghdl") :
         files.add(fileOfEntity)
       else :
         msg = "Horror : Entity not found \n"
-        mc.writeOnWindow(mc.dataWindow, msg)
+        mc.writeOnWindow(mc.msgWindow, msg, opt=mc.curses.color_pair(1))
         return
     fileDict[topEntityName] = files
-  mc.writeOnWindow(mc.dataWindow, "\n")
 
   # If generateTB is set then ignore the previous TB and generate  a new one.
   # Else execute the design as it is.
@@ -76,7 +81,7 @@ def runDesign(generateTB, simulator="ghdl") :
     fileDict = newFileDict
 
   # Great, now simulate.
-  mc.writeOnWindow(mc.dataWindow, str(fileDict))
+  #mc.writeOnWindow(mc.dataWindow, str(fileDict))
   for entity in fileDict :
     runATopEntity(entity, fileDict[entity])
 
@@ -92,11 +97,22 @@ def runATopEntity(entityName, fileSet) :
     filepath = topdir+file
     analyze(workdir, filepath)
   elaborate(workdir, entityName)
+  test.generateTestVector()
   run(workdir, entityName)
 
 def run(workdir, entityName, time=1000) :
   ''' Running the binary '''
   bin = workdir+"/"+entityName
+  testVecPath = workdir+"/vector.test"
+  msg = "Simulating design ...\n"
+  mc.writeOnWindow(mc.msgWindow, msg, opt=mc.curses.color_pair(2))
+  if not os.path.exists(testVecPath) :
+    msg = "Error : Test vector is not generated. Existing...\n"
+    mc.writeOnWindow(mc.msgWindow
+        , msg
+        , opt=mc.curses.color_pair(1))
+    return
+
   if not os.path.isfile(bin) :
     msg = "Error : Binary not found. Existing."
     mc.writeOnWindow(mc.msgWindow, msg
@@ -105,7 +121,7 @@ def run(workdir, entityName, time=1000) :
   # Else run the command.
   command = "{0} --vcd={1}.vcd --stop-time={2}ns \n".format(
       bin, workdir+"/"+entityName, time)
-  mc.writeOnWindow(mc.dataWindow, command)
+  mc.writeOnWindow(mc.msgWindow, command)
   p = subprocess.Popen(shlex.split(command)
       , stdout = subprocess.PIPE
       , stderr = subprocess.PIPE)
@@ -148,7 +164,6 @@ def elaborate(workdir, entityname) :
     os.remove(bin)
   command = "ghdl -e --workdir={0} --work=work -o {1} {2}".format(workdir
       , bin, entityname)
-  msg = "Executing :\n"
   mc.writeOnWindow(mc.msgWindow, msg, opt=mc.curses.color_pair(2))
   msg = "{0} \n".format(command)
   mc.writeOnWindow(mc.msgWindow
@@ -213,7 +228,7 @@ def getNextLevelsOfHier(archName, elemXml, hasParents, childLess,
         archXml.append(compXml)
     else :
       msg = "{0} component is not instantited.\n".format(compName)
-      mc.writeOnWindow(mc.dataWindow, msg)
+      mc.writeOnWindow(mc.msgWindow, msg)
 
 
 def getHierarchy(elemXml) : 
@@ -254,7 +269,7 @@ def getHierarchy(elemXml) :
     x.attrib['topEntity'] = "true"
     hierXml.append(x)
 
-def execute(topdir, files, generateTB=True) :
+def execute(topdir, files, top, generateTB) :
   ''' Top most function in this folder.'''
   # We must delete all files automatically generated before (if any). All such
   # files have auto_generated_ prefix.
@@ -281,7 +296,7 @@ def execute(topdir, files, generateTB=True) :
   # Run each top-entity.
   msg = "Elaborating each design ..."
   mc.writeOnWindow(mc.processWindow, msg)
-  runDesign(generateTB)
+  runDesign(top, generateTB)
   msg = "Done \n"
   mc.writeOnWindow(mc.processWindow, msg
       , opt=mc.curses.color_pair(1))

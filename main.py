@@ -4,6 +4,7 @@ import os
 import sys
 import math
 import language.vhdl as vhdl
+import language.test as test
 import mycurses as mc
 
 def findListings(dirs, regex=None) :
@@ -43,9 +44,12 @@ if __name__=="__main__" :
       , required = True
       , help = 'Which languag (supported : vhdl )')
   parser.add_argument('-t', metavar='top_module', nargs=1
-      , dest = 'topModule'
-      , required = False
-      , help = 'Optional : Top module in your design.'
+      , required = False, default=None
+      , help = 'Optional : Top module in your design.')
+  parser.add_argument('-r', metavar='auto_test', nargs=1
+    , required = False, default=True
+    , help = 'Optional : If specified testbenches will be generated\
+    automatically.'
       )
 
   class Args: pass 
@@ -60,7 +64,7 @@ if __name__=="__main__" :
       sys.exit();
     mc.initCurses()
     topDir = findTopDir(args.d)
-    vhdl.execute(topDir, files)
+    vhdl.execute(topDir, files, top=args.t, generateTB=args.r)
   else :
     mc.initCurses()
     msg = "Unsupported language : {0}".format(args.l)
