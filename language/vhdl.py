@@ -182,6 +182,7 @@ def getNextLevelsOfHier(archName, elemXml, hasParents, childLess,
   comps = elemXml.findall(".//architecture[@of='{0}']/*"\
       .format(archName))
   #mc.writeOnWindow(mc.dataWindow, comps)
+  archXml = alreadyAddedArcs[archName]
   if len(comps) < 1 :
     msg = "No component found for {0}\n".format(archName)
     #mc.writeOnWindow(mc.dataWindow, msg)
@@ -196,16 +197,15 @@ def getNextLevelsOfHier(archName, elemXml, hasParents, childLess,
       # Now check if architecture of this component was already added.
       if compName in alreadyAddedArcs.keys() :
         compXml = alreadyAddedArcs[compName]
-        elemXml.append(compXml)
+        archXml.append(compXml)
       else :
         compXml = ET.Element("module")
         compXml.attrib['name'] = compName 
         alreadyAddedArcs[compName] = compXml
-        elemXml.append(compXml)
+        archXml.append(compXml)
     else :
       msg = "{0} component is not instantited.\n".format(compName)
       mc.writeOnWindow(mc.dataWindow, msg)
-  return elemXml
 
 
 def getHierarchy(elemXml) : 
@@ -236,11 +236,15 @@ def getHierarchy(elemXml) :
     getNextLevelsOfHier(entityName, elemXml, hasParents
         , childLess , alreadyAddedArcs)
   
-  # Here we should have two sets. Print them.
-
-  mc.writeOnWindow(mc.dataWindow, str(hasParents))
-  mc.writeOnWindow(mc.dataWindow, str(childLess))
-  
+  # Here we should have two sets. Nodes which do not have children and nodes
+  # which do not have parents. Nodes with following properties can not be
+  # top-modules.
+  # 1. Those who belongs to hasParents set.
+  topModulesSet = allEntities - hasParents
+  for topModule in topModulesSet :
+    x = (alreadyAddedArcs[topModule])
+    x.attrib['topEntity'] = "true"
+    hierXml.append(x)
 
 def execute(topdir, files, generateTB=True) :
   msg = "Building design out of files ..."
