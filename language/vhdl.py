@@ -13,7 +13,7 @@ def runDesign(generateTB, simulator="ghdl") :
   # set compiler analyze command.
   compileXml = ET.SubElement(vhdl.vhdlXml, "compiler")
   compileXml.attrib['name'] = 'ghdl'
-  topEntities = vhdl.vhdlXml.findall(".//hier/module[@isTopmodule='True']")
+  topEntities = vhdl.vhdlXml.findall(".//hier/module[@topEntity='true']")
   fileDict = dict()
   for te in topEntities :
     # Files needed to elaborate the design.
