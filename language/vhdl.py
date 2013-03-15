@@ -131,7 +131,7 @@ def run(topdir, entityName, time=1000) :
   status = p.stderr.readline()
   if status.__len__() > 0 :
     mc.writeOnWindow(mc.msgWindow
-        , "Failed to run with error :  {0}".format(str(status))
+        , "Error status :  {0}".format(str(status))
         , indent=2)
   else :
     msg = "Successfully executed \n"

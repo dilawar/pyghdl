@@ -265,7 +265,7 @@ def generateTestBench(entity, tbName) :
   tDict['variables'] = variables
   
   # Generate assert lines
-  tDict['assert'] = generateAssertLines(ports)
+  tDict['asserts'] = generateAssertLines(ports)
   
   # Create a testbench
   testbench = testbenchFromDict(tDict)
