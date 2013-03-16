@@ -308,16 +308,8 @@ def execute(topdir, files, top, generateTB) :
 
 def generateTestVector(entityName) :
   top = vhdl.vhdlXml.attrib['dir']
-  testFunction = "test_"+entityName[3:]
-  if testFunction not in dir(test) :
-    msg = "Function {0} is not defined in test module.\n".format(testFunction)
-    msg += " Write this function to generate vector.test file " 
-    msg += " This file should be stored in {0}".format(top)
-    mc.writeOnWindow(mc.msgWindow, msg, opt=mc.curses.color_pair(1))
-    sys.exit()
-  else :
-    msg = "Generating vector.test file...\n"
-    mc.writeOnWindow(mc.msgWindow, msg)
-    # call this function now.
-    test.__getattribute__(testFunction)(entityName, top)
-    return
+  msg = "Generating vector.test file...\n"
+  mc.writeOnWindow(mc.msgWindow, msg)
+  # call this function now.
+  test.testEntity(entityName, top)
+  return
