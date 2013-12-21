@@ -5,7 +5,6 @@ import os
 import errno
 import shlex
 import subprocess
-import mycurses as mc
 from language.vcd import parse_vcd
 from language.test import testVCD
 import xml.etree.cElementTree as ET
@@ -98,10 +97,8 @@ def parseTxt(elemXml, txt, fileName) :
   global vhdlXml
   topdir = vhdlXml.attrib['dir']
   if not topdir :
-    msg = "Can't fetched dir from designXMl. Got {0}".format(topdir)
-    mc.writeOnWindow(mc.msgWindow, msg, indent = 3)
+    print("Can't fetched dir from designXMl. Got {0}".format(topdir))
     return
-  #mc.writeOnWindow(mc.dataWindow, topdir)
 
   pattern = r'entity\s+(?P<name>\w+)\s+is\s*(?P<body>.*)'\
     +'end\s*(entity)?\s*(?P=name)?\s*;'
@@ -202,8 +199,8 @@ def parsePortText(elemXml, portText) :
         portXml.attrib['direction'] = dir
         portXml.attrib['type'] = type
   else :
-    mc.writeOnWindow(mc.msgWindow, "Error : Empty port list")
-    return
+      print("[ERROR] Empty port list")
+      return
 
 def toVHDLXML(elemXml, files) :
   ''' Process all files to get the heirarchy of design.
@@ -211,7 +208,7 @@ def toVHDLXML(elemXml, files) :
   for file in files :
     with open(file, "r") as f :
       msg = "Parsing file : {0} \n".format(file)
-      mc.writeOnWindow(mc.msgWindow, msg, indent=2)
+      print(msg)
       txt = ""
       for line in f :
         if(line.strip()[0:2] == "--") : pass 
@@ -223,7 +220,6 @@ def generateTestBench(entity, tbName) :
   ''' Add a test-bench 
   tbName : file name of tb
   '''
-  #mc.writeOnWindow(mc.dataWindow, "\n")
   global vhdlXml
   tDict = dict()        # To keep the data to create testbench.
   tDict['comp_name'] = entity

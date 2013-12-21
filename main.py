@@ -62,10 +62,8 @@ if __name__=="__main__" :
       print("No file is found with regex {0} in directories"
         +" {1}".format(regex, args.d))
       sys.exit();
-    mc.initCurses()
     topDir = findTopDir(args.d)
     vhdl.execute(topDir, files, top=args.t, generateTB=args.r)
   else :
-    mc.initCurses()
     msg = "Unsupported language : {0}".format(args.l)
-    mc.writeOnWindow(mc.msgWindow, msg)
+    print(msg)
