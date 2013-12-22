@@ -59,9 +59,8 @@ if __name__=="__main__" :
       file_regex = ".*\.vhdl?$"
       files = findListings(args.d, regex=file_regex)
       if len(files) < 1 :
-          print("No file is found with regex {0} in directories {1}".format(
-              file_regex, args.d)
-              )
+          debug.printDebug("WARN", "No file is found with regex \
+                  {0} in directories {1}".format( file_regex, args.d))
           sys.exit();
       topDir = findTopDir(args.d)
       vhdl.execute(topDir, files, top=args.t, generateTB=args.r)

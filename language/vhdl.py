@@ -7,84 +7,101 @@ import subprocess
 import shlex
 import re
 import language.test as test
+import debug.debug as debug
 
 hierXml = ET.Element("hier")
 
 def runDesign(topModule, generateTB, simulator="ghdl") :
-  # set compiler analyze command.
-  topDir = vhdl.vhdlXml.attrib['dir']
-  compileXml = ET.SubElement(vhdl.vhdlXml, "compiler")
-  compileXml.attrib['name'] = 'ghdl'
-  topEntities = vhdl.vhdlXml.findall(".//hier/module[@topEntity='true']")
-  fileDict = dict()
-  if topModule :
-    topModule = topModule[0]
-    topEntities = vhdl.vhdlXml.findall(".//hier/module[@name='{0}']"\
-        .format(topModule))
-  for te in topEntities :
-    # Files needed to elaborate the design.
-    files = set()
-    neededEntity = set()
-    topEntityName = te.attrib['name']
-    neededEntity.add(topEntityName)
-    children = te.findall(".//*")
-    for child in children :
-      neededEntity.add(child.attrib['name'])
-    # get files we need to compile to elaborate this entity.
-    for entityName in neededEntity :
-      entity = vhdl.vhdlXml.find(".//entity[@name='{0}']".format(entityName))
-      if entity is not None :
-        fileOfEntity = entity.attrib['file']
-        files.add(fileOfEntity)
-      else :
-        msg = "Horror : Entity not found \n"
-        print(msg)
-        return
-    fileDict[topEntityName] = files
+    """ Run the damn design
+    """
+    # check for compiler. If it does not exists, quit.
+    try:
+        subprocess.call([simulator])
+    except OSError as e:
+        if e.errno == os.errno.ENOENT:
+            raise RuntimeError, "Simulator {0} not found".format(simulator)
+        else:
+            debug.printDebug("ERR"
+                    , "Something went wrong when checking for {0}".format(
+                        simulator
+                        )
+                    )
+            raise e
 
-  # If generateTB is set then ignore the previous TB and generate  a new one.
-  # Else execute the design as it is.
-  if generateTB :
-    newFileDict = dict()
+    # set compiler analyze command.
+    topDir = vhdl.vhdlXml.attrib['dir']
+    compileXml = ET.SubElement(vhdl.vhdlXml, "compiler")
+    compileXml.attrib['name'] = 'ghdl'
+    topEntities = vhdl.vhdlXml.findall(".//hier/module[@topEntity='true']")
+    fileDict = dict()
+    if topModule :
+      topModule = topModule[0]
+      topEntities = vhdl.vhdlXml.findall(".//hier/module[@name='{0}']"\
+          .format(topModule))
+    for te in topEntities :
+      # Files needed to elaborate the design.
+      files = set()
+      neededEntity = set()
+      topEntityName = te.attrib['name']
+      neededEntity.add(topEntityName)
+      children = te.findall(".//*")
+      for child in children :
+        neededEntity.add(child.attrib['name'])
+      # get files we need to compile to elaborate this entity.
+      for entityName in neededEntity :
+        entity = vhdl.vhdlXml.find(".//entity[@name='{0}']".format(entityName))
+        if entity is not None :
+          fileOfEntity = entity.attrib['file']
+          files.add(fileOfEntity)
+        else :
+          msg = "Horror : Entity not found \n"
+          print(msg)
+          return
+      fileDict[topEntityName] = files
+  
+    # If generateTB is set then ignore the previous TB and generate  a new one.
+    # Else execute the design as it is.
+    if generateTB :
+      newFileDict = dict()
+      for entity in fileDict :
+        # if this entity is already a testbench then remove it from the list and
+        # add a new one.
+        eXml = vhdl.vhdlXml.find(".//entity[@name='{0}']".format(entity))
+        msg = "|- Generating testbench for entity {0} \n".format(entity)
+        print(msg)
+        if eXml.attrib['noPort'] == "true" : # It's a testbench.
+          fileName = eXml.attrib['file']
+          msg = "   |- Ignoring existing one \n"
+          fileDict[entity].remove(fileName)
+          print(msg)
+          # add a new testbench. Need to find an entity which is its children.
+          fileSet = fileDict[entity]
+          # Get the name of entity this tb contains.
+          compXml = vhdl.vhdlXml.find(".//architecture[@of='{0}']/component"\
+              .format(entity))
+          try:
+              entityInTb = compXml.attrib['name']
+              tbName = "auto_generated_"+entityInTb+".vhd"
+              fileSet.add( vhdl.generateTestBench(entityInTb, tbName))
+              tbEntity = "tb_"+entityInTb
+              newFileDict[tbEntity] = fileSet
+          except Exception as e:
+              msg = "No test bench found in {0}".format(compXml)
+              print(msg)
+              return 
+        else :                              # no testbench
+          fileSet = set(fileDict[entity])
+          tbName = "auto_generated_"+entity+".vhd"
+          tbEntity = "tb_"+entity
+          fileSet.add(vhdl.generateTestBench(entity, tbName))
+          newFileDict[tbEntity] = fileSet
+      # Copy the new file list to old one.
+      fileDict = newFileDict
+  
+    # Great, now simulate.
     for entity in fileDict :
-      # if this entity is already a testbench then remove it from the list and
-      # add a new one.
-      eXml = vhdl.vhdlXml.find(".//entity[@name='{0}']".format(entity))
-      msg = "|- Generating testbench for entity {0} \n".format(entity)
-      print(msg)
-      if eXml.attrib['noPort'] == "true" : # It's a testbench.
-        fileName = eXml.attrib['file']
-        msg = "   |- Ignoring existing one \n"
-        fileDict[entity].remove(fileName)
-        print(msg)
-        # add a new testbench. Need to find an entity which is its children.
-        fileSet = fileDict[entity]
-        # Get the name of entity this tb contains.
-        compXml = vhdl.vhdlXml.find(".//architecture[@of='{0}']/component"\
-            .format(entity))
-        try:
-            entityInTb = compXml.attrib['name']
-            tbName = "auto_generated_"+entityInTb+".vhd"
-            fileSet.add( vhdl.generateTestBench(entityInTb, tbName))
-            tbEntity = "tb_"+entityInTb
-            newFileDict[tbEntity] = fileSet
-        except Exception as e:
-            msg = "No test bench found in {0}".format(compXml)
-            print(msg)
-            return 
-      else :                              # no testbench
-        fileSet = set(fileDict[entity])
-        tbName = "auto_generated_"+entity+".vhd"
-        tbEntity = "tb_"+entity
-        fileSet.add(vhdl.generateTestBench(entity, tbName))
-        newFileDict[tbEntity] = fileSet
-    # Copy the new file list to old one.
-    fileDict = newFileDict
-
-  # Great, now simulate.
-  for entity in fileDict :
-    runATopEntity(entity, fileDict[entity])
-
+      runATopEntity(entity, fileDict[entity])
+  
 def runATopEntity(entityName, fileSet) :
   topdir = vhdl.vhdlXml.attrib['dir']
   workdir = topdir+"/work"
@@ -248,25 +265,23 @@ def getHierarchy(elemXml) :
     hierXml.append(x)
 
 def execute(topdir, files, top, generateTB) :
-  ''' Top most function in this folder.'''
-  # We must delete all files automatically generated before (if any). All such
-  # files have auto_generated_ prefix.
-  newFiles = set()
-  for file in files :
-    if re.search(r"auto_generated_", file) : pass 
-    else : newFiles.add(file)
-  files = newFiles
-  msg = "Building design out of files ... Done"
-  print(msg)
-  vhdl.processFiles(topdir, files)
-  print("Processing design ... ")
-  global hierXml
-  getHierarchy(vhdl.vhdlXml) 
-  vhdl.vhdlXml.append(hierXml)
-  
-  # Run each top-entity.
-  print("Elaborating each design ...")
-  runDesign(top, generateTB)
+    ''' Top most function in this folder.'''
+    # We must delete all files automatically generated before (if any). All such
+    # files have auto_generated_ prefix.
+    newFiles = set()
+    for file in files :
+        if re.search(r"auto_generated_", file) : pass 
+        else : newFiles.add(file)
+    files = newFiles
+    debug.printDebug("STEP", "Building design out of files.")
+    vhdl.processFiles(topdir, files)
+    debug.printDebug("STEP", "Processing design")
+    global hierXml
+    getHierarchy(vhdl.vhdlXml) 
+    vhdl.vhdlXml.append(hierXml)
+    # Run each top-entity.
+    debug.printDebug("STEP", "Elaborating each design ...")
+    #runDesign(top, generateTB)
 
 def generateTestVector(entityName) :
   top = vhdl.vhdlXml.attrib['dir']

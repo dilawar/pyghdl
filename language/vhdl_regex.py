@@ -9,6 +9,7 @@ from language.vcd import parse_vcd
 from language.test import testVCD
 import xml.etree.cElementTree as ET
 import errno
+import debug.debug as debug
 
 vhdlXml = ET.Element("design")
 
@@ -90,59 +91,58 @@ END ARCHITECTURE arch;
   return testbench
 
 def parseTxt(elemXml, txt, fileName) :
-  '''
-  Parse the given 'txt'. Construct a design object which has topmodule.
-  If this topmodule is not a test bench then write one. Compile and simulate.
-  '''
-  global vhdlXml
-  topdir = vhdlXml.attrib['dir']
-  if not topdir :
-    print("Can't fetched dir from designXMl. Got {0}".format(topdir))
-    return
-
-  pattern = r'entity\s+(?P<name>\w+)\s+is\s*(?P<body>.*)'\
-    +'end\s*(entity)?\s*(?P=name)?\s*;'
-  entity = re.compile(pattern, re.IGNORECASE | re.DOTALL);
-  m = entity.finditer(txt)
-  for i in m :
-    match = i.groupdict()
-    body = match['body']
-    entityXml = ET.SubElement(elemXml, "entity")
-    #entityXml.text = str(body)
-    entityXml.attrib['name'] = match['name']
-    baseName = fileName.replace(topdir,"")
-    entityXml.attrib['file'] = baseName
-    entityXml.attrib['noPort'] = 'false'
-    genericPattern = re.compile(r'generic\s*\(((?!port).)+\)\s*;'
-        , re.IGNORECASE | re.DOTALL)
-    genericMatch = genericPattern.finditer(body) 
-    for gi in genericMatch :
-      genericText = gi.group(0)
-      genericXml = ET.SubElement(entityXml, "generic")
-      genericXml.text = genericText
-    portExpr = re.compile(r'port\s*\(((?!end).)+\)\s*;', re.IGNORECASE |
-        re.DOTALL)
-    portMatch = portExpr.search(body)
-    if portMatch :
-      portText = portMatch.group(0)
-      parsePortText(entityXml, portText)
-    else :
-      entityXml.attrib['noPort'] = "true"
-
-  architecture_body = '(?P<arch_body>((?!entity).)+)'
-  pattern = r'architecture\s+(?P<arch_name>\w+)\s+of\s+(?P<arch_of>\w+)'\
-      +'\s+is\s+{0}'.format( architecture_body)
-  architecture = re.compile(pattern, re.IGNORECASE | re.DOTALL);
-  m = architecture.finditer(txt)
-  for i in m :
-    match = i.groupdict()
-    arch_name = match['arch_name']
-    arch_body = match['arch_body']
-    arch_of = match['arch_of']
-    archXml = ET.SubElement(elemXml, "architecture")
-    archXml.attrib['name'] = arch_name
-    archXml.attrib['of'] = arch_of
-    parseArchitectureText(archXml, arch_body)
+    '''
+    Parse the given 'txt'. Construct a design object which has topmodule.
+    If this topmodule is not a test bench then write one. Compile and simulate.
+    '''
+    global vhdlXml
+    topdir = vhdlXml.attrib['dir']
+    if not topdir:
+        raise IOError, "Can't fetched dir from designXMl. Got {0}".format(topdir)
+  
+    pattern = r'entity\s+(?P<name>\w+)\s+is\s*(?P<body>.*)'\
+      +'end\s*(entity)?\s*(?P=name)?\s*;'
+    entity = re.compile(pattern, re.IGNORECASE | re.DOTALL);
+    m = entity.finditer(txt)
+    for i in m :
+      match = i.groupdict()
+      body = match['body']
+      entityXml = ET.SubElement(elemXml, "entity")
+      #entityXml.text = str(body)
+      entityXml.attrib['name'] = match['name']
+      baseName = fileName.replace(topdir,"")
+      entityXml.attrib['file'] = baseName
+      entityXml.attrib['noPort'] = 'false'
+      genericPattern = re.compile(r'generic\s*\(((?!port).)+\)\s*;'
+          , re.IGNORECASE | re.DOTALL)
+      genericMatch = genericPattern.finditer(body) 
+      for gi in genericMatch :
+        genericText = gi.group(0)
+        genericXml = ET.SubElement(entityXml, "generic")
+        genericXml.text = genericText
+      portExpr = re.compile(r'port\s*\(((?!end).)+\)\s*;', re.IGNORECASE |
+          re.DOTALL)
+      portMatch = portExpr.search(body)
+      if portMatch :
+        portText = portMatch.group(0)
+        parsePortText(entityXml, portText)
+      else :
+        entityXml.attrib['noPort'] = "true"
+  
+    architecture_body = '(?P<arch_body>((?!entity).)+)'
+    pattern = r'architecture\s+(?P<arch_name>\w+)\s+of\s+(?P<arch_of>\w+)'\
+        +'\s+is\s+{0}'.format( architecture_body)
+    architecture = re.compile(pattern, re.IGNORECASE | re.DOTALL);
+    m = architecture.finditer(txt)
+    for i in m :
+      match = i.groupdict()
+      arch_name = match['arch_name']
+      arch_body = match['arch_body']
+      arch_of = match['arch_of']
+      archXml = ET.SubElement(elemXml, "architecture")
+      archXml.attrib['name'] = arch_name
+      archXml.attrib['of'] = arch_of
+      parseArchitectureText(archXml, arch_body)
 
 def parseArchitectureText(elemXml, arch_body) :
   ''' 
@@ -203,19 +203,18 @@ def parsePortText(elemXml, portText) :
       return
 
 def toVHDLXML(elemXml, files) :
-  ''' Process all files to get the heirarchy of design.
-  '''
-  for file in files :
-    with open(file, "r") as f :
-      msg = "Parsing file : {0} \n".format(file)
-      print(msg)
-      txt = ""
-      for line in f :
-        if(line.strip()[0:2] == "--") : pass 
-        else : 
-          txt += line
-      parseTxt(elemXml, txt, file)
- 
+    ''' Process all files to get the heirarchy of design.
+    '''
+    for file in files:
+        with open(file, "r") as f:
+            txt = ""
+            for line in f:
+                if(line.strip()[0:2] == "--") : pass 
+                else: txt += line
+            assert len(txt) > 3, "File contains: {0}".format(txt)
+            debug.printDebug("STEP", "Parsing file : {0} \n".format(file))
+            parseTxt(elemXml, txt, file)
+   
 def generateTestBench(entity, tbName) :
   ''' Add a test-bench 
   tbName : file name of tb
@@ -292,11 +291,11 @@ def generateAssertLines(ports ) :
   return assertLine
 
 def processFiles(topdir, files) :
-  ''' Process the all file listings. '''
-  global vhdlXml
-  
-  currentTime = time.strftime('%Y-%m-%d %H-%M')
-  vhdlXml.attrib['langauge'] ="vhdl"
-  vhdlXml.attrib['timestamp'] = currentTime
-  vhdlXml.attrib['dir'] = topdir
-  toVHDLXML(vhdlXml, files)
+    ''' Process the all file listings. 
+    '''
+    global vhdlXml
+    currentTime = time.strftime('%Y-%m-%d %H-%M')
+    vhdlXml.attrib['langauge'] ="vhdl"
+    vhdlXml.attrib['timestamp'] = currentTime
+    vhdlXml.attrib['dir'] = topdir
+    toVHDLXML(vhdlXml, files)

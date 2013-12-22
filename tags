@@ -62,6 +62,7 @@ ApIntUlt_proc	test/packagesV2/OperatorPackage.vhd	/^  procedure ApIntUlt_proc (l
 ApIntXor_proc	test/packagesV2/OperatorPackage.vhd	/^  procedure ApIntXor_proc (l : in std_logic_vector; r : in std_logic_vector; result : out std_logic_vector) is					$/;"	p
 ApIntZero	test/packagesV2/Subprograms.vhd	/^  function ApIntZero( l: integer) return ApInt is$/;"	f
 Args	main.py	/^  class Args: pass $/;"	c
+BUG_NetworkML_500	debug/bugs.py	/^BUG_NetworkML_500 = False$/;"	v
 BankArrayControlArray	test/memory_subsystem/common/memory_bank_base.vhd	/^  type BankArrayControlArray is array (0 to bank_array_height-1, 0 to bank_array_width -1) of std_logic;$/;"	t
 BankArrayDataArray	test/memory_subsystem/common/memory_bank_base.vhd	/^  type BankArrayDataArray is array (0 to bank_array_height-1, 0 to bank_array_width -1) of std_logic_vector(g_base_bank_data_width-1 downto 0);$/;"	t
 BankControlArray	test/memory_subsystem/strictly_ordered/memory_subsystem_core.vhd	/^  type BankControlArray is array(natural range <>) of std_logic_vector(number_of_banks-1 downto 0);$/;"	t
@@ -114,6 +115,7 @@ Convert_To_String	test/packagesV2/Utilities.vhd	/^  function Convert_To_String(v
 Convert_To_String	test/packagesV2/mem_function_pack.vhd	/^  function Convert_To_String(val : NATURAL) return STRING is$/;"	f
 Convert_To_String	test/packagesV2/mem_function_pack.vhd	/^  function Convert_To_String(val : std_logic_vector) return STRING is$/;"	f
 DArray	test/operatorsV2/ieee754/UnsignedMultiplier.vhd	/^	type DArray is array (natural range <>) of unsigned(operand_width-1 downto 0);$/;"	t
+DEBUG	debug/debug.py	/^DEBUG = HEADER$/;"	v
 Data2D	test/operatorsV2/testbenches/PortTB.vhd	/^    type   Data2D is array(natural range <>) of std_logic_vector(data_width-1 downto 0);$/;"	t
 Data2D	test/operatorsV2/testbenches/SplitOperatorSharedTB.vhd	/^    type   Data2D is array(natural range <>) of std_logic_vector(input_data_width-1 downto 0);$/;"	t
 DataArray	test/memory_subsystem/common/mem_shift_repeater.vhd	/^  type DataArray is array (natural range <>) of std_logic_vector(g_data_width-1 downto 0);$/;"	t
@@ -121,6 +123,10 @@ DataArray	test/memory_subsystem/unordered/register_bank.vhd	/^  type DataArray i
 DelayCell	test/operatorsV2/ieee754/UnsignedMultiplier.vhd	/^entity DelayCell is$/;"	e
 Digit_To_Char	test/packagesV2/Utilities.vhd	/^  function Digit_To_Char(val: integer) return character is$/;"	f
 DoublePrecisionMultiplier	test/operatorsV2/ieee754/DoublePrecisionMultiplier.vhd	/^entity DoublePrecisionMultiplier is$/;"	e
+ENDC	debug/debug.py	/^ENDC = '\\033[0m'$/;"	v
+ERR	debug/debug.py	/^    ERR = ERR$/;"	v
+ERR	debug/debug.py	/^ERR = '\\033[31m'$/;"	v
+ERROR	debug/debug.py	/^ERROR = ERR$/;"	v
 Extract	test/packagesV2/Subprograms.vhd	/^  function Extract( x : StdLogicArray2D;  idx : integer) return std_logic_vector is$/;"	f
 Extract	test/packagesV2/Subprograms.vhd	/^  function Extract( x: ApFloatArray;  idx: integer) return ApFloat is$/;"	f
 Extract	test/packagesV2/Subprograms.vhd	/^  function Extract( x: ApIntArray;  idx: integer) return ApInt is$/;"	f
@@ -139,6 +145,8 @@ GuardInterface	test/operatorsV2/base/GuardInterface.vhd	/^entity GuardInterface 
 H	test/control-path/join.vhdl	/^  constant H: integer := preds'high;$/;"	c
 H	test/control-path/join_with_input.vhdl	/^  constant H: integer := preds'high;$/;"	c
 H	test/control-path/marked_join.vhdl	/^  constant H: integer := preds'high;$/;"	c
+HEADER	debug/debug.py	/^HEADER = '\\033[95m'$/;"	v
+INFO	debug/debug.py	/^INFO = OKBLUE$/;"	v
 IPWArray	test/operatorsV2/base/InputPort.vhd	/^  type   IPWArray is array(integer range <>) of std_logic_vector(data_width-1 downto 0);$/;"	t
 IPWArray	test/operatorsV2/base/InputPortLevel.vhd	/^  type IPWArray is array(integer range <>) of std_logic_vector(data_width-1 downto 0);$/;"	t
 IStdLogicVector	test/packagesV2/Types.vhd	/^  type IStdLogicVector is array (integer range <>) of std_logic; -- note: integer range$/;"	t
@@ -205,6 +213,8 @@ Natural_To_SLV	test/packagesV2/mem_function_pack.vhd	/^  function Natural_To_SLV
 NobodyLeftBehind	test/operatorsV2/base/NobodyLeftBehind.vhd	/^entity NobodyLeftBehind is$/;"	e
 Nonzero_Count	test/packagesV2/merge_functions.vhd	/^  function Nonzero_Count ($/;"	f
 NumChunks	test/operatorsV2/ieee754/UnsignedMultiplier.vhd	/^	constant NumChunks : integer := Ceil(operand_width, chunk_width);$/;"	c
+OKBLUE	debug/debug.py	/^OKBLUE = '\\033[94m'$/;"	v
+OKGREEN	debug/debug.py	/^OKGREEN = '\\033[92m'$/;"	v
 OPWArray	test/operatorsV2/base/OutputPort.vhd	/^  type   OPWArray is array(integer range <>) of std_logic_vector(data_width-1 downto 0);$/;"	t
 OPWArray	test/operatorsV2/base/OutputPortLevel.vhd	/^  type OPWArray is array(integer range <>) of std_logic_vector(odata'range);$/;"	t
 OneD2BitArray	test/operatorsV2/ieee754/UnsignedMultiplier.vhd	/^	type OneD2BitArray is array (natural range <>) of unsigned(1 downto 0);$/;"	t
@@ -237,6 +247,7 @@ QueueArray	test/operatorsV2/base/QueueBase.vhd	/^  type QueueArray is array(natu
 QueueArray	test/operatorsV2/base/SynchFifo.vhd	/^  type QueueArray is array(natural range <>) of std_logic_vector(data_width-1 downto 0);$/;"	t
 QueueArray	test/operatorsV2/base/SynchLifo.vhd	/^  type QueueArray is array(natural range <>) of std_logic_vector(data_width-1 downto 0);$/;"	t
 QueueBase	test/operatorsV2/base/QueueBase.vhd	/^entity QueueBase is$/;"	e
+RED	debug/debug.py	/^RED = ERR$/;"	v
 RPEState	test/operatorsV2/base/Request_Priority_Encode_Entity.vhd	/^  type RPEState is (idle,busy);$/;"	t
 RR_State	test/operatorsV2/base/RigidRepeater.vhd	/^	type RR_State is (idle, busy, done);$/;"	t
 RWORD	test/operatorsV2/ieee754/UnsignedMultiplier.vhd	/^  type RWORD is array (natural range <>) of unsigned((2*operand_width)-1 downto 0);$/;"	t
@@ -290,6 +301,7 @@ Swap_Bytes	test/packagesV2/Subprograms.vhd	/^  function Swap_Bytes(x: std_logic_
 SynchFifo	test/operatorsV2/base/SynchFifo.vhd	/^entity SynchFifo is$/;"	e
 SynchLifo	test/operatorsV2/base/SynchLifo.vhd	/^entity SynchLifo is$/;"	e
 SynchToAsynchReadInterface	test/operatorsV2/base/SynchToASynchReadInterface.vhd	/^entity SynchToAsynchReadInterface is$/;"	e
+TODO	debug/debug.py	/^TODO = OKGREEN$/;"	v
 TWORD	test/operatorsV2/ieee754/UnsignedAdderSubtractor.vhd	/^  type TWORD is array (natural range <>) of std_logic_vector(tag_width-1 downto 0);  $/;"	t
 TWORD	test/operatorsV2/ieee754/UnsignedMultiplier.vhd	/^  type TWORD is array (natural range <>) of std_logic_vector(tag_width-1 downto 0);  $/;"	t
 TWORD	test/operatorsV2/ieee754/UnsignedShifter.vhd	/^  type TWORD is array (natural range <>) of std_logic_vector(tag_width-1 downto 0);  $/;"	t
@@ -371,15 +383,18 @@ UnsignedMultiplier	test/operatorsV2/ieee754/UnsignedMultiplier.vhd	/^entity Unsi
 UnsignedShifter	test/operatorsV2/ieee754/UnsignedShifter.vhd	/^entity UnsignedShifter is$/;"	e
 Utilities	test/packagesV2/Utilities.vhd	/^package Utilities is$/;"	P
 Utilities	test/packagesV2/Utilities.vhd	/^package body Utilities is$/;"	P
+WARN	debug/debug.py	/^WARN = WARNING$/;"	v
+WARNING	debug/debug.py	/^WARNING = '\\033[93m'$/;"	v
 WordArray	test/operatorsV2/base/InputMuxBase.vhd	/^  type WordArray is array (natural range <>) of std_logic_vector(owidth-1 downto 0);$/;"	t
 WordArray	test/operatorsV2/base/OutputDemuxBase.vhd	/^  type WordArray is array (natural range <>) of std_logic_vector(iwidth-1 downto 0);$/;"	t
-_lr_action	parsetab.py	/^_lr_action = { }$/;"	v
-_lr_action_items	parsetab.py	/^_lr_action_items = {'UPTO':([78,],[80,]),'USE':([0,2,3,4,5,7,11,15,52,69,75,79,],[1,-4,-3,1,-5,-2,-1,-6,-9,-10,-33,-34,]),'LPAREN':([21,23,60,],[27,29,73,]),'GENERIC':([17,],[21,]),'NUMBER':([73,80,81,],[78,82,83,]),'ENTITY':([0,2,3,4,5,7,11,15,30,52,69,75,79,],[6,-4,-3,6,-5,-2,-1,-6,39,-9,-10,-33,-34,]),'ASSIGN_OP':([57,58,59,60,84,85,],[-30,72,-28,-29,-32,-31,]),'PORT':([17,22,61,],[23,23,-13,]),'INOUT':([49,],[63,]),'RPAREN':([32,33,34,35,38,56,57,58,59,60,68,74,77,82,83,84,85,],[-15,-16,47,48,-21,-14,-30,-17,-28,-29,-20,-22,-18,84,85,-32,-31,]),'SEMICOLON':([9,19,20,38,39,40,41,42,44,47,48,53,57,59,60,71,74,76,84,85,],[15,-7,-8,51,52,54,-37,-38,-39,61,62,69,-30,-28,-29,75,-22,79,-32,-31,]),'COLON':([33,36,37,67,],[46,49,-24,-23,]),'COMMA':([32,33,37,57,58,59,60,77,84,85,],[45,-16,50,-30,-17,-28,-29,-18,-32,-31,]),'BIT':([46,63,64,65,66,],[59,-27,-25,59,-26,]),'DECIMAL':([9,10,19,20,],[14,16,-7,-8,]),'OUT':([49,],[66,]),'END':([24,25,28,43,54,62,70,],[30,-12,-11,55,-36,-19,-35,]),'IS':([12,26,],[17,31,]),'type_decl':([31,54,],[41,41,]),'IN':([49,],[64,]),'ID':([1,6,8,14,16,18,27,29,31,39,45,46,50,51,54,63,64,65,66,71,72,],[10,12,13,19,20,26,33,37,44,53,33,60,37,37,44,-27,-25,60,-26,76,77,]),'OF':([13,],[18,]),'DOWNTO':([78,],[81,]),'ARCHITECTURE':([0,2,3,4,5,7,11,15,52,55,69,75,79,],[8,-4,-3,8,-5,-2,-1,-6,-9,71,-10,-33,-34,]),'procedure_definition':([31,54,],[42,42,]),'$end':([2,3,4,5,7,11,15,52,69,75,79,],[-4,-3,0,-5,-2,-1,-6,-9,-10,-33,-34,]),}$/;"	v
-_lr_goto	parsetab.py	/^_lr_goto = { }$/;"	v
-_lr_goto_items	parsetab.py	/^_lr_goto_items = {'bit_vector':([46,65,],[57,57,]),'generic_decl':([17,],[22,]),'generic_stmts':([27,45,],[34,56,]),'portdir':([49,],[65,]),'arch_expressions':([31,54,],[40,40,]),'portlist':([29,51,],[35,68,]),'portnames':([29,50,51,],[36,67,36,]),'generic_stmt':([27,45,],[32,32,]),'library':([1,],[9,]),'entity':([0,4,],[2,2,]),'header':([0,4,],[3,3,]),'entity_body':([17,],[24,]),'design':([0,],[4,]),'architecture':([0,4,],[5,5,]),'porttype':([46,65,],[58,74,]),'architecture_body':([31,54,],[43,70,]),'ports':([17,22,],[25,28,]),'unit':([0,4,],[7,11,]),'portdecl':([29,51,],[38,38,]),}$/;"	v
-_lr_method	parsetab.py	/^_lr_method = 'LALR'$/;"	v
-_lr_productions	parsetab.py	/^_lr_productions = [$/;"	v
-_tabversion	parsetab.py	/^_tabversion = '3.2'$/;"	v
+__author__	debug/bugs.py	/^__author__           = "Dilawar Singh"$/;"	v
+__copyright__	debug/bugs.py	/^__copyright__        = "Copyright 2013, NCBS Bangalore"$/;"	v
+__credits__	debug/bugs.py	/^__credits__          = ["NCBS Bangalore", "Bhalla Lab"]$/;"	v
+__email__	debug/bugs.py	/^__email__            = "dilawars@iitb.ac.in"$/;"	v
+__license__	debug/bugs.py	/^__license__          = "GPL"$/;"	v
+__maintainer__	debug/bugs.py	/^__maintainer__       = "Dilawar Singh"$/;"	v
+__status__	debug/bugs.py	/^__status__           = "Development"$/;"	v
+__version__	debug/bugs.py	/^__version__          = "1.0.0"$/;"	v
 addr_width	test/memory_subsystem/test/UnorderedMemorySystemTB.vhd	/^  constant addr_width : natural := 4;$/;"	c
 addr_width	test/memory_subsystem/test/memory_subsystem_tb.vhd	/^  constant addr_width : natural := 10;$/;"	c
 addr_width	test/memory_subsystem/test/register_bank_tb.vhd	/^  constant addr_width : natural := 4;$/;"	c
@@ -421,12 +436,13 @@ c_store_port_id_width	test/memory_subsystem/unordered/UnorderedMemorySubsystem.v
 c_total_intermediate_width	test/memory_subsystem/strictly_ordered/merge_tree.vhd	/^  constant c_total_intermediate_width : natural := Total_Intermediate_Width(g_number_of_inputs,g_mux_degree);$/;"	c
 c_total_intermediate_width	test/memory_subsystem/unordered/PipelinedMux.vhd	/^  constant c_total_intermediate_width : natural := Total_Intermediate_Width(g_number_of_inputs,g_mux_degree);$/;"	c
 calc_mult	language/vcd.py	/^def calc_mult (statement, opt_timescale=''):$/;"	f
+colored	debug/debug.py	/^def colored(msg, label="INFO") :$/;"	f
 combinational_merge	test/memory_subsystem/strictly_ordered/combinational_merge.vhd	/^entity combinational_merge is$/;"	e
 combinational_merge_with_repeater	test/memory_subsystem/strictly_ordered/combinational_merge_with_repeater.vhd	/^entity combinational_merge_with_repeater is$/;"	e
 const_operand	test/operatorsV2/testbenches/SplitOperatorSharedTB.vhd	/^    constant const_operand: std_logic_vector(input_data_width-1 downto 0) := (others => '1');$/;"	c
 control_delay_element	test/control-path/control_delay_element.vhdl	/^entity control_delay_element is$/;"	e
 croak	language/vcd.py	/^def croak(*args):$/;"	f
-dataWindow	mycurses.py	/^dataWindow = None$/;"	v
+dataWindow	curses/mycurses.py	/^dataWindow = None$/;"	v
 data_width	test/memory_subsystem/test/UnorderedMemorySystemTB.vhd	/^  constant data_width : natural := 8;$/;"	c
 data_width	test/memory_subsystem/test/memory_subsystem_tb.vhd	/^  constant data_width : natural := 28;$/;"	c
 data_width	test/memory_subsystem/test/register_bank_tb.vhd	/^  constant data_width : natural := 16;$/;"	c
@@ -446,11 +462,11 @@ dummy_write_only_memory_subsystem	test/memory_subsystem/common/dummy_write_only_
 elaborate	language/vhdl.py	/^def elaborate(workdir, entityname) :$/;"	f
 execute	language/vhdl.py	/^def execute(topdir, files, top, generateTB) :$/;"	f
 expon_base	test/operatorsV2/ieee754/GenericFloatingPointNormalizer.vhd	/^    constant expon_base : SIGNED (exponent_width-1 downto 0) :=$/;"	c
-file_regex	main.py	/^    file_regex = ".*\\.vhd$"$/;"	v	class:.Args
-files	main.py	/^    files = findListings(args.d, regex=file_regex)$/;"	v	class:.Args
+file_regex	main.py	/^      file_regex = ".*\\.vhdl?$"$/;"	v	class:.Args
+files	main.py	/^      files = findListings(args.d, regex=file_regex)$/;"	v	class:.Args
 findListings	main.py	/^def findListings(dirs, regex=None) :$/;"	f
 findTopDir	main.py	/^def findTopDir(dirs) :$/;"	f
-formatString	mycurses.py	/^def formatString(msg, width, indent) :$/;"	f
+formatString	curses/mycurses.py	/^def formatString(msg, width, indent) :$/;"	f
 fpadd32	test/operatorsV2/functionLibrary/fpadd32.vhd	/^entity fpadd32 is -- $/;"	e
 fpadd64	test/operatorsV2/functionLibrary/fpadd64.vhd	/^entity fpadd64 is -- $/;"	e
 fpmul32	test/operatorsV2/functionLibrary/fpmul32.vhd	/^entity fpmul32 is -- $/;"	e
@@ -472,7 +488,7 @@ get_timescale	language/vcd.py	/^def get_timescale() :$/;"	f
 global_debug_flag	test/packagesV2/Types.vhd	/^  constant global_debug_flag: boolean := false;$/;"	c
 hierXml	language/vhdl.py	/^hierXml = ET.Element("hier")$/;"	v
 ignore_tag	test/operatorsV2/base/SplitOperatorShared.vhd	/^  constant ignore_tag  : boolean := no_arbitration or (reqL'length = 1);$/;"	c
-initCurses	mycurses.py	/^def initCurses() :$/;"	f
+initCurses	curses/mycurses.py	/^def initCurses() :$/;"	f
 inserted_delay	test/memory_subsystem/strictly_ordered/demerge_tree.vhd	/^  constant inserted_delay  : integer := Maximum(1,Ceil_Log2(g_number_of_outputs\/g_demux_degree));$/;"	c
 iteration_count	test/memory_subsystem/test/UnorderedMemorySystemTB.vhd	/^  constant iteration_count : natural := (2**(addr_width-tag_width))-1;$/;"	c
 iteration_count	test/memory_subsystem/test/memory_subsystem_tb.vhd	/^  constant iteration_count : natural := (2**addr_width) - 1;$/;"	c
@@ -487,11 +503,13 @@ iwidth	test/operatorsV2/ieee754/PipelinedFPOperator.vhd	/^  constant iwidth : in
 join	test/control-path/join.vhdl	/^entity join is$/;"	e
 join2	test/control-path/join_2.vhdl	/^entity join2 is$/;"	e
 join_with_input	test/control-path/join_with_input.vhdl	/^entity join_with_input is$/;"	e
-killCurses	mycurses.py	/^def killCurses() :$/;"	f
+killCurses	curses/mycurses.py	/^def killCurses() :$/;"	f
 l_index	test/memory_subsystem/common/memory_bank_base.vhd	/^        constant l_index: natural := Minimum(g_addr_width-1, g_base_bank_addr_width-1);$/;"	c
 level_to_pulse	test/control-path/level_to_pulse.vhdl	/^entity level_to_pulse is$/;"	e
 list_sigs	language/vcd.py	/^def list_sigs(file) :$/;"	f
 log2_number_of_banks	test/memory_subsystem/strictly_ordered/memory_subsystem_core.vhd	/^  constant log2_number_of_banks : natural := Ceil_Log2(number_of_banks);  --  $/;"	c
+logFile	debug/logger.py	/^logFile = 'logs\/moose.log'$/;"	v
+logPathsToFille	debug/logger.py	/^def logPathsToFille(pat):$/;"	f
 loop_terminator	test/control-path/loop_terminator.vhdl	/^entity loop_terminator is$/;"	e
 marked_join	test/control-path/marked_join.vhdl	/^entity marked_join is$/;"	e
 mem_component_pack	test/packagesV2/mem_component_pack.vhd	/^package mem_component_pack is$/;"	P
@@ -512,8 +530,8 @@ merge_functions	test/packagesV2/merge_functions.vhd	/^package merge_functions is
 merge_tree	test/memory_subsystem/strictly_ordered/merge_tree.vhd	/^entity merge_tree is$/;"	e
 min_data_width	test/operatorsV2/base/RegisterBase.vhd	/^  constant min_data_width : integer := Minimum(in_data_width,out_data_width);$/;"	c
 moore_flag	test/operatorsV2/base/Pulse_To_Level_Translate_Entity.vhd	/^  constant moore_flag : boolean := false;$/;"	c
-msg	main.py	/^    msg = "Unsupported language : {0}".format(args.l)$/;"	v	class:.Args
-msgWindow	mycurses.py	/^msgWindow = None$/;"	v
+mooseLogger	debug/logger.py	/^mooseLogger = logging.getLogger()$/;"	v
+msgWindow	curses/mycurses.py	/^msgWindow = None$/;"	v
 multguard	test/operatorsV2/ieee754/GenericFloatingPointMultiplier.vhd	/^  constant multguard        : NATURAL := addguard;           -- guard bits$/;"	c
 num_chunks	test/operatorsV2/ieee754/UnsignedAdderSubtractor.vhd	/^  constant num_chunks: integer := Ceil(operand_width, chunk_width);$/;"	c
 num_loads	test/memory_subsystem/test/UnorderedMemorySystemTB.vhd	/^  constant num_loads: natural := 2;$/;"	c
@@ -554,8 +572,10 @@ pipe_depth	test/operatorsV2/ieee754/UnsignedShifter.vhd	/^  constant pipe_depth 
 pipeline_interlock	test/control-path/pipeline_interlock.vhdl	/^entity pipeline_interlock is$/;"	e
 place	test/control-path/place.vhdl	/^entity place is$/;"	e
 place_with_bypass	test/control-path/place_with_bypass.vhdl	/^entity place_with_bypass is$/;"	e
+prefix	debug/debug.py	/^prefix = dict($/;"	v
+printDebug	debug/debug.py	/^def printDebug(label, msg, frame=None, exception=None):$/;"	f
 processFiles	language/vhdl_regex.py	/^def processFiles(topdir, files) :$/;"	f
-processWindow	mycurses.py	/^processWindow = None$/;"	v
+processWindow	curses/mycurses.py	/^processWindow = None$/;"	v
 rd_mux_data_width	test/memory_subsystem/unordered/UnorderedMemorySubsystem.vhd	/^  constant rd_mux_data_width: integer :=  (addr_width + tag_width + c_load_port_id_width );$/;"	c
 register_bank	test/memory_subsystem/unordered/register_bank.vhd	/^entity register_bank is$/;"	e
 register_bank_tb	test/memory_subsystem/test/register_bank_tb.vhd	/^entity register_bank_tb is$/;"	e
@@ -565,7 +585,9 @@ run	language/vhdl.py	/^def run(topdir, entityName, time=1000) :$/;"	f
 runATopEntity	language/vhdl.py	/^def runATopEntity(entityName, fileSet) :$/;"	f
 runDesign	language/vhdl.py	/^def runDesign(topModule, generateTB, simulator="ghdl") :$/;"	f
 shift_delay	test/memory_subsystem/strictly_ordered/merge_box_with_repeater.vhd	/^  constant shift_delay : integer := RepeaterShiftDelay(g_pipeline_flag);$/;"	c
-stdscr	mycurses.py	/^stdscr = None$/;"	v
+st	debug/logger.py	/^st = datetime.datetime.fromtimestamp(st).strftime('%Y-%m-%d-%H%M')$/;"	v
+st	debug/logger.py	/^st = time.time()$/;"	v
+stdscr	curses/mycurses.py	/^stdscr = None$/;"	v
 suppress_immediate_ack	test/operatorsV2/base/InputMuxBase.vhd	/^  constant suppress_immediate_ack : BooleanArray(reqL'length-1 downto 0) := (others => true);$/;"	c
 suppress_immediate_ack	test/operatorsV2/base/InputMuxBaseNoData.vhd	/^  constant suppress_immediate_ack : BooleanArray(reqL'length-1 downto 0) := (others => true);$/;"	c
 tag	test/memory_subsystem/test/mem_test_block.vhd	/^    constant tag : std_logic_vector(tag_width-1 downto 0) := Natural_To_SLV(block_id,tag_width);$/;"	c
@@ -578,19 +600,35 @@ tag_length	test/operatorsV2/ieee754/PipelinedFPOperator.vhd	/^  constant tag_len
 tag_width	test/memory_subsystem/test/UnorderedMemorySystemTB.vhd	/^  constant tag_width : natural := Ceil_Log2(num_loads);$/;"	c
 tag_width	test/memory_subsystem/test/memory_subsystem_tb.vhd	/^  constant tag_width : natural := Ceil_Log2(num_loads);$/;"	c
 tag_width	test/memory_subsystem/test/register_bank_tb.vhd	/^  constant tag_width : natural := Ceil_Log2(num_loads);$/;"	c
+tb_CombinationalMux	test/memory_subsystem/unordered/auto_generated_CombinationalMux.vhd	/^ENTITY tb_CombinationalMux IS END;$/;"	e
+tb_PipelinedDemux	test/memory_subsystem/unordered/auto_generated_PipelinedDemux.vhd	/^ENTITY tb_PipelinedDemux IS END;$/;"	e
+tb_PipelinedMux	test/memory_subsystem/unordered/auto_generated_PipelinedMux.vhd	/^ENTITY tb_PipelinedMux IS END;$/;"	e
+tb_PipelinedMuxStage	test/memory_subsystem/unordered/auto_generated_PipelinedMuxStage.vhd	/^ENTITY tb_PipelinedMuxStage IS END;$/;"	e
+tb_UnorderedMemorySubsystem	test/memory_subsystem/unordered/auto_generated_UnorderedMemorySubsystem.vhd	/^ENTITY tb_UnorderedMemorySubsystem IS END;$/;"	e
+tb_combinational_merge	test/memory_subsystem/strictly_ordered/auto_generated_combinational_merge.vhd	/^ENTITY tb_combinational_merge IS END;$/;"	e
+tb_combinational_merge_with_repeater	test/memory_subsystem/strictly_ordered/auto_generated_combinational_merge_with_repeater.vhd	/^ENTITY tb_combinational_merge_with_repeater IS END;$/;"	e
+tb_demerge_tree	test/memory_subsystem/strictly_ordered/auto_generated_demerge_tree.vhd	/^ENTITY tb_demerge_tree IS END;$/;"	e
+tb_demerge_tree_wrap	test/memory_subsystem/strictly_ordered/auto_generated_demerge_tree_wrap.vhd	/^ENTITY tb_demerge_tree_wrap IS END;$/;"	e
+tb_mem_demux	test/memory_subsystem/strictly_ordered/auto_generated_mem_demux.vhd	/^ENTITY tb_mem_demux IS END;$/;"	e
+tb_memory_subsystem	test/memory_subsystem/strictly_ordered/auto_generated_memory_subsystem.vhd	/^ENTITY tb_memory_subsystem IS END;$/;"	e
+tb_memory_subsystem_core	test/memory_subsystem/strictly_ordered/auto_generated_memory_subsystem_core.vhd	/^ENTITY tb_memory_subsystem_core IS END;$/;"	e
+tb_merge_box_with_repeater	test/memory_subsystem/strictly_ordered/auto_generated_merge_box_with_repeater.vhd	/^ENTITY tb_merge_box_with_repeater IS END;$/;"	e
+tb_merge_tree	test/memory_subsystem/strictly_ordered/auto_generated_merge_tree.vhd	/^ENTITY tb_merge_tree IS END;$/;"	e
+tb_ordered_memory_subsystem	test/memory_subsystem/strictly_ordered/auto_generated_ordered_memory_subsystem.vhd	/^ENTITY tb_ordered_memory_subsystem IS END;$/;"	e
+tb_register_bank	test/memory_subsystem/unordered/auto_generated_register_bank.vhd	/^ENTITY tb_register_bank IS END;$/;"	e
 testEntity	language/test.py	/^def testEntity(entityName, testDir) : $/;"	f
 testVCD	language/test.py	/^def testVCD(vcds) :$/;"	f
 testbenchFromDict	language/vhdl_regex.py	/^def testbenchFromDict(tDict) :$/;"	f
 time_stamp_width	test/memory_subsystem/strictly_ordered/memory_subsystem.vhd	/^  constant time_stamp_width : natural := 2 + Ceil_Log2(num_loads + num_stores);   --  two msb bits for identification$/;"	c
 toVHDLXML	language/vhdl_regex.py	/^def toVHDLXML(elemXml, files) :$/;"	f
-topDir	main.py	/^    topDir = findTopDir(args.d)$/;"	v	class:.Args
+topDir	main.py	/^      topDir = findTopDir(args.d)$/;"	v	class:.Args
 transition	test/control-path/transition.vhdl	/^entity transition is$/;"	e
 transition_merge	test/control-path/transition_merge.vhdl	/^entity transition_merge is$/;"	e
 use_as_subtractor	test/operatorsV2/ieee754/PipelinedFPOperator.vhd	/^  constant use_as_subtractor : boolean := (operator_id = "ApFloatSub");$/;"	c
 use_generic_multiplier	test/operatorsV2/ieee754/PipelinedFPOperator.vhd	/^  constant use_generic_multiplier : boolean := true;$/;"	c
 vhdlXml	language/vhdl_regex.py	/^vhdlXml = ET.Element("design")$/;"	v
 wr_mux_data_width	test/memory_subsystem/unordered/UnorderedMemorySubsystem.vhd	/^  constant wr_mux_data_width: integer :=  (addr_width + data_width + tag_width + c_store_port_id_width);$/;"	c
-writeOnWindow	mycurses.py	/^def writeOnWindow(win, msg, indent=1, overwrite=False$/;"	f
+writeOnWindow	curses/mycurses.py	/^def writeOnWindow(win, msg, indent=1, overwrite=False$/;"	f
 zero_addr	test/memory_subsystem/unordered/register_bank.vhd	/^  constant zero_addr : std_logic_vector(addr_width-1 downto 0) := (others => '0');$/;"	c
 zero_const	test/operatorsV2/ieee754/UnsignedMultiplier.vhd	/^	constant zero_const : unsigned(operand_width-2 downto 0) := (others => '0');$/;"	c
 zero_pad	test/packagesV2/Subprograms.vhd	/^  function zero_pad ($/;"	f

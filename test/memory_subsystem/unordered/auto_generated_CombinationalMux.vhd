@@ -55,7 +55,7 @@ BEGIN
 		VARIABLE tmp_out_ack :  std_logic;
 
 		-- File and its minions.
-		FILE vector_file : TEXT OPEN read_mode IS "test/memory_subsystem/unordered//work/vector.test";
+		FILE vector_file : TEXT OPEN read_mode IS "./test/memory_subsystem/unordered//work/vector.test";
 		VARIABLE l : LINE;
 		VARIABLE r : REAL;
 		VARIABLE vector_time : TIME;
