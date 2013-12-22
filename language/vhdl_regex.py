@@ -18,6 +18,7 @@ class VHDLParser:
     def __init__(self, topdir=""):
         self.tb = ""
         self.topdir = topdir
+        self.workdir = os.path.join(self.topdir, 'work')
         self.vhdlXml = ET.Element("design")
 
     def testbenchFromDict(self, tDict):
@@ -260,19 +261,29 @@ END ARCHITECTURE arch;
         topDir = self.vhdlXml.attrib['dir']
         # Delete previous testbench 
         tbPath = topDir+tbName
-        tDict['vector_file_path'] = topDir+"/work/vector.test"
+        tDict['vector_file_path'] = os.path.join(self.workdir, "vector.test")
+
         try :
             os.remove(tbPath)
         except OSError, e: 
             if e.errno != errno.ENOENT:
                 raise
+        
+
         # Fill in testbench
         tDict['comp_decl'] = ""
         ports = self.vhdlXml.findall(".//entity[@name='{0}']/port".format(entity))
         for p in ports:
             tDict['comp_decl'] += ("\t\t"+p.text+ " : "+p.attrib['direction']+ " "
                     + p.attrib['type']+";\n")
+
         
+        # generics
+        gns = self.vhdlXml.findall(
+                ".//entity/[@name='{0}']/generic".format(entity)
+                )
+        print gns
+
         # Signal declarations.
         tDict['signal_decl'] = ''
         for p in ports :

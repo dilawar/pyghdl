@@ -13,6 +13,7 @@ class VHDL(vhdl_regex.VHDLParser):
 
     def __init__(self, topdir):
         self.topdir = topdir
+        self.workdir = os.path.join(self.topdir, 'work')
         self.hierXml = ET.Element("hier")
         self.topModule = None
 
