@@ -22,7 +22,6 @@ class VHDLParser:
 
     def testbenchFromDict(self, tDict):
         testbench = '''
-ENTITY tb_{0} IS END;
 -------------------------------------------------------------------------------
 -- This testbench is automatically generated. May not work.
 -- A file called vector.test must be generated in the same directory where
@@ -36,16 +35,17 @@ USE ieee.std_logic_1164.ALL;
 USE std.textio.ALL;
 USE work.ALL;
 
+ENTITY tb_{0} IS END;
 ARCHITECTURE arch OF tb_{0} IS 
 
 \t----------------------------------------------------------------
 \t-- Component declaration.
 \t----------------------------------------------------------------
 \tCOMPONENT {0} 
-\t\tPORT ( \n'''.format(tDict.get('comp_name'))
+\tPORT ( \n'''.format(tDict.get('comp_name'))
         testbench += "{0}".format(tDict.get('comp_decl'))
         testbench = testbench[0:-2]
-        testbench += ''');
+        testbench += '''\n\t);
 \tEND COMPONENT;
 \t
 \t-- Signals in entity 
@@ -94,6 +94,7 @@ BEGIN
 END ARCHITECTURE arch;
 -- Testbech ends here.
   '''
+        testbench = testbench.replace('\t', '    ')
         self.tb = testbench
         return testbench
         
@@ -241,7 +242,10 @@ END ARCHITECTURE arch;
                 txt = ""
                 for line in f:
                     if(line.strip()[0:2] == "--") : pass 
-                    else: txt += line
+                    else: 
+                        # Remove the comme\nts from the end of line
+                        line = re.sub(r'\-\-.*', '', line)
+                        txt += line
                 assert len(txt) > 3, "File contains: {0}".format(txt)
                 debug.printDebug("INFO", "Parsing file : {0}".format(file))
                 self.parseTxt(txt, file)
@@ -285,7 +289,7 @@ END ARCHITECTURE arch;
         # variables.
         variables = ""
         for p in ports :
-            portExpr = "tmp_"+p.text+" : "+" "+p.attrib['type']
+            portExpr = "tmp_" + p.text+" : "+" " + p.attrib['type']
             variables += "\t\tVARIABLE "+ portExpr +";\n"
         tDict['variables'] = variables
         
