@@ -114,20 +114,17 @@ BEGIN
 			-- read ack_out value
 			read(l, tmp_ack_out, good_val);
 			assert good_val REPORT "bad ack_out value";
-			assert tmp_ack_out = ack_out REPORT "vector mismatch";
-			read(l, space); -- skip a space
+			assert tmp_ack_out = ack_out REPORT "vector mismatch";			read(l, space); -- skip a space
 
 			-- read data_out value
 			read(l, tmp_data_out, good_val);
 			assert good_val REPORT "bad data_out value";
-			assert tmp_data_out = data_out REPORT "vector mismatch";
-			read(l, space); -- skip a space
+			assert tmp_data_out = data_out REPORT "vector mismatch";			read(l, space); -- skip a space
 
 			-- read req_out value
 			read(l, tmp_req_out, good_val);
 			assert good_val REPORT "bad req_out value";
-			assert tmp_req_out = req_out REPORT "vector mismatch";
-			read(l, space); -- skip a space
+			assert tmp_req_out = req_out REPORT "vector mismatch";			read(l, space); -- skip a space
 
 			-- read ack_in value
 			read(l, tmp_ack_in, good_val);

@@ -21,6 +21,7 @@ class VHDL(vhdl_regex.VHDLParser):
         """
         # check for compiler. If it does not exists, quit.
         debug.printDebug("USER", "Using {0}".format(simulator))
+        self.simulator = simulator
         try:
             subprocess.call([simulator, "--version"], stdout=subprocess.PIPE)
         except OSError as e:
@@ -110,18 +111,18 @@ class VHDL(vhdl_regex.VHDLParser):
       
     def runATopEntity(self, entityName, fileSet) :
         topdir = self.vhdlXml.attrib['dir']
-        workdir = topdir+"/work"
+        self.workdir = os.path.join(topdir, "work")
         try :
-            os.makedirs(workdir)
+            os.makedirs(self.workdir)
         except OSError as exception :
             if exception.errno != errno.EEXIST :
                 raise
         for file in fileSet : 
             filepath = topdir+file
-            analyze(workdir, filepath)
-        self.elaborate(workdir, entityName)
+            self.analyze(filepath)
+        self.elaborate(entityName)
         self.generateTestVector(entityName)
-        self.run(topdir, entityName)
+        self.run(entityName)
 
     def run(self, topdir, entityName, time=1000) :
         ''' Running the binary '''
@@ -153,18 +154,19 @@ class VHDL(vhdl_regex.VHDLParser):
     def analyze(self, filepath) :
         ''' Analyze a file. '''
         workdir = self.workdir
-        command = "ghdl -a --workdir={0} --work=work \
-            --ieee=synopsys {1}".format(workdir, filepath)
-        p1 = subprocess.Popen(shlex.split(command)
-            , stdout = subprocess.PIPE
-            , stderr = subprocess.PIPE)
-        p1.wait()
-        status = p1.stderr.readline()
-        if status.__len__() > 0 :
-          print("Compilation failed with error :  {0}".format(str(status)))
-          sys.exit(0)
-        else :
-            print("Compiled : {0}".format(filepath))
+        if self.simulator == "ghdl":
+            command = "ghdl -a --workdir={0} --work=work \
+                --ieee=synopsys {1}".format(workdir, filepath)
+            p1 = subprocess.Popen(shlex.split(command)
+                , stdout = subprocess.PIPE
+                , stderr = subprocess.PIPE)
+            p1.wait()
+            status = p1.stderr.readline()
+            if status.__len__() > 0 :
+              print("Compilation failed with error :  {0}".format(str(status)))
+              sys.exit(0)
+            else :
+                print("Compiled : {0}".format(filepath))
 
     def elaborate(self, entityname) :
         ''' Elaborate the file '''

@@ -95,7 +95,7 @@ END ARCHITECTURE arch;
 -- Testbech ends here.
   '''
         self.tb = testbench
-        return 
+        return testbench
         
     def parseTxt(self, txt, fileName) :
         '''
@@ -258,10 +258,10 @@ END ARCHITECTURE arch;
         tbPath = topDir+tbName
         tDict['vector_file_path'] = topDir+"/work/vector.test"
         try :
-          os.remove(tbPath)
+            os.remove(tbPath)
         except OSError, e: 
-          if e.errno != errno.ENOENT:
-            raise
+            if e.errno != errno.ENOENT:
+                raise
         # Fill in testbench
         tDict['comp_decl'] = ""
         ports = self.vhdlXml.findall(".//entity[@name='{0}']/port".format(entity))
@@ -272,8 +272,8 @@ END ARCHITECTURE arch;
         # Signal declarations.
         tDict['signal_decl'] = ''
         for p in ports :
-          tDict['signal_decl'] += ("\tSIGNAL "+p.text+" : "
-              + " "+p.attrib['type']+";\n")
+            tDict['signal_decl'] += ("\tSIGNAL "+p.text+" : "
+                + " "+p.attrib['type']+";\n")
           
         dut = "\tdut : {0} PORT MAP( \n".format(entity)
         for p in ports :
@@ -285,18 +285,20 @@ END ARCHITECTURE arch;
         # variables.
         variables = ""
         for p in ports :
-          portExpr = "tmp_"+p.text+" : "\
-              +" "+p.attrib['type']
-          variables += "\t\tVARIABLE "+ portExpr +";\n"
+            portExpr = "tmp_"+p.text+" : "+" "+p.attrib['type']
+            variables += "\t\tVARIABLE "+ portExpr +";\n"
         tDict['variables'] = variables
         
         # Generate assert lines
         tDict['asserts'] = self.generateAssertLines(ports)
         
         # Create a testbench
-        testbench = self.testbenchFromDict(tDict)
-        with open(tbPath, "w") as f :
-          f.write(testbench)
+        t = self.testbenchFromDict(tDict)
+        try:
+            with open(tbPath, "w") as f :
+                f.write(t)
+        except Exception as e:
+            raise IOError, "Failed to write testbench", e
         return tbName
 
 
