@@ -1,6 +1,5 @@
 import re
 import math
-import mycurses as mc
 import vhdl_regex as vhdl
 
 def testVCD(vcds) :

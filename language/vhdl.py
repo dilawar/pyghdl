@@ -144,7 +144,7 @@ def analyze(workdir, filepath) :
     print("Compilation failed with error :  {0}".format(str(status)))
     sys.exit(0)
   else :
-      print("Compiled : {0}\n".format(filepath))
+      print("Compiled : {0}".format(filepath))
 
 def elaborate(workdir, entityname) :
   ''' Elaborate the file '''
