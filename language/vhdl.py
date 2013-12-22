@@ -69,42 +69,45 @@ class VHDL(vhdl_regex.VHDLParser):
       
         # If generateTB is set then ignore the previous TB and generate  a new one.
         # Else execute the design as it is.
-        if generateTB :
-          newFileDict = dict()
-          for entity in fileDict :
+        if not generateTB:
+            return 
+
+        newFileDict = dict()
+        for entity in fileDict :
             # if this entity is already a testbench then remove it from the list and
             # add a new one.
             eXml = self.vhdlXml.find(".//entity[@name='{0}']".format(entity))
-            msg = "|- Generating testbench for entity {0} \n".format(entity)
-            print(msg)
-            if eXml.attrib['noPort'] == "true" : # It's a testbench.
-              fileName = eXml.attrib['file']
-              msg = "   |- Ignoring existing one \n"
-              fileDict[entity].remove(fileName)
-              print(msg)
-              # add a new testbench. Need to find an entity which is its children.
-              fileSet = fileDict[entity]
-              # Get the name of entity this tb contains.
-              compXml = self.vhdlXml.find(".//architecture[@of='{0}']/component"\
-                  .format(entity))
-              try:
-                  entityInTb = compXml.attrib['name']
-                  tbName = "auto_generated_"+entityInTb+".vhd"
-                  fileSet.add( self.generateTestBench(entityInTb, tbName))
-                  tbEntity = "tb_"+entityInTb
-                  newFileDict[tbEntity] = fileSet
-              except Exception as e:
-                  msg = "No test bench found in {0}".format(compXml)
-                  print(msg)
-                  return 
+            debug.printDebug("INFO"
+                    , "Generating testbench for entity {0}".format(entity)
+                    )
+            if eXml.attrib['noPort'] == "true": # It's a testbench.
+                fileName = eXml.attrib['file']
+                debug.printDebug("WARN", "Ignoring existing one")
+                fileDict[entity].remove(fileName)
+                # add a new testbench. Need to find an entity which is its children.
+                fileSet = fileDict[entity]
+                # Get the name of entity this tb contains.
+                compXml = self.vhdlXml.find(
+                        ".//architecture[@of='{0}']/component".format(entity)
+                        )
+                try:
+                    entityInTb = compXml.attrib['name']
+                    tbName = "auto_generated_"+entityInTb+".vhd"
+                    fileSet.add( self.generateTestBench(entityInTb, tbName))
+                    tbEntity = "tb_"+entityInTb
+                    newFileDict[tbEntity] = fileSet
+                except Exception as e:
+                    msg = "No test bench found in {0}".format(compXml)
+                    print(msg)
+                    return 
             else :                              # no testbench
-              fileSet = set(fileDict[entity])
-              tbName = "auto_generated_"+entity+".vhd"
-              tbEntity = "tb_"+entity
-              fileSet.add(self.generateTestBench(entity, tbName))
-              newFileDict[tbEntity] = fileSet
-          # Copy the new file list to old one.
-          fileDict = newFileDict
+                fileSet = set(fileDict[entity])
+                tbName = "auto_generated_"+entity+".vhd"
+                tbEntity = "tb_"+entity
+                fileSet.add(self.generateTestBench(entity, tbName))
+                newFileDict[tbEntity] = fileSet
+        # Copy the new file list to old one.
+        fileDict = newFileDict
       
         # Great, now simulate.
         for entity in fileDict :

@@ -19,8 +19,13 @@ ARCHITECTURE arch OF tb_PipelinedMuxStage IS
     -- Component declaration.
     ----------------------------------------------------------------
     COMPONENT PipelinedMuxStage 
-    PORT ( 
-        data_left : in std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
+    GENERIC(g_data_width: integer := 10;
+           g_number_of_inputs: integer := 8;
+           g_number_of_outputs: integer := 1;
+           g_tag_width : integer := 3  
+           
+    );
+    PORT(data_left : in std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
         req_in : in std_logic_vector(g_number_of_inputs-1 downto 0);
         ack_out : out std_logic_vector(g_number_of_inputs-1 downto 0);
         data_right : out std_logic_vector((g_data_width*g_number_of_outputs)-1 downto 0);
@@ -43,15 +48,21 @@ ARCHITECTURE arch OF tb_PipelinedMuxStage IS
 
 BEGIN
     -- Instantiate a dut 
-    dut : PipelinedMuxStage PORT MAP( 
-        data_left => data_left,
+    dut : PipelinedMuxStage
+    GENERIC MAP(    g_data_width =>  10,
+        g_number_of_inputs =>  8,
+        g_number_of_outputs =>  1,
+        g_tag_width =>  3)
+    PORT MAP ( data_left => data_left,
         req_in => req_in,
         ack_out => ack_out,
         data_right => data_right,
         req_out => req_out,
         ack_in => ack_in,
         clock => clock,
-        reset => reset);
+        reset => reset
+    );
+
     test : PROCESS 
         -- Declare variables to store the values stored in test files. 
         VARIABLE tmp_data_left :  std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);

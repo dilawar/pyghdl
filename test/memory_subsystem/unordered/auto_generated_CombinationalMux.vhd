@@ -19,8 +19,11 @@ ARCHITECTURE arch OF tb_CombinationalMux IS
     -- Component declaration.
     ----------------------------------------------------------------
     COMPONENT CombinationalMux 
-    PORT ( 
-        in_data : in std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
+    GENERIC(
+    g_data_width       : integer := 32;
+    g_number_of_inputs: integer := 2
+    );
+    PORT(in_data : in std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
         out_data : out std_logic_vector(g_data_width-1 downto 0);
         in_req : in std_logic_vector(g_number_of_inputs-1 downto 0);
         in_ack : out std_logic_vector(g_number_of_inputs-1 downto 0);
@@ -39,13 +42,17 @@ ARCHITECTURE arch OF tb_CombinationalMux IS
 
 BEGIN
     -- Instantiate a dut 
-    dut : CombinationalMux PORT MAP( 
-        in_data => in_data,
+    dut : CombinationalMux
+    GENERIC MAP(    g_data_width =>  32,
+        g_number_of_inputs =>  2)
+    PORT MAP ( in_data => in_data,
         out_data => out_data,
         in_req => in_req,
         in_ack => in_ack,
         out_req => out_req,
-        out_ack => out_ack);
+        out_ack => out_ack
+    );
+
     test : PROCESS 
         -- Declare variables to store the values stored in test files. 
         VARIABLE tmp_in_data :  std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);

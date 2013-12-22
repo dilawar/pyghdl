@@ -42,10 +42,9 @@ ARCHITECTURE arch OF tb_{0} IS
 \t----------------------------------------------------------------
 \t-- Component declaration.
 \t----------------------------------------------------------------
-\tCOMPONENT {0} 
-\tPORT ( \n'''.format(tDict.get('comp_name'))
+\tCOMPONENT {0} {1}
+\tPORT('''.format(tDict.get('comp_name'), tDict.get('comp_generic'))
         testbench += "{0}".format(tDict.get('comp_decl'))
-        testbench = testbench[0:-2]
         testbench += '''\n\t);
 \tEND COMPONENT;
 \t
@@ -121,13 +120,24 @@ END ARCHITECTURE arch;
             baseName = fileName.replace(topdir,"")
             entityXml.attrib['file'] = baseName
             entityXml.attrib['noPort'] = 'false'
-            genericPattern = re.compile(r'generic\s*\(((?!port).)+\)\s*;'
+            genericPattern = re.compile(
+                    r'generic\s*\((?P<list>((?!port).)+)\s*\)\s*;'
                 , re.IGNORECASE | re.DOTALL)
             genericMatch = genericPattern.finditer(body) 
             for gi in genericMatch :
-                genericText = gi.group(0)
-                genericXml = ET.SubElement(entityXml, "generic")
+                genericText = gi.group('list')
+                genericXml = ET.SubElement(entityXml, "generics")
                 genericXml.text = genericText
+                generics = genericText.split(';')
+                for g in generics:
+                    g = g.strip()
+                    genXml = ET.SubElement(genericXml, "generic")
+                    m = re.search(r'(?P<name>\w+)\s*\:\s*', g)
+                    genXml.attrib['lhs'] = m.group('name')
+                    g = g.replace(m.group(0), '')
+                    genXml.attrib['rhs'] = g
+
+            # ports 
             portExpr = re.compile(r'port\s*\(((?!end).)+\)\s*;'
                     , re.IGNORECASE | re.DOTALL
                     )
@@ -260,7 +270,7 @@ END ARCHITECTURE arch;
         tDict['comp_name'] = entity
         topDir = self.vhdlXml.attrib['dir']
         # Delete previous testbench 
-        tbPath = topDir+tbName
+        tbPath = os.path.join(topDir, tbName)
         tDict['vector_file_path'] = os.path.join(self.workdir, "vector.test")
 
         try :
@@ -268,33 +278,44 @@ END ARCHITECTURE arch;
         except OSError, e: 
             if e.errno != errno.ENOENT:
                 raise
-        
+ 
+        # generics
+        gns = self.vhdlXml.find(
+                ".//entity/[@name='{0}']/generics".format(entity)
+                )       
+        if gns:
+            tDict['comp_generic'] = '\n\tGENERIC({0}\n\t);'.format(gns.text)
+        else:
+            tDict['comp_generic'] = ''
 
         # Fill in testbench
         tDict['comp_decl'] = ""
         ports = self.vhdlXml.findall(".//entity[@name='{0}']/port".format(entity))
+        portText = []
         for p in ports:
-            tDict['comp_decl'] += ("\t\t"+p.text+ " : "+p.attrib['direction']+ " "
-                    + p.attrib['type']+";\n")
-
+            portText.append(
+                    p.text+ " : "+p.attrib['direction']+" "+p.attrib['type']
+                    )
+        tDict['comp_decl'] = ';\n\t\t'.join(portText)
         
-        # generics
-        gns = self.vhdlXml.findall(
-                ".//entity/[@name='{0}']/generic".format(entity)
-                )
-        print gns
-
         # Signal declarations.
         tDict['signal_decl'] = ''
         for p in ports :
             tDict['signal_decl'] += ("\tSIGNAL "+p.text+" : "
                 + " "+p.attrib['type']+";\n")
           
-        dut = "\tdut : {0} PORT MAP( \n".format(entity)
-        for p in ports :
-          dut += "\t\t{0} => {0},\n".format(p.text)
+        dut = "\tdut : {0}\n".format(entity)
 
-        dut = dut[0:-2]+");"
+        if gns:
+            tDict['generics'] = gns.text
+            dut += "\tGENERIC MAP("
+            dut += "\t{0}".format(self.formatGenericText(gns))
+            dut += ")\n"
+
+        dut += "\tPORT MAP ( "
+        dut += "{0}".format(self.formatPortText(ports))
+        dut += "\n\t);\n"
+
         tDict['dut_instance'] = dut
         
         # variables.
@@ -345,3 +366,25 @@ END ARCHITECTURE arch;
         self.vhdlXml.attrib['timestamp'] = currentTime
         self.vhdlXml.attrib['dir'] = self.topdir
         return self.toVHDLXML(self.vhdlXml, files)
+
+    def formatGenericText(self, genericXml):
+        """Given generic xml, for a generic list for component
+        """
+        newText = []
+        for gen in genericXml:
+            txt = gen.attrib['lhs']
+            if ":=" in gen.attrib['rhs']:
+                txt += ' => ' + gen.attrib['rhs'].split(":=")[-1]
+            newText.append(txt)
+        return ",\n\t\t".join(newText)
+    
+    def formatPortText(self, ports):
+        newText = []
+        for p in ports:
+            p = p.text
+            p = p.strip()
+            if p: newText.append("{0} => {0}".format(p))
+            else: pass
+        return ',\n\t\t'.join(newText)
+
+

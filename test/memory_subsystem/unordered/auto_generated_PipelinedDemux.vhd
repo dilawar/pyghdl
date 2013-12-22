@@ -19,8 +19,11 @@ ARCHITECTURE arch OF tb_PipelinedDemux IS
     -- Component declaration.
     ----------------------------------------------------------------
     COMPONENT PipelinedDemux 
-    PORT ( 
-        data_in : in std_logic_vector(g_data_width-1 downto 0);
+    GENERIC( g_data_width: natural := 10;
+            g_destination_id_width : natural := 3;
+            g_number_of_outputs: natural := 8
+    );
+    PORT(data_in : in std_logic_vector(g_data_width-1 downto 0);
         sel_in : in std_logic_vector(g_destination_id_width-1 downto 0);
         req_in : in std_logic;
         ack_out : out std_logic;
@@ -45,8 +48,11 @@ ARCHITECTURE arch OF tb_PipelinedDemux IS
 
 BEGIN
     -- Instantiate a dut 
-    dut : PipelinedDemux PORT MAP( 
-        data_in => data_in,
+    dut : PipelinedDemux
+    GENERIC MAP(    g_data_width =>  10,
+        g_destination_id_width =>  3,
+        g_number_of_outputs =>  8)
+    PORT MAP ( data_in => data_in,
         sel_in => sel_in,
         req_in => req_in,
         ack_out => ack_out,
@@ -54,7 +60,9 @@ BEGIN
         req_out => req_out,
         ack_in => ack_in,
         clk => clk,
-        reset => reset);
+        reset => reset
+    );
+
     test : PROCESS 
         -- Declare variables to store the values stored in test files. 
         VARIABLE tmp_data_in :  std_logic_vector(g_data_width-1 downto 0);

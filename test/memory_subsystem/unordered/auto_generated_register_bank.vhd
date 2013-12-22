@@ -19,8 +19,14 @@ ARCHITECTURE arch OF tb_register_bank IS
     -- Component declaration.
     ----------------------------------------------------------------
     COMPONENT register_bank 
-    PORT ( 
-        lr_addr_in : in std_logic_vector((num_loads*addr_width)-1 downto 0);
+    GENERIC(num_loads             : natural := 5;
+          num_stores            : natural := 10;
+          addr_width            : natural := 9;
+          data_width            : natural := 5;
+          tag_width             : natural := 7;
+          num_registers         : natural := 1
+    );
+    PORT(lr_addr_in : in std_logic_vector((num_loads*addr_width)-1 downto 0);
         lr_req_in : in std_logic_vector(num_loads-1 downto 0);
         lr_ack_out : out std_logic_vector(num_loads-1 downto 0);
         lr_tag_in : in std_logic_vector((num_loads*tag_width)-1 downto 0);
@@ -63,8 +69,14 @@ ARCHITECTURE arch OF tb_register_bank IS
 
 BEGIN
     -- Instantiate a dut 
-    dut : register_bank PORT MAP( 
-        lr_addr_in => lr_addr_in,
+    dut : register_bank
+    GENERIC MAP(    num_loads =>  5,
+        num_stores =>  10,
+        addr_width =>  9,
+        data_width =>  5,
+        tag_width =>  7,
+        num_registers =>  1)
+    PORT MAP ( lr_addr_in => lr_addr_in,
         lr_req_in => lr_req_in,
         lr_ack_out => lr_ack_out,
         lr_tag_in => lr_tag_in,
@@ -81,7 +93,9 @@ BEGIN
         sc_ack_out => sc_ack_out,
         sc_tag_out => sc_tag_out,
         clock => clock,
-        reset => reset);
+        reset => reset
+    );
+
     test : PROCESS 
         -- Declare variables to store the values stored in test files. 
         VARIABLE tmp_lr_addr_in :  std_logic_vector((num_loads*addr_width)-1 downto 0);

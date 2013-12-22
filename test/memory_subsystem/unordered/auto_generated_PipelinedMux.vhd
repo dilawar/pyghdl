@@ -19,8 +19,7 @@ ARCHITECTURE arch OF tb_PipelinedMux IS
     -- Component declaration.
     ----------------------------------------------------------------
     COMPONENT PipelinedMux 
-    PORT ( 
-        merge_data_in : in std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
+    PORT(merge_data_in : in std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
         merge_req_in : in std_logic_vector(g_number_of_inputs-1 downto 0);
         merge_ack_out : out std_logic_vector(g_number_of_inputs-1 downto 0);
         merge_data_out : out std_logic_vector(g_data_width-1 downto 0);
@@ -43,15 +42,17 @@ ARCHITECTURE arch OF tb_PipelinedMux IS
 
 BEGIN
     -- Instantiate a dut 
-    dut : PipelinedMux PORT MAP( 
-        merge_data_in => merge_data_in,
+    dut : PipelinedMux
+    PORT MAP ( merge_data_in => merge_data_in,
         merge_req_in => merge_req_in,
         merge_ack_out => merge_ack_out,
         merge_data_out => merge_data_out,
         merge_req_out => merge_req_out,
         merge_ack_in => merge_ack_in,
         clock => clock,
-        reset => reset);
+        reset => reset
+    );
+
     test : PROCESS 
         -- Declare variables to store the values stored in test files. 
         VARIABLE tmp_merge_data_in :  std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
