@@ -33,12 +33,12 @@ ARCHITECTURE arch OF tb_CombinationalMux IS
     END COMPONENT;
     
     -- Signals in entity 
-    SIGNAL in_data :  std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
-    SIGNAL out_data :  std_logic_vector(g_data_width-1 downto 0);
-    SIGNAL in_req :  std_logic_vector(g_number_of_inputs-1 downto 0);
-    SIGNAL in_ack :  std_logic_vector(g_number_of_inputs-1 downto 0);
-    SIGNAL out_req :  std_logic;
-    SIGNAL out_ack :  std_logic;
+    SIGNAL in_data : std_logic_vector(( 32* 2)-1 downto 0);
+    SIGNAL out_data : std_logic_vector( 32-1 downto 0);
+    SIGNAL in_req : std_logic_vector( 2-1 downto 0);
+    SIGNAL in_ack : std_logic_vector( 2-1 downto 0);
+    SIGNAL out_req : std_logic;
+    SIGNAL out_ack : std_logic;
 
 BEGIN
     -- Instantiate a dut 
@@ -55,10 +55,10 @@ BEGIN
 
     test : PROCESS 
         -- Declare variables to store the values stored in test files. 
-        VARIABLE tmp_in_data :  std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
-        VARIABLE tmp_out_data :  std_logic_vector(g_data_width-1 downto 0);
-        VARIABLE tmp_in_req :  std_logic_vector(g_number_of_inputs-1 downto 0);
-        VARIABLE tmp_in_ack :  std_logic_vector(g_number_of_inputs-1 downto 0);
+        VARIABLE tmp_in_data :  std_logic_vector(( 32* 2)-1 downto 0);
+        VARIABLE tmp_out_data :  std_logic_vector( 32-1 downto 0);
+        VARIABLE tmp_in_req :  std_logic_vector( 2-1 downto 0);
+        VARIABLE tmp_in_ack :  std_logic_vector( 2-1 downto 0);
         VARIABLE tmp_out_req :  std_logic;
         VARIABLE tmp_out_ack :  std_logic;
 

@@ -31,14 +31,14 @@ ARCHITECTURE arch OF tb_PipelinedMux IS
     END COMPONENT;
     
     -- Signals in entity 
-    SIGNAL merge_data_in :  std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
-    SIGNAL merge_req_in :  std_logic_vector(g_number_of_inputs-1 downto 0);
-    SIGNAL merge_ack_out :  std_logic_vector(g_number_of_inputs-1 downto 0);
-    SIGNAL merge_data_out :  std_logic_vector(g_data_width-1 downto 0);
-    SIGNAL merge_req_out :  std_logic;
-    SIGNAL merge_ack_in :  std_logic;
-    SIGNAL clock :  std_logic;
-    SIGNAL reset :  std_logic;
+    SIGNAL merge_data_in : std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
+    SIGNAL merge_req_in : std_logic_vector(g_number_of_inputs-1 downto 0);
+    SIGNAL merge_ack_out : std_logic_vector(g_number_of_inputs-1 downto 0);
+    SIGNAL merge_data_out : std_logic_vector(g_data_width-1 downto 0);
+    SIGNAL merge_req_out : std_logic;
+    SIGNAL merge_ack_in : std_logic;
+    SIGNAL clock : std_logic;
+    SIGNAL reset : std_logic;
 
 BEGIN
     -- Instantiate a dut 

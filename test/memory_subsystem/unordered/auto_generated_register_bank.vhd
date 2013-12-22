@@ -48,24 +48,24 @@ ARCHITECTURE arch OF tb_register_bank IS
     END COMPONENT;
     
     -- Signals in entity 
-    SIGNAL lr_addr_in :  std_logic_vector((num_loads*addr_width)-1 downto 0);
-    SIGNAL lr_req_in :  std_logic_vector(num_loads-1 downto 0);
-    SIGNAL lr_ack_out :  std_logic_vector(num_loads-1 downto 0);
-    SIGNAL lr_tag_in :  std_logic_vector((num_loads*tag_width)-1 downto 0);
-    SIGNAL lc_data_out :  std_logic_vector((num_loads*data_width)-1 downto 0);
-    SIGNAL lc_req_in :  std_logic_vector(num_loads-1 downto 0);
-    SIGNAL lc_ack_out :  std_logic_vector(num_loads-1 downto 0);
-    SIGNAL lc_tag_out :  std_logic_vector((num_loads*tag_width)-1 downto 0);
-    SIGNAL sr_addr_in :  std_logic_vector((num_stores*addr_width)-1 downto 0);
-    SIGNAL sr_data_in :  std_logic_vector((num_stores*data_width)-1 downto 0);
-    SIGNAL sr_req_in :  std_logic_vector(num_stores-1 downto 0);
-    SIGNAL sr_ack_out :  std_logic_vector(num_stores-1 downto 0);
-    SIGNAL sr_tag_in :  std_logic_vector((num_stores*tag_width)-1 downto 0);
-    SIGNAL sc_req_in :  std_logic_vector(num_stores-1 downto 0);
-    SIGNAL sc_ack_out :  std_logic_vector(num_stores-1 downto 0);
-    SIGNAL sc_tag_out :  std_logic_vector((num_stores*tag_width)-1 downto 0);
-    SIGNAL clock :  std_logic;
-    SIGNAL reset :  std_logic;
+    SIGNAL lr_addr_in : std_logic_vector(( 5* 9)-1 downto 0);
+    SIGNAL lr_req_in : std_logic_vector( 5-1 downto 0);
+    SIGNAL lr_ack_out : std_logic_vector( 5-1 downto 0);
+    SIGNAL lr_tag_in : std_logic_vector(( 5* 7)-1 downto 0);
+    SIGNAL lc_data_out : std_logic_vector(( 5* 5)-1 downto 0);
+    SIGNAL lc_req_in : std_logic_vector( 5-1 downto 0);
+    SIGNAL lc_ack_out : std_logic_vector( 5-1 downto 0);
+    SIGNAL lc_tag_out : std_logic_vector(( 5* 7)-1 downto 0);
+    SIGNAL sr_addr_in : std_logic_vector(( 10* 9)-1 downto 0);
+    SIGNAL sr_data_in : std_logic_vector(( 10* 5)-1 downto 0);
+    SIGNAL sr_req_in : std_logic_vector( 10-1 downto 0);
+    SIGNAL sr_ack_out : std_logic_vector( 10-1 downto 0);
+    SIGNAL sr_tag_in : std_logic_vector(( 10* 7)-1 downto 0);
+    SIGNAL sc_req_in : std_logic_vector( 10-1 downto 0);
+    SIGNAL sc_ack_out : std_logic_vector( 10-1 downto 0);
+    SIGNAL sc_tag_out : std_logic_vector(( 10* 7)-1 downto 0);
+    SIGNAL clock : std_logic;
+    SIGNAL reset : std_logic;
 
 BEGIN
     -- Instantiate a dut 
@@ -98,22 +98,22 @@ BEGIN
 
     test : PROCESS 
         -- Declare variables to store the values stored in test files. 
-        VARIABLE tmp_lr_addr_in :  std_logic_vector((num_loads*addr_width)-1 downto 0);
-        VARIABLE tmp_lr_req_in :  std_logic_vector(num_loads-1 downto 0);
-        VARIABLE tmp_lr_ack_out :  std_logic_vector(num_loads-1 downto 0);
-        VARIABLE tmp_lr_tag_in :  std_logic_vector((num_loads*tag_width)-1 downto 0);
-        VARIABLE tmp_lc_data_out :  std_logic_vector((num_loads*data_width)-1 downto 0);
-        VARIABLE tmp_lc_req_in :  std_logic_vector(num_loads-1 downto 0);
-        VARIABLE tmp_lc_ack_out :  std_logic_vector(num_loads-1 downto 0);
-        VARIABLE tmp_lc_tag_out :  std_logic_vector((num_loads*tag_width)-1 downto 0);
-        VARIABLE tmp_sr_addr_in :  std_logic_vector((num_stores*addr_width)-1 downto 0);
-        VARIABLE tmp_sr_data_in :  std_logic_vector((num_stores*data_width)-1 downto 0);
-        VARIABLE tmp_sr_req_in :  std_logic_vector(num_stores-1 downto 0);
-        VARIABLE tmp_sr_ack_out :  std_logic_vector(num_stores-1 downto 0);
-        VARIABLE tmp_sr_tag_in :  std_logic_vector((num_stores*tag_width)-1 downto 0);
-        VARIABLE tmp_sc_req_in :  std_logic_vector(num_stores-1 downto 0);
-        VARIABLE tmp_sc_ack_out :  std_logic_vector(num_stores-1 downto 0);
-        VARIABLE tmp_sc_tag_out :  std_logic_vector((num_stores*tag_width)-1 downto 0);
+        VARIABLE tmp_lr_addr_in :  std_logic_vector(( 5* 9)-1 downto 0);
+        VARIABLE tmp_lr_req_in :  std_logic_vector( 5-1 downto 0);
+        VARIABLE tmp_lr_ack_out :  std_logic_vector( 5-1 downto 0);
+        VARIABLE tmp_lr_tag_in :  std_logic_vector(( 5* 7)-1 downto 0);
+        VARIABLE tmp_lc_data_out :  std_logic_vector(( 5* 5)-1 downto 0);
+        VARIABLE tmp_lc_req_in :  std_logic_vector( 5-1 downto 0);
+        VARIABLE tmp_lc_ack_out :  std_logic_vector( 5-1 downto 0);
+        VARIABLE tmp_lc_tag_out :  std_logic_vector(( 5* 7)-1 downto 0);
+        VARIABLE tmp_sr_addr_in :  std_logic_vector(( 10* 9)-1 downto 0);
+        VARIABLE tmp_sr_data_in :  std_logic_vector(( 10* 5)-1 downto 0);
+        VARIABLE tmp_sr_req_in :  std_logic_vector( 10-1 downto 0);
+        VARIABLE tmp_sr_ack_out :  std_logic_vector( 10-1 downto 0);
+        VARIABLE tmp_sr_tag_in :  std_logic_vector(( 10* 7)-1 downto 0);
+        VARIABLE tmp_sc_req_in :  std_logic_vector( 10-1 downto 0);
+        VARIABLE tmp_sc_ack_out :  std_logic_vector( 10-1 downto 0);
+        VARIABLE tmp_sc_tag_out :  std_logic_vector(( 10* 7)-1 downto 0);
         VARIABLE tmp_clock :  std_logic;
         VARIABLE tmp_reset :  std_logic;
 

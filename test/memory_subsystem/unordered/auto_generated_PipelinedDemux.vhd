@@ -36,15 +36,15 @@ ARCHITECTURE arch OF tb_PipelinedDemux IS
     END COMPONENT;
     
     -- Signals in entity 
-    SIGNAL data_in :  std_logic_vector(g_data_width-1 downto 0);
-    SIGNAL sel_in :  std_logic_vector(g_destination_id_width-1 downto 0);
-    SIGNAL req_in :  std_logic;
-    SIGNAL ack_out :  std_logic;
-    SIGNAL data_out :  std_logic_vector((g_number_of_outputs*g_data_width)-1 downto 0 );
-    SIGNAL req_out :  std_logic_vector(g_number_of_outputs-1 downto 0);
-    SIGNAL ack_in :  std_logic_vector(g_number_of_outputs-1 downto 0);
-    SIGNAL clk :  std_logic;
-    SIGNAL reset :  std_logic;
+    SIGNAL data_in : std_logic_vector( 10-1 downto 0);
+    SIGNAL sel_in : std_logic_vector( 3-1 downto 0);
+    SIGNAL req_in : std_logic;
+    SIGNAL ack_out : std_logic;
+    SIGNAL data_out : std_logic_vector(( 8* 10)-1 downto 0 );
+    SIGNAL req_out : std_logic_vector( 8-1 downto 0);
+    SIGNAL ack_in : std_logic_vector( 8-1 downto 0);
+    SIGNAL clk : std_logic;
+    SIGNAL reset : std_logic;
 
 BEGIN
     -- Instantiate a dut 
@@ -65,13 +65,13 @@ BEGIN
 
     test : PROCESS 
         -- Declare variables to store the values stored in test files. 
-        VARIABLE tmp_data_in :  std_logic_vector(g_data_width-1 downto 0);
-        VARIABLE tmp_sel_in :  std_logic_vector(g_destination_id_width-1 downto 0);
+        VARIABLE tmp_data_in :  std_logic_vector( 10-1 downto 0);
+        VARIABLE tmp_sel_in :  std_logic_vector( 3-1 downto 0);
         VARIABLE tmp_req_in :  std_logic;
         VARIABLE tmp_ack_out :  std_logic;
-        VARIABLE tmp_data_out :  std_logic_vector((g_number_of_outputs*g_data_width)-1 downto 0 );
-        VARIABLE tmp_req_out :  std_logic_vector(g_number_of_outputs-1 downto 0);
-        VARIABLE tmp_ack_in :  std_logic_vector(g_number_of_outputs-1 downto 0);
+        VARIABLE tmp_data_out :  std_logic_vector(( 8* 10)-1 downto 0 );
+        VARIABLE tmp_req_out :  std_logic_vector( 8-1 downto 0);
+        VARIABLE tmp_ack_in :  std_logic_vector( 8-1 downto 0);
         VARIABLE tmp_clk :  std_logic;
         VARIABLE tmp_reset :  std_logic;
 

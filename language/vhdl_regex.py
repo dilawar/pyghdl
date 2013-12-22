@@ -300,16 +300,7 @@ END ARCHITECTURE arch;
             typeOfPort = p.attrib['type']
             # If any of key is matched then we should replace the name of
             # generic with its value.
-            for k in genericDict:
-                if k in typeOfPort:
-                    if genericDict[k] is None:
-                        msg = "Can't find the value for generic {0}".format(k)
-                        msg += " Can't produce a testbench. Initialize generics"
-                        msg += " in entity with some default values. "
-                        raise UserError, msg
-                    else:
-                        typeOfPort = typeOfPort.replace(k, genericDict[k])
-                else: pass
+            typeOfPort = self.replaceGenericWithValue(typeOfPort, genericDict)
             portText.append(p.text+ " : "+p.attrib['direction']+" "+typeOfPort)
 
         self.tDict['comp_decl'] = ';\n\t\t'.join(portText)
@@ -318,8 +309,9 @@ END ARCHITECTURE arch;
         # accordingly.
         self.tDict['signal_decl'] = ''
         for p in ports :
-            self.tDict['signal_decl'] += ("\tSIGNAL "+p.text+" : "
-                + " "+p.attrib['type']+";\n")
+            t = p.attrib['type']
+            t = self.replaceGenericWithValue(t, genericDict)
+            self.tDict['signal_decl'] += ("\tSIGNAL "+p.text+" : " + t +";\n")
           
         dut = "\tdut : {0}\n".format(entity)
 
@@ -339,6 +331,7 @@ END ARCHITECTURE arch;
         variables = ""
         for p in ports :
             portExpr = "tmp_" + p.text+" : "+" " + p.attrib['type']
+            portExpr = self.replaceGenericWithValue(portExpr, genericDict)
             variables += "\t\tVARIABLE "+ portExpr +";\n"
         self.tDict['variables'] = variables
         
@@ -418,3 +411,17 @@ END ARCHITECTURE arch;
                 generics[lhs] = None
         self.genericsDict[entityName] = generics
         return generics 
+    
+    def replaceGenericWithValue(self, txt, genericDict):
+        for k in genericDict:
+            if k in txt:
+                if genericDict[k] is None:
+                    msg = "Can't find the value for generic {0}".format(k)
+                    msg += " Can't produce a testbench. Initialize generics"
+                    msg += " in entity with some default values. "
+                    raise UserError, msg
+                else:
+                    txt = txt.replace(k, genericDict[k])
+            else: pass
+        return txt
+

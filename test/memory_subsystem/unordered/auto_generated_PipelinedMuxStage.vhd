@@ -37,14 +37,14 @@ ARCHITECTURE arch OF tb_PipelinedMuxStage IS
     END COMPONENT;
     
     -- Signals in entity 
-    SIGNAL data_left :  std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
-    SIGNAL req_in :  std_logic_vector(g_number_of_inputs-1 downto 0);
-    SIGNAL ack_out :  std_logic_vector(g_number_of_inputs-1 downto 0);
-    SIGNAL data_right :  std_logic_vector((g_data_width*g_number_of_outputs)-1 downto 0);
-    SIGNAL req_out :  std_logic_vector(g_number_of_outputs-1 downto 0);
-    SIGNAL ack_in :  std_logic_vector(g_number_of_outputs-1 downto 0);
-    SIGNAL clock :  std_logic;
-    SIGNAL reset :  std_logic;
+    SIGNAL data_left : std_logic_vector(( 10* 8)-1 downto 0);
+    SIGNAL req_in : std_logic_vector( 8-1 downto 0);
+    SIGNAL ack_out : std_logic_vector( 8-1 downto 0);
+    SIGNAL data_right : std_logic_vector(( 10* 1)-1 downto 0);
+    SIGNAL req_out : std_logic_vector( 1-1 downto 0);
+    SIGNAL ack_in : std_logic_vector( 1-1 downto 0);
+    SIGNAL clock : std_logic;
+    SIGNAL reset : std_logic;
 
 BEGIN
     -- Instantiate a dut 
@@ -65,12 +65,12 @@ BEGIN
 
     test : PROCESS 
         -- Declare variables to store the values stored in test files. 
-        VARIABLE tmp_data_left :  std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
-        VARIABLE tmp_req_in :  std_logic_vector(g_number_of_inputs-1 downto 0);
-        VARIABLE tmp_ack_out :  std_logic_vector(g_number_of_inputs-1 downto 0);
-        VARIABLE tmp_data_right :  std_logic_vector((g_data_width*g_number_of_outputs)-1 downto 0);
-        VARIABLE tmp_req_out :  std_logic_vector(g_number_of_outputs-1 downto 0);
-        VARIABLE tmp_ack_in :  std_logic_vector(g_number_of_outputs-1 downto 0);
+        VARIABLE tmp_data_left :  std_logic_vector(( 10* 8)-1 downto 0);
+        VARIABLE tmp_req_in :  std_logic_vector( 8-1 downto 0);
+        VARIABLE tmp_ack_out :  std_logic_vector( 8-1 downto 0);
+        VARIABLE tmp_data_right :  std_logic_vector(( 10* 1)-1 downto 0);
+        VARIABLE tmp_req_out :  std_logic_vector( 1-1 downto 0);
+        VARIABLE tmp_ack_in :  std_logic_vector( 1-1 downto 0);
         VARIABLE tmp_clock :  std_logic;
         VARIABLE tmp_reset :  std_logic;
 
