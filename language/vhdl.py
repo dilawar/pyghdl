@@ -189,41 +189,42 @@ def elaborate(workdir, entityname) :
 
 def getNextLevelsOfHier(archName, elemXml, hasParents, childLess,
     alreadyAddedArcs) :
-  '''
-  Get the components of a xmlElem.
-  @param elemXml : Xml element of archName 
-  @param archName : name of the entity of this architecture
-  '''
-  if archName not in alreadyAddedArcs.keys() :
-    msg = "Funtion validations error : {0} should have been added to args 2"
-    print(msg)
-    return None
-  comps = elemXml.findall(".//architecture[@of='{0}']/*"\
-      .format(archName))
-  archXml = alreadyAddedArcs[archName]
-  if len(comps) < 1 :
-    msg = "No component found for {0}\n".format(archName)
-    print(msg)
-    childLess.add(archName)
-    return elemXml
-  for comp in comps :
-    compName = comp.attrib['name']
-    msg = "Component {0} found for entity {1}\n".format(compName, archName)
-    print(msg)
-    if comp.attrib['isInstantiated'] == "true" :
-      hasParents.add(compName)
-      # Now check if architecture of this component was already added.
-      if compName in alreadyAddedArcs.keys() :
-        compXml = alreadyAddedArcs[compName]
-        archXml.append(compXml)
-      else :
-        compXml = ET.Element("module")
-        compXml.attrib['name'] = compName 
-        alreadyAddedArcs[compName] = compXml
-        archXml.append(compXml)
-    else :
-      msg = "{0} component is not instantited.\n".format(compName)
-      print(msg)
+    '''
+    Get the components of a xmlElem.
+    @param elemXml : Xml element of archName 
+    @param archName : name of the entity of this architecture
+    '''
+    if archName not in alreadyAddedArcs.keys():
+        debug.printDebug("WARN", "Funtion validations error"\
+            +": {0} should have been added to args 2".format(archName))
+        return None
+    comps = elemXml.findall(".//architecture[@of='{0}']/*".format(archName))
+    archXml = alreadyAddedArcs[archName]
+    if len(comps) < 1 :
+        debug.printDebug("INFO", "No component found for {0}".format(archName))
+        childLess.add(archName)
+        return elemXml
+    for comp in comps :
+        compName = comp.attrib['name']
+        debug.printDebug("DEBUG", "Component {0} found for entity {1}".format(
+                compName
+                , archName
+                )
+            )
+        if comp.attrib['isInstantiated'] == "true":
+            hasParents.add(compName)
+            # Now check if architecture of this component was already added.
+            if compName in alreadyAddedArcs.keys() :
+                compXml = alreadyAddedArcs[compName]
+                archXml.append(compXml)
+            else :
+                compXml = ET.Element("module")
+                compXml.attrib['name'] = compName 
+                alreadyAddedArcs[compName] = compXml
+                archXml.append(compXml)
+        else :
+            msg = "{0} component is not instantited.\n".format(compName)
+            print(msg)
 
 
 def getHierarchy(elemXml) : 
@@ -281,7 +282,7 @@ def execute(topdir, files, top, generateTB) :
     vhdl.vhdlXml.append(hierXml)
     # Run each top-entity.
     debug.printDebug("STEP", "Elaborating each design ...")
-    #runDesign(top, generateTB)
+    runDesign(top, generateTB)
 
 def generateTestVector(entityName) :
   top = vhdl.vhdlXml.attrib['dir']

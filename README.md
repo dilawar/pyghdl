@@ -1,7 +1,9 @@
 pyghdl
 ======
 
-A python frontend for ghdl 
+A python front-end for ghdl/vsim.
+
+vsim is yet not supported.
 
 PLANS ARE :
 
