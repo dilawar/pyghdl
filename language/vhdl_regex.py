@@ -10,6 +10,7 @@ from language.test import testVCD
 import xml.etree.cElementTree as ET
 import errno
 import debug.debug as debug
+import collections
 
 vhdlXml = ET.Element("design")
 
@@ -105,29 +106,29 @@ def parseTxt(elemXml, txt, fileName) :
     entity = re.compile(pattern, re.IGNORECASE | re.DOTALL);
     m = entity.finditer(txt)
     for i in m :
-      match = i.groupdict()
-      body = match['body']
-      entityXml = ET.SubElement(elemXml, "entity")
-      #entityXml.text = str(body)
-      entityXml.attrib['name'] = match['name']
-      baseName = fileName.replace(topdir,"")
-      entityXml.attrib['file'] = baseName
-      entityXml.attrib['noPort'] = 'false'
-      genericPattern = re.compile(r'generic\s*\(((?!port).)+\)\s*;'
-          , re.IGNORECASE | re.DOTALL)
-      genericMatch = genericPattern.finditer(body) 
-      for gi in genericMatch :
-        genericText = gi.group(0)
-        genericXml = ET.SubElement(entityXml, "generic")
-        genericXml.text = genericText
-      portExpr = re.compile(r'port\s*\(((?!end).)+\)\s*;', re.IGNORECASE |
-          re.DOTALL)
-      portMatch = portExpr.search(body)
-      if portMatch :
-        portText = portMatch.group(0)
-        parsePortText(entityXml, portText)
-      else :
-        entityXml.attrib['noPort'] = "true"
+        match = i.groupdict()
+        body = match['body']
+        entityXml = ET.SubElement(elemXml, "entity")
+        #entityXml.text = str(body)
+        entityXml.attrib['name'] = match['name']
+        baseName = fileName.replace(topdir,"")
+        entityXml.attrib['file'] = baseName
+        entityXml.attrib['noPort'] = 'false'
+        genericPattern = re.compile(r'generic\s*\(((?!port).)+\)\s*;'
+            , re.IGNORECASE | re.DOTALL)
+        genericMatch = genericPattern.finditer(body) 
+        for gi in genericMatch :
+          genericText = gi.group(0)
+          genericXml = ET.SubElement(entityXml, "generic")
+          genericXml.text = genericText
+        portExpr = re.compile(r'port\s*\(((?!end).)+\)\s*;', re.IGNORECASE |
+            re.DOTALL)
+        portMatch = portExpr.search(body)
+        if portMatch :
+          portText = portMatch.group(0)
+          parsePortText(entityXml, portText)
+        else :
+          entityXml.attrib['noPort'] = "true"
   
     architecture_body = '(?P<arch_body>((?!entity).)+)'
     pattern = r'architecture\s+(?P<arch_name>\w+)\s+of\s+(?P<arch_of>\w+)'\
@@ -135,44 +136,67 @@ def parseTxt(elemXml, txt, fileName) :
     architecture = re.compile(pattern, re.IGNORECASE | re.DOTALL);
     m = architecture.finditer(txt)
     for i in m :
-      match = i.groupdict()
-      arch_name = match['arch_name']
-      arch_body = match['arch_body']
-      arch_of = match['arch_of']
-      archXml = ET.SubElement(elemXml, "architecture")
-      archXml.attrib['name'] = arch_name
-      archXml.attrib['of'] = arch_of
-      parseArchitectureText(archXml, arch_body)
+        match = i.groupdict()
+        arch_name = match['arch_name']
+        arch_body = match['arch_body']
+        arch_of = match['arch_of']
+        archXml = ET.SubElement(elemXml, "architecture")
+        archXml.attrib['name'] = arch_name
+        archXml.attrib['of'] = arch_of
+        parseArchitectureText(archXml, arch_body)
 
 def parseArchitectureText(elemXml, arch_body) :
-  ''' 
-  Parse the architecture text and find out which component is instantiated
-  in this architecture.
-  '''
-  instances = dict()
-  component_inst_expr = r'(?P<instance_name>\w+)\s*\:\s*'\
-      +'(?P<arch_name>\w+)\s+(generic|port)\s+(map)'
-  pattern = re.compile(component_inst_expr
-      , re.IGNORECASE | re.DOTALL)
-  mm = pattern.finditer(arch_body) 
-  for ii in mm :
-    instanceName = ii.groupdict()['instance_name']
-    instanceOf = ii.groupdict()['arch_name']
-    instances[instanceOf] = instanceName
+    ''' 
+    Parse the architecture text and find out which component is instantiated
+    in this architecture.
+    '''
+    assert len(arch_body) > 2, "Text in architecture {0}".format(arch_body)
+    instanceDict = collections.defaultdict(list)
+    component_inst_expr = r'(?P<instance_name>\w+)\s*\:\s*'\
+        +'(?P<arch_name>\w+)\s+(generic|port)\s+(map)'
+    pattern = re.compile(component_inst_expr, re.IGNORECASE | re.DOTALL)
+    mm = pattern.finditer(arch_body) 
+    for ii in mm :
+        instanceName = ii.groupdict()['instance_name']
+        instanceOf = ii.groupdict()['arch_name']
+        instanceDict[instanceOf].append(instanceName)
+  
+    # Not all components are instantiated. Some are imported from libraries.
+    # Following take care of instantiated components. 
+    component_decl_pat = r'\s*component\s+(?P<comp_name>\w+)'\
+        +'(((?!component).)+)\s*end\s+component'
+    pattern = re.compile(component_decl_pat, re.IGNORECASE | re.DOTALL)
+    mm = pattern.finditer(arch_body)
 
-  component_decl_pat = r'\s*component\s+(?P<comp_name>\w+)'\
-      +'(((?!component).)+)\s*end\s+component'
-  pattern = re.compile(component_decl_pat, re.IGNORECASE | re.DOTALL)
-  mm = pattern.finditer(arch_body)
-  for ii in mm :
-    compXml = ET.SubElement(elemXml, "component")
-    comp_name = ii.groupdict()['comp_name']
-    compXml.attrib['name'] = comp_name
-    if comp_name in instances.keys() :
-      compXml.attrib['isInstantiated'] = 'true'
-      compXml.attrib['intance_name'] = instances[comp_name]
-    else :
-      compXml.attrib['isInstantiated'] = 'false'
+    # keep a list of processed components.
+    userDefinedComponents = list()
+    libraryComponents = list()
+
+    if mm:
+        for ii in mm :
+            compXml = ET.SubElement(elemXml, "component")
+            comp_name = ii.groupdict()['comp_name']
+            compXml.attrib['name'] = comp_name
+            if instanceOf in instanceDict.keys():
+                userDefinedComponents.append(instanceOf)
+                compXml.attrib['isInstantiated'] = 'true'
+                compXml.attrib['type'] = 'user_defined'
+                for l in instanceDict[comp_name]:
+                    instanceXml = ET.SubElement(compXml, "instance")
+                    compXml.attrib['name'] = l
+            else :
+                compXml.attrib['isInstantiated'] = 'false'
+
+    for comp in instanceDict:
+        if comp not in userDefinedComponents:
+            # This most likely to be imported from other library.
+            compXml = ET.SubElement(elemXml, "component")
+            compXml.attrib['isInstantiated'] = 'true'
+            compXml.attrib['type'] = 'library_defined'
+            for l in instanceDict[comp]:
+                instanceXml = ET.SubElement(compXml, "instance")
+                compXml.attrib['name'] = l
+
 
 def parsePortText(elemXml, portText) :
   '''
@@ -212,7 +236,7 @@ def toVHDLXML(elemXml, files) :
                 if(line.strip()[0:2] == "--") : pass 
                 else: txt += line
             assert len(txt) > 3, "File contains: {0}".format(txt)
-            debug.printDebug("STEP", "Parsing file : {0} \n".format(file))
+            debug.printDebug("INFO", "Parsing file : {0}".format(file))
             parseTxt(elemXml, txt, file)
    
 def generateTestBench(entity, tbName) :
