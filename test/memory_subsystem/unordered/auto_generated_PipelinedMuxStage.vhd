@@ -25,12 +25,12 @@ ARCHITECTURE arch OF tb_PipelinedMuxStage IS
            g_tag_width : integer := 3  
            
     );
-    PORT(data_left : in std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
-        req_in : in std_logic_vector(g_number_of_inputs-1 downto 0);
-        ack_out : out std_logic_vector(g_number_of_inputs-1 downto 0);
-        data_right : out std_logic_vector((g_data_width*g_number_of_outputs)-1 downto 0);
-        req_out : out std_logic_vector(g_number_of_outputs-1 downto 0);
-        ack_in : in std_logic_vector(g_number_of_outputs-1 downto 0);
+    PORT(data_left : in std_logic_vector(( 10* 8)-1 downto 0);
+        req_in : in std_logic_vector( 8-1 downto 0);
+        ack_out : out std_logic_vector( 8-1 downto 0);
+        data_right : out std_logic_vector(( 10* 1)-1 downto 0);
+        req_out : out std_logic_vector( 1-1 downto 0);
+        ack_in : in std_logic_vector( 1-1 downto 0);
         clock : in std_logic;
         reset : in std_logic
     );

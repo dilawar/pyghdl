@@ -21,7 +21,7 @@ class VHDLParser:
         self.workdir = os.path.join(self.topdir, 'work')
         self.vhdlXml = ET.Element("design")
 
-    def testbenchFromDict(self, tDict):
+    def testbenchFromDict(self):
         testbench = '''
 -------------------------------------------------------------------------------
 -- This testbench is automatically generated. May not work.
@@ -43,27 +43,27 @@ ARCHITECTURE arch OF tb_{0} IS
 \t-- Component declaration.
 \t----------------------------------------------------------------
 \tCOMPONENT {0} {1}
-\tPORT('''.format(tDict.get('comp_name'), tDict.get('comp_generic'))
-        testbench += "{0}".format(tDict.get('comp_decl'))
+\tPORT('''.format(self.tDict.get('comp_name'), self.tDict.get('comp_generic'))
+        testbench += "{0}".format(self.tDict.get('comp_decl'))
         testbench += '''\n\t);
 \tEND COMPONENT;
 \t
 \t-- Signals in entity 
 '''
-        testbench += "{0}".format(tDict.get('signal_decl'))
+        testbench += "{0}".format(self.tDict.get('signal_decl'))
         testbench += '''
 BEGIN
 \t-- Instantiate a dut 
 '''
-        testbench += "{0}".format(tDict.get('dut_instance'))
+        testbench += "{0}".format(self.tDict.get('dut_instance'))
         testbench += '''
 \ttest : PROCESS 
 \t\t-- Declare variables to store the values stored in test files. 
 '''
-        testbench += "{0}".format(tDict['variables'])
+        testbench += "{0}".format(self.tDict['variables'])
         testbench += '''
 \t\t-- File and its minions.
-\t\tFILE vector_file : TEXT OPEN read_mode IS "{0}";'''.format(tDict['vector_file_path'])
+\t\tFILE vector_file : TEXT OPEN read_mode IS "{0}";'''.format(self.tDict['vector_file_path'])
         testbench += '''
 \t\tVARIABLE l : LINE;
 \t\tVARIABLE r : REAL;
@@ -85,7 +85,7 @@ BEGIN
 \t\t\t-- Skip a space
 \t\t\tread(l, space);
 \t\t\t-- Read other singals etc. '''
-        testbench += "{0}".format(tDict.get('asserts'))
+        testbench += "{0}".format(self.tDict.get('asserts'))
         testbench += '''
 \t\tEND LOOP;
 \t\tASSERT false REPORT "Test complete";
@@ -266,12 +266,12 @@ END ARCHITECTURE arch;
         ''' Add a test-bench 
         tbName : file name of tb
         '''
-        tDict = dict()        # To keep the data to create testbench.
-        tDict['comp_name'] = entity
+        self.tDict = dict()        # To keep the data to create testbench.
+        self.tDict['comp_name'] = entity
         topDir = self.vhdlXml.attrib['dir']
         # Delete previous testbench 
         tbPath = os.path.join(topDir, tbName)
-        tDict['vector_file_path'] = os.path.join(self.workdir, "vector.test")
+        self.tDict['vector_file_path'] = os.path.join(self.workdir, "vector.test")
 
         try :
             os.remove(tbPath)
@@ -283,31 +283,48 @@ END ARCHITECTURE arch;
         gns = self.vhdlXml.find(
                 ".//entity/[@name='{0}']/generics".format(entity)
                 )       
+
+        genericDict = {}
         if gns:
-            tDict['comp_generic'] = '\n\tGENERIC({0}\n\t);'.format(gns.text)
+            genericDict = self.populateGenericDict(gns, entity)
+            self.tDict['comp_generic'] = '\n\tGENERIC({0}\n\t);'.format(gns.text)
         else:
-            tDict['comp_generic'] = ''
+            self.tDict['comp_generic'] = ''
 
         # Fill in testbench
-        tDict['comp_decl'] = ""
-        ports = self.vhdlXml.findall(".//entity[@name='{0}']/port".format(entity))
+        ports = self.vhdlXml.findall(
+                ".//entity[@name='{0}']/port".format(entity)
+                )
         portText = []
         for p in ports:
-            portText.append(
-                    p.text+ " : "+p.attrib['direction']+" "+p.attrib['type']
-                    )
-        tDict['comp_decl'] = ';\n\t\t'.join(portText)
+            typeOfPort = p.attrib['type']
+            # If any of key is matched then we should replace the name of
+            # generic with its value.
+            for k in genericDict:
+                if k in typeOfPort:
+                    if genericDict[k] is None:
+                        msg = "Can't find the value for generic {0}".format(k)
+                        msg += " Can't produce a testbench. Initialize generics"
+                        msg += " in entity with some default values. "
+                        raise UserError, msg
+                    else:
+                        typeOfPort = typeOfPort.replace(k, genericDict[k])
+                else: pass
+            portText.append(p.text+ " : "+p.attrib['direction']+" "+typeOfPort)
+
+        self.tDict['comp_decl'] = ';\n\t\t'.join(portText)
         
-        # Signal declarations.
-        tDict['signal_decl'] = ''
+        # Signal declarations. We need to make sure that generics are replaced
+        # accordingly.
+        self.tDict['signal_decl'] = ''
         for p in ports :
-            tDict['signal_decl'] += ("\tSIGNAL "+p.text+" : "
+            self.tDict['signal_decl'] += ("\tSIGNAL "+p.text+" : "
                 + " "+p.attrib['type']+";\n")
           
         dut = "\tdut : {0}\n".format(entity)
 
         if gns:
-            tDict['generics'] = gns.text
+            self.tDict['generics'] = gns.text
             dut += "\tGENERIC MAP("
             dut += "\t{0}".format(self.formatGenericText(gns))
             dut += ")\n"
@@ -316,20 +333,20 @@ END ARCHITECTURE arch;
         dut += "{0}".format(self.formatPortText(ports))
         dut += "\n\t);\n"
 
-        tDict['dut_instance'] = dut
+        self.tDict['dut_instance'] = dut
         
         # variables.
         variables = ""
         for p in ports :
             portExpr = "tmp_" + p.text+" : "+" " + p.attrib['type']
             variables += "\t\tVARIABLE "+ portExpr +";\n"
-        tDict['variables'] = variables
+        self.tDict['variables'] = variables
         
         # Generate assert lines
-        tDict['asserts'] = self.generateAssertLines(ports)
+        self.tDict['asserts'] = self.generateAssertLines(ports)
         
         # Create a testbench
-        t = self.testbenchFromDict(tDict)
+        t = self.testbenchFromDict()
         try:
             with open(tbPath, "w") as f :
                 f.write(t)
@@ -388,3 +405,16 @@ END ARCHITECTURE arch;
         return ',\n\t\t'.join(newText)
 
 
+    def populateGenericDict(self, genXml, entityName):
+        """Create generic for this entity
+        """
+        generics = dict()
+        for xml in genXml:
+            rhs = xml.attrib['rhs']
+            lhs = xml.attrib['lhs']
+            if ":=" in rhs:
+                generics[lhs] = rhs.split(":=")[-1]
+            else:
+                generics[lhs] = None
+        self.genericsDict[entityName] = generics
+        return generics 

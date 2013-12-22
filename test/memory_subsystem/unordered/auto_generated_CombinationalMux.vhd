@@ -23,10 +23,10 @@ ARCHITECTURE arch OF tb_CombinationalMux IS
     g_data_width       : integer := 32;
     g_number_of_inputs: integer := 2
     );
-    PORT(in_data : in std_logic_vector((g_data_width*g_number_of_inputs)-1 downto 0);
-        out_data : out std_logic_vector(g_data_width-1 downto 0);
-        in_req : in std_logic_vector(g_number_of_inputs-1 downto 0);
-        in_ack : out std_logic_vector(g_number_of_inputs-1 downto 0);
+    PORT(in_data : in std_logic_vector(( 32* 2)-1 downto 0);
+        out_data : out std_logic_vector( 32-1 downto 0);
+        in_req : in std_logic_vector( 2-1 downto 0);
+        in_ack : out std_logic_vector( 2-1 downto 0);
         out_req : out std_logic;
         out_ack : in std_logic
     );

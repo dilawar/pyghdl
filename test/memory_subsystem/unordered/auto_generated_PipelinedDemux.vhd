@@ -23,13 +23,13 @@ ARCHITECTURE arch OF tb_PipelinedDemux IS
             g_destination_id_width : natural := 3;
             g_number_of_outputs: natural := 8
     );
-    PORT(data_in : in std_logic_vector(g_data_width-1 downto 0);
-        sel_in : in std_logic_vector(g_destination_id_width-1 downto 0);
+    PORT(data_in : in std_logic_vector( 10-1 downto 0);
+        sel_in : in std_logic_vector( 3-1 downto 0);
         req_in : in std_logic;
         ack_out : out std_logic;
-        data_out : out std_logic_vector((g_number_of_outputs*g_data_width)-1 downto 0 );
-        req_out : out std_logic_vector(g_number_of_outputs-1 downto 0);
-        ack_in : in std_logic_vector(g_number_of_outputs-1 downto 0);
+        data_out : out std_logic_vector(( 8* 10)-1 downto 0 );
+        req_out : out std_logic_vector( 8-1 downto 0);
+        ack_in : in std_logic_vector( 8-1 downto 0);
         clk : in std_logic;
         reset : in std_logic
     );

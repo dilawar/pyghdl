@@ -16,6 +16,7 @@ class VHDL(vhdl_regex.VHDLParser):
         self.workdir = os.path.join(self.topdir, 'work')
         self.hierXml = ET.Element("hier")
         self.topModule = None
+        self.genericsDict = dict()
 
     def runDesign(self, generateTB, simulator) :
         """ Run the damn design

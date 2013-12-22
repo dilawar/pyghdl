@@ -29,22 +29,22 @@ ARCHITECTURE arch OF tb_UnorderedMemorySubsystem IS
       base_bank_addr_width  : natural := 8;
       base_bank_data_width  : natural := 8
     );
-    PORT(lr_addr_in : in std_logic_vector((num_loads*addr_width)-1 downto 0);
-        lr_req_in : in std_logic_vector(num_loads-1 downto 0);
-        lr_ack_out : out std_logic_vector(num_loads-1 downto 0);
-        lr_tag_in : in std_logic_vector((num_loads*tag_width)-1 downto 0);
-        lc_data_out : out std_logic_vector((num_loads*data_width)-1 downto 0);
-        lc_req_in : in std_logic_vector(num_loads-1 downto 0);
-        lc_ack_out : out std_logic_vector(num_loads-1 downto 0);
-        lc_tag_out : out std_logic_vector((num_loads*tag_width)-1 downto 0);
-        sr_addr_in : in std_logic_vector((num_stores*addr_width)-1 downto 0);
-        sr_data_in : in std_logic_vector((num_stores*data_width)-1 downto 0);
-        sr_req_in : in std_logic_vector(num_stores-1 downto 0);
-        sr_ack_out : out std_logic_vector(num_stores-1 downto 0);
-        sr_tag_in : in std_logic_vector((num_stores*tag_width)-1 downto 0);
-        sc_req_in : in std_logic_vector(num_stores-1 downto 0);
-        sc_ack_out : out std_logic_vector(num_stores-1 downto 0);
-        sc_tag_out : out std_logic_vector((num_stores*tag_width)-1 downto 0);
+    PORT(lr_addr_in : in std_logic_vector(( 5* 9)-1 downto 0);
+        lr_req_in : in std_logic_vector( 5-1 downto 0);
+        lr_ack_out : out std_logic_vector( 5-1 downto 0);
+        lr_tag_in : in std_logic_vector(( 5* 7)-1 downto 0);
+        lc_data_out : out std_logic_vector(( 5* 5)-1 downto 0);
+        lc_req_in : in std_logic_vector( 5-1 downto 0);
+        lc_ack_out : out std_logic_vector( 5-1 downto 0);
+        lc_tag_out : out std_logic_vector(( 5* 7)-1 downto 0);
+        sr_addr_in : in std_logic_vector(( 10* 9)-1 downto 0);
+        sr_data_in : in std_logic_vector(( 10* 5)-1 downto 0);
+        sr_req_in : in std_logic_vector( 10-1 downto 0);
+        sr_ack_out : out std_logic_vector( 10-1 downto 0);
+        sr_tag_in : in std_logic_vector(( 10* 7)-1 downto 0);
+        sc_req_in : in std_logic_vector( 10-1 downto 0);
+        sc_ack_out : out std_logic_vector( 10-1 downto 0);
+        sc_tag_out : out std_logic_vector(( 10* 7)-1 downto 0);
         clock : in std_logic;
         reset : in std_logic
     );
