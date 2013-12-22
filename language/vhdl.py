@@ -9,16 +9,14 @@ import re
 import language.test as test
 import debug.debug as debug
 
-
-class VHDL:
+class VHDL(vhdl_regex.VHDLParser):
 
     def __init__(self, topdir):
         self.topdir = topdir
         self.hierXml = ET.Element("hier")
-        self.vhdl = vhdl_regex.VHDLParser()
-        self.vhdlXml = None
+        self.topModule = None
 
-    def runDesign(self, topModule, generateTB, simulator="ghdl") :
+    def runDesign(self, generateTB, simulator) :
         """ Run the damn design
         """
         # check for compiler. If it does not exists, quit.
@@ -36,34 +34,36 @@ class VHDL:
                         )
                 raise e
         # set compiler analyze command.
-        topDir = self.vhdlXml.attrib['dir']
-        compileXml = ET.SubElement(self.vhdl.vhdlXml, "compiler")
+        self.topdir = self.vhdlXml.attrib['dir']
+        compileXml = ET.SubElement(self.vhdlXml, "compiler")
         compileXml.attrib['name'] = 'ghdl'
         topEntities = self.vhdlXml.findall(".//hier/module[@topEntity='true']")
         fileDict = dict()
-        if topModule :
-            topEntities = self.vhdl.vhdlXml.findall(".//hier/module[@name='{0}']"\
-                    .format(topModule))
+        if self.topModule is not None and len(self.topModule) > 0:
+            topEntities = self.vhdlXml.findall(
+                    ".//hier/module[@name='{0}']".format(topModule)
+                    )
         for te in topEntities :
-          # Files needed to elaborate the design.
-          files = set()
-          neededEntity = set()
-          topEntityName = te.attrib['name']
-          neededEntity.add(topEntityName)
-          children = te.findall(".//*")
-          for child in children :
-            neededEntity.add(child.attrib['name'])
-          # get files we need to compile to elaborate this entity.
-          for entityName in neededEntity :
-            entity = self.vhdl.vhdlXml.find(".//entity[@name='{0}']".format(entityName))
-            if entity is not None :
-              fileOfEntity = entity.attrib['file']
-              files.add(fileOfEntity)
-            else :
-              msg = "Horror : Entity not found \n"
-              print(msg)
-              return
-          fileDict[topEntityName] = files
+            # Files needed to elaborate the design.
+            files = set()
+            neededEntity = set()
+            topEntityName = te.attrib['name']
+            neededEntity.add(topEntityName)
+            children = te.findall(".//*")
+            for child in children :
+                neededEntity.add(child.attrib['name'])
+
+            # get files we need to compile to elaborate this entity.
+            for entityName in neededEntity :
+                entity = self.vhdlXml.find(
+                        ".//entity[@name='{0}']".format(entityName)
+                        )
+                if entity is not None :
+                    fileOfEntity = entity.attrib['file']
+                    files.add(fileOfEntity)
+                else :
+                    raise UserWarning, "Entity {0} not found".format(entity)
+            fileDict[topEntityName] = files
       
         # If generateTB is set then ignore the previous TB and generate  a new one.
         # Else execute the design as it is.
@@ -72,7 +72,7 @@ class VHDL:
           for entity in fileDict :
             # if this entity is already a testbench then remove it from the list and
             # add a new one.
-            eXml = self.vhdl.vhdlXml.find(".//entity[@name='{0}']".format(entity))
+            eXml = self.vhdlXml.find(".//entity[@name='{0}']".format(entity))
             msg = "|- Generating testbench for entity {0} \n".format(entity)
             print(msg)
             if eXml.attrib['noPort'] == "true" : # It's a testbench.
@@ -83,12 +83,12 @@ class VHDL:
               # add a new testbench. Need to find an entity which is its children.
               fileSet = fileDict[entity]
               # Get the name of entity this tb contains.
-              compXml = self.vhdl.vhdlXml.find(".//architecture[@of='{0}']/component"\
+              compXml = self.vhdlXml.find(".//architecture[@of='{0}']/component"\
                   .format(entity))
               try:
                   entityInTb = compXml.attrib['name']
                   tbName = "auto_generated_"+entityInTb+".vhd"
-                  fileSet.add( self.vhdl.generateTestBench(entityInTb, tbName))
+                  fileSet.add( self.generateTestBench(entityInTb, tbName))
                   tbEntity = "tb_"+entityInTb
                   newFileDict[tbEntity] = fileSet
               except Exception as e:
@@ -99,7 +99,7 @@ class VHDL:
               fileSet = set(fileDict[entity])
               tbName = "auto_generated_"+entity+".vhd"
               tbEntity = "tb_"+entity
-              fileSet.add(self.vhdl.generateTestBench(entity, tbName))
+              fileSet.add(self.generateTestBench(entity, tbName))
               newFileDict[tbEntity] = fileSet
           # Copy the new file list to old one.
           fileDict = newFileDict
@@ -109,7 +109,7 @@ class VHDL:
           self.runATopEntity(entity, fileDict[entity])
       
     def runATopEntity(self, entityName, fileSet) :
-        topdir = self.vhdl.vhdlXml.attrib['dir']
+        topdir = self.vhdlXml.attrib['dir']
         workdir = topdir+"/work"
         try :
             os.makedirs(workdir)
@@ -148,7 +148,7 @@ class VHDL:
         if status.__len__() > 0 :
             print("Error status :  {0}".format(str(status)))
         else :
-            print("Successfully executed \n")
+            print("Successfully executed")
 
     def analyze(self, filepath) :
         ''' Analyze a file. '''
@@ -169,16 +169,15 @@ class VHDL:
     def elaborate(self, entityname) :
         ''' Elaborate the file '''
         workdir = self.workdir
-        msg = "Elaborating entity {0} \n".format(entityname)
-        print(msg)
-        bin = workdir+"/"+entityname
-        # Before elaboration, check if binary already exists. If yes then remove it.
-        if os.path.exists(bin) :
-          os.remove(bin)
+        debug.printDebug("STEP", "Elaborating entity {0} \n".format(entityname))
+        bin = os.path.join(self.workdir, entityname)
+        # Before elaboration, check if binary already exists. If yes then remove
+        # it.
+        if os.path.exists(bin):
+            os.remove(bin)
         command = "ghdl -e --workdir={0} --work=work -o {1} {2}".format(workdir
             , bin, entityname)
-        msg = "{0} \n".format(command)
-        print(msg)
+        debug.printDebug("DEBUG", "Executing: \n$ {0}".format(command))
         p = subprocess.Popen(shlex.split(command)
             , stdout = subprocess.PIPE
             , stderr = subprocess.PIPE
@@ -232,47 +231,52 @@ class VHDL:
                         , "Component {0} is not instantited.".format(compName)
                         )
 
-
     def getHierarchy(self): 
-      ''' Generate the hierarchy and store it in a xml element elemXml
-      '''
-      allEntities = set()
-      hasParents = set()
-      childLess = set()
-      # keep the aleady added xml elements of architecture in a dictionary.
-      alreadyAddedArcs = dict()
-      # get the list of entities we have.
-      entities = self.vhdlXml.findall('entity')
-      # collect all entities
-      for entity in entities : 
-        entityName = entity.attrib['name']
-        allEntities.add(entityName)
-        # If this entity is already added to hierarchy then ignore it otherwise
-        # create an xml element of it.
-        if entityName not in alreadyAddedArcs.keys() :
-          entityXml = ET.Element("module")
-          entityXml.attrib['name'] = entityName 
-          alreadyAddedArcs[entityName] = entityXml
-        else :
-          entityXml = alreadyAddedArcs[entityName]
-        # Pass this name of entity along with root xmlElement to be processed.
-        self.getNextLevelsOfHier(entityName, hasParents, childLess, alreadyAddedArcs)
-      
-      # Here we should have two sets. Nodes which do not have children and nodes
-      # which do not have parents. Nodes with following properties can not be
-      # top-modules.
-      # 1. Those who belongs to hasParents set.
-      topModulesSet = allEntities - hasParents
-      for topModule in topModulesSet :
-        x = (alreadyAddedArcs[topModule])
-        x.attrib['topEntity'] = "true"
-        self.hierXml.append(x)
+        ''' Generate the hierarchy and store it in a xml element elemXml
+        '''
+        allEntities = set()
+        hasParents = set()
+        childLess = set()
+        # keep the aleady added xml elements of architecture in a dictionary.
+        alreadyAddedArcs = dict()
+        # get the list of entities we have.
+        entities = self.vhdlXml.findall('entity')
+        # collect all entities
+        for entity in entities : 
+            entityName = entity.attrib['name']
+            allEntities.add(entityName)
+            # If this entity is already added to hierarchy then ignore it
+            # otherwise
+            # create an xml element of it.
+            if entityName not in alreadyAddedArcs.keys() :
+                entityXml = ET.Element("module")
+                entityXml.attrib['name'] = entityName 
+                alreadyAddedArcs[entityName] = entityXml
+            else :
+                entityXml = alreadyAddedArcs[entityName]
+                # Pass this name of entity along with root xmlElement to be
+                # processed.
+                self.getNextLevelsOfHier(entityName
+                        , hasParents
+                        , childLess
+                        , alreadyAddedArcs
+                        )
+        
+        # Here we should have two sets. Nodes which do not have children and
+        # nodes which do not have parents. Nodes with following properties can
+        # not be top-modules.  1. Those who belongs to hasParents set.
+        topModulesSet = allEntities - hasParents
+        for topModule in topModulesSet :
+          x = (alreadyAddedArcs[topModule])
+          x.attrib['topEntity'] = "true"
+          self.hierXml.append(x)
 
     def execute(self, files, top, generateTB) :
         ''' Top most function in this folder.'''
+
         self.topModule = top
-        # We must delete all files automatically generated before (if any). All such
-        # files have auto_generated_ prefix.
+        # We must delete all files automatically generated before (if any). All
+        # such files have auto_generated_ prefix.
         newFiles = set()
         for file in files :
             if re.search(r"auto_generated_", file) : pass 
@@ -289,10 +293,10 @@ class VHDL:
 
         # Run each top-entity
         debug.printDebug("STEP", "Elaborating each design ...")
-        return self.runDesign(self, generateTB)
+        self.runDesign(generateTB, "ghdl")
 
     def generateTestVector(self, entityName) :
-        top = self.vhdl.vhdlXml.attrib['dir']
+        top = self.vhdlXml.attrib['dir']
         debug.printDebug("STEP", "Generating vector.test file.")
         # call this function now.
         test.testEntity(entityName, top)
