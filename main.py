@@ -32,39 +32,42 @@ def findTopDir(dirs) :
   return min(dList, key=len)
 
 if __name__=="__main__" :
-  # Argument parser.
-  description = '''Python front-end of ghdl written for personal convenience.'''
-  parser = argparse.ArgumentParser(description=description)
-  parser.add_argument('-d', metavar='design_directory', nargs=1
-      , action='append'
-      , required = True
-      , help = 'Location of directory where your VHDL design.')
-  parser.add_argument('-l', metavar='language', nargs=1
-      , default = "vhdl"
-      , help = 'Which languag (supported : vhdl )')
-  parser.add_argument('-t', metavar='top_module', nargs=1
-      , required = False, default=None
-      , help = 'Optional : Top module in your design.')
-  parser.add_argument('-r', metavar='auto_test', nargs=1
-      , required = False, default=True
-      , help = 'Optional : If specified testbenches will be generated \
-              automatically.'
-      )
-
-  class Args: pass 
-
-  args = Args()
-  parser.parse_args(namespace=args)
-  if args.l == "vhdl" :
-      file_regex = ".*\.vhdl?$"
-      files = findListings(args.d, regex=file_regex)
-      if len(files) < 1 :
-          debug.printDebug("WARN", "No file is found with regex \
-                  {0} in directories {1}".format( file_regex, args.d))
-          sys.exit();
-      topDir = findTopDir(args.d)
-      vhdl.execute(topDir, files, top=args.t, generateTB=args.r)
-  else:
-      debug.printDebug("INFO",  "Unsupported language : {0}".format(args.l))
-      debug.printDebug("DEBUG", "Languge specified {0}".format(args.l))
-      raise UserWarning, "Unsupported language. {0}".format(args.l)
+   # Argument parser.
+   description = '''Python front-end of ghdl written for personal convenience.'''
+   parser = argparse.ArgumentParser(description=description)
+   parser.add_argument('-d', metavar='design_directory', nargs=1
+           , action='append'
+           , required = True
+           , help = 'Location of directory where your VHDL design.'
+           )
+   parser.add_argument('-l', metavar='language', nargs=1
+           , default = "vhdl"
+           , help = 'Which languag (supported : vhdl )'
+           )
+   parser.add_argument('-t', metavar='top_module', nargs=1
+           , required = False, default=None
+           , help = 'Optional : Top module in your design.'
+           )
+   parser.add_argument('-r', metavar='auto_test', nargs=1
+           , required = False, default=True
+           , help = 'Optional : If specified testbenches will be generated \
+                   automatically.'
+            )
+ 
+   class Args: pass 
+   args = Args()
+   parser.parse_args(namespace=args)
+   if args.l == "vhdl" :
+       file_regex = ".*\.vhdl?$"
+       files = findListings(args.d, regex=file_regex)
+       if len(files) < 1 :
+           debug.printDebug("WARN", "No file is found with regex \
+                   {0} in directories {1}".format( file_regex, args.d))
+           sys.exit();
+       topDir = findTopDir(args.d)
+       vhdlObj = vhdl.VHDL(topDir)
+       vhdlObj.execute(files, top=args.t, generateTB=args.r)
+   else:
+       debug.printDebug("INFO",  "Unsupported language : {0}".format(args.l))
+       debug.printDebug("DEBUG", "Languge specified {0}".format(args.l))
+       raise UserWarning, "Unsupported language. {0}".format(args.l)
