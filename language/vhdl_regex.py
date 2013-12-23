@@ -357,7 +357,7 @@ END ARCHITECTURE arch;
             assertLine += '\t\t\tassert good_val REPORT "bad {0} value";\n'.format(port)
             if p.attrib['direction'] == "out" :
                 # Out port. Assert the value.
-                line = "\t\t\tassert {0} = {1} REPORT \"vector mismatch\";"\
+                line = "\t\t\tassert {0} = {1} REPORT \"vector mismatch\";\n"\
                         .format("tmp_" + port, port)
                 assertLine += line
             assertLine += '\t\t\tread(l, space); -- skip a space\n'

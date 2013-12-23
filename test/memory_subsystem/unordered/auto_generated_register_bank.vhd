@@ -152,7 +152,8 @@ BEGIN
             -- read lr_ack_out value
             read(l, tmp_lr_ack_out, good_val);
             assert good_val REPORT "bad lr_ack_out value";
-            assert tmp_lr_ack_out = lr_ack_out REPORT "vector mismatch";            read(l, space); -- skip a space
+            assert tmp_lr_ack_out = lr_ack_out REPORT "vector mismatch";
+            read(l, space); -- skip a space
 
             -- read lr_tag_in value
             read(l, tmp_lr_tag_in, good_val);
@@ -162,7 +163,8 @@ BEGIN
             -- read lc_data_out value
             read(l, tmp_lc_data_out, good_val);
             assert good_val REPORT "bad lc_data_out value";
-            assert tmp_lc_data_out = lc_data_out REPORT "vector mismatch";            read(l, space); -- skip a space
+            assert tmp_lc_data_out = lc_data_out REPORT "vector mismatch";
+            read(l, space); -- skip a space
 
             -- read lc_req_in value
             read(l, tmp_lc_req_in, good_val);
@@ -172,12 +174,14 @@ BEGIN
             -- read lc_ack_out value
             read(l, tmp_lc_ack_out, good_val);
             assert good_val REPORT "bad lc_ack_out value";
-            assert tmp_lc_ack_out = lc_ack_out REPORT "vector mismatch";            read(l, space); -- skip a space
+            assert tmp_lc_ack_out = lc_ack_out REPORT "vector mismatch";
+            read(l, space); -- skip a space
 
             -- read lc_tag_out value
             read(l, tmp_lc_tag_out, good_val);
             assert good_val REPORT "bad lc_tag_out value";
-            assert tmp_lc_tag_out = lc_tag_out REPORT "vector mismatch";            read(l, space); -- skip a space
+            assert tmp_lc_tag_out = lc_tag_out REPORT "vector mismatch";
+            read(l, space); -- skip a space
 
             -- read sr_addr_in value
             read(l, tmp_sr_addr_in, good_val);
@@ -197,7 +201,8 @@ BEGIN
             -- read sr_ack_out value
             read(l, tmp_sr_ack_out, good_val);
             assert good_val REPORT "bad sr_ack_out value";
-            assert tmp_sr_ack_out = sr_ack_out REPORT "vector mismatch";            read(l, space); -- skip a space
+            assert tmp_sr_ack_out = sr_ack_out REPORT "vector mismatch";
+            read(l, space); -- skip a space
 
             -- read sr_tag_in value
             read(l, tmp_sr_tag_in, good_val);
@@ -212,12 +217,14 @@ BEGIN
             -- read sc_ack_out value
             read(l, tmp_sc_ack_out, good_val);
             assert good_val REPORT "bad sc_ack_out value";
-            assert tmp_sc_ack_out = sc_ack_out REPORT "vector mismatch";            read(l, space); -- skip a space
+            assert tmp_sc_ack_out = sc_ack_out REPORT "vector mismatch";
+            read(l, space); -- skip a space
 
             -- read sc_tag_out value
             read(l, tmp_sc_tag_out, good_val);
             assert good_val REPORT "bad sc_tag_out value";
-            assert tmp_sc_tag_out = sc_tag_out REPORT "vector mismatch";            read(l, space); -- skip a space
+            assert tmp_sc_tag_out = sc_tag_out REPORT "vector mismatch";
+            read(l, space); -- skip a space
 
             -- read clock value
             read(l, tmp_clock, good_val);

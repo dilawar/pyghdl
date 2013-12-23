@@ -99,17 +99,20 @@ BEGIN
             -- read merge_ack_out value
             read(l, tmp_merge_ack_out, good_val);
             assert good_val REPORT "bad merge_ack_out value";
-            assert tmp_merge_ack_out = merge_ack_out REPORT "vector mismatch";            read(l, space); -- skip a space
+            assert tmp_merge_ack_out = merge_ack_out REPORT "vector mismatch";
+            read(l, space); -- skip a space
 
             -- read merge_data_out value
             read(l, tmp_merge_data_out, good_val);
             assert good_val REPORT "bad merge_data_out value";
-            assert tmp_merge_data_out = merge_data_out REPORT "vector mismatch";            read(l, space); -- skip a space
+            assert tmp_merge_data_out = merge_data_out REPORT "vector mismatch";
+            read(l, space); -- skip a space
 
             -- read merge_req_out value
             read(l, tmp_merge_req_out, good_val);
             assert good_val REPORT "bad merge_req_out value";
-            assert tmp_merge_req_out = merge_req_out REPORT "vector mismatch";            read(l, space); -- skip a space
+            assert tmp_merge_req_out = merge_req_out REPORT "vector mismatch";
+            read(l, space); -- skip a space
 
             -- read merge_ack_in value
             read(l, tmp_merge_ack_in, good_val);
