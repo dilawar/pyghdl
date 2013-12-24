@@ -186,97 +186,6 @@ class VHDLParser(tb.TestBench):
                 self.parseTxt(txt, file)
         return elemXml
        
-    def generateTestBench(self, entity, tbName) :
-        ''' Add a test-bench 
-        tbName : file name of tb
-        '''
-        self.tDict = dict()        # To keep the data to create testbench.
-        self.tDict['comp_name'] = entity
-        topDir = self.vhdlXml.attrib['dir']
-        # Delete previous testbench 
-        tbPath = os.path.join(topDir, tbName)
-        self.tDict['vector_file_path'] = os.path.join(self.workdir, "vector.test")
-
-        try :
-            os.remove(tbPath)
-        except OSError, e: 
-            if e.errno != errno.ENOENT:
-                raise
- 
-        # generics
-        gns = self.vhdlXml.find(
-                ".//entity/[@name='{0}']/generics".format(entity)
-                )       
-
-        genericDict = {}
-        if gns:
-            genericDict = self.populateGenericDict(gns, entity)
-            self.tDict['comp_generic'] = '\n\tGENERIC({0}\n\t);'.format(gns.text)
-        else:
-            self.tDict['comp_generic'] = ''
-
-        # Fill in testbench
-        ports = self.vhdlXml.findall(
-                ".//entity[@name='{0}']/port".format(entity)
-                )
-        portText = []
-        for p in ports:
-            typeOfPort = p.attrib['type']
-            # If any of key is matched then we should replace the name of
-            # generic with its value.
-            typeOfPort = self.replaceGenericWithValue(typeOfPort
-                    , genericDict
-                    , entity
-                    )
-            portText.append(p.text + " : "+p.attrib['direction']+" "+typeOfPort)
-
-        self.tDict['comp_decl'] = ';\n\t\t'.join(portText)
-        
-        # Signal declarations. We need to make sure that generics are replaced
-        # accordingly.
-        self.tDict['signal_decl'] = ''
-        for p in ports :
-            t = p.attrib['type']
-            t = self.replaceGenericWithValue(t, genericDict, entity)
-            self.tDict['signal_decl'] += ("\tSIGNAL "+p.text+" : " + t +";\n")
-          
-        dut = "\tdut : {0}\n".format(entity)
-
-        if gns:
-            self.tDict['generics'] = gns.text
-            dut += "\tGENERIC MAP("
-            dut += "\t{0}".format(self.formatGenericText(gns))
-            dut += ")\n"
-
-        dut += "\tPORT MAP ( "
-        dut += "{0}".format(self.formatPortText(ports))
-        dut += "\n\t);\n"
-
-        self.tDict['dut_instance'] = dut
-        
-        # variables.
-        variables = ""
-        for p in ports :
-            portExpr = "tmp_" + p.text+" : "+" " + p.attrib['type']
-            portExpr = self.replaceGenericWithValue(portExpr
-                        , genericDict
-                        , entity
-                        )
-            variables += "\t\tVARIABLE "+ portExpr +";\n"
-        self.tDict['variables'] = variables
-        
-        # Generate assert lines
-        self.tDict['asserts'] = self.generateAssertLines(ports)
-        
-        # Create a testbench
-        t = self.testbenchFromDict(entity)
-        try:
-            with open(tbPath, "w") as f :
-                f.write(t)
-        except Exception as e:
-            raise IOError, "Failed to write testbench", e
-        return tbName
-
     def parseFiles(self, files):
         ''' Process the all file listings. 
         '''
@@ -298,11 +207,11 @@ class VHDLParser(tb.TestBench):
         return ",\n\t\t".join(newText)
     
     def formatPortText(self, ports):
-        newText = []
+        newText = set()
         for p in ports:
             p = p.text
             p = p.strip()
-            if p: newText.append("{0} => {0}".format(p))
+            if p: newText.add("{0} => {0}".format(p))
             else: pass
         return ',\n\t\t'.join(newText)
 
