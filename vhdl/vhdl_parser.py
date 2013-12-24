@@ -125,6 +125,7 @@ class VHDLParser(tb.TestBench):
                     for l in instanceDict[comp_name]:
                         instanceXml = ET.SubElement(compXml, "instance")
                         compXml.attrib['name'] = l
+                        compXml.attrib['instance_of'] = instanceOf
                 else :
                     compXml.attrib['isInstantiated'] = 'false'
 
@@ -137,35 +138,36 @@ class VHDLParser(tb.TestBench):
                 for l in instanceDict[comp]:
                     instanceXml = ET.SubElement(compXml, "instance")
                     compXml.attrib['name'] = l
+                    compXml.attrib['instance_of'] = instanceOf
 
 
     def parsePortText(self, elemXml, portText) :
-      '''
-      Parse the port-text and add them to xml.
-      '''
-      pattern = re.compile(r'port\s*\((?P<port_body>.*)\s*\)\s*;'
-          , re.IGNORECASE | re.DOTALL)
-      m = pattern.match(portText)
-      if m :
-        ports = m.groupdict()['port_body']
-        ports = ports.split(";")
-        for portDecl in ports :
-          portList, typeAndDir = portDecl.split(":")
-          portList = portList.strip().split(",")
-          for port in portList :
-            portXml = ET.SubElement(elemXml, "port")
-            portXml.text = port.strip()
-            dirTypeExp = re.compile(r'(?P<dir>\w+)\s+(?P<type>.+)\s*'
-                , re.IGNORECASE | re.DOTALL)
-            dirTypeM = dirTypeExp.match(typeAndDir.strip())
-            dirTypeDict = dirTypeM.groupdict()
-            dir = dirTypeDict['dir']
-            type = dirTypeDict['type']
-            portXml.attrib['direction'] = dir
-            portXml.attrib['type'] = type
-      else :
-          print("[ERROR] Empty port list")
-          return
+        '''
+        Parse the port-text and add them to xml.
+        '''
+        pattern = re.compile(r'port\s*\((?P<port_body>.*)\s*\)\s*;'
+            , re.IGNORECASE | re.DOTALL)
+        m = pattern.match(portText)
+        if m :
+          ports = m.groupdict()['port_body']
+          ports = ports.split(";")
+          for portDecl in ports :
+              portList, typeAndDir = portDecl.split(":", 1)
+              portList = portList.strip().split(",")
+              for port in portList :
+                  portXml = ET.SubElement(elemXml, "port")
+                  portXml.text = port.strip()
+                  dirTypeExp = re.compile(r'(?P<dir>\w+)\s+(?P<type>.+)\s*'
+                      , re.IGNORECASE | re.DOTALL)
+                  dirTypeM = dirTypeExp.match(typeAndDir.strip())
+                  dirTypeDict = dirTypeM.groupdict()
+                  dir = dirTypeDict['dir']
+                  type = dirTypeDict['type']
+                  portXml.attrib['direction'] = dir
+                  portXml.attrib['type'] = type
+        else :
+            print("[ERROR] Empty port list")
+            return
 
     def toVHDLXML(self, elemXml, files) :
         ''' Process all files to get the heirarchy of design.
@@ -320,7 +322,7 @@ class VHDLParser(tb.TestBench):
                     msg = "Can't find the value for generic {0}".format(k)
                     msg += " Can't produce a testbench. Initialize generics"
                     msg += " in entity with some default values. "
-                    raise UserError, msg
+                    raise UserWarning, msg
                 else:
                     txt = txt.replace(k, genericDict[k])
             else: pass

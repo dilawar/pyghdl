@@ -1,7 +1,7 @@
 import errno
 import os
 import sys
-import xml.etree.cElementTree as ET
+import xml.etree.ElementTree as ET
 import vhdl_parser
 import subprocess
 import shlex
@@ -24,32 +24,33 @@ class VHDL(vhdl_parser.VHDLParser):
         """ Run the damn design
         """
         # check for compiler. If it does not exists, quit.
-        debug.printDebug("USER", "Using {0}".format(simulator))
         self.simulator = simulator
         # set compiler analyze command.
         self.topdir = self.vhdlXml.attrib['dir']
         compileXml = ET.SubElement(self.vhdlXml, "compiler")
         compileXml.attrib['name'] = self.compiler
-        topEntities = self.vhdlXml.findall(".//hier/module[@topEntity='true']")
+        topEntities = self.hierXml.findall("module[@topEntity='true']")
         fileDict = dict()
         if self.topModule is not None and len(self.topModule) > 0:
             topEntities = self.vhdlXml.findall(
-                    ".//hier/module[@name='{0}']".format(topModule)
+                    "entity[@name='{0}']".format(topModule)
                     )
+
         for te in topEntities :
             # Files needed to elaborate the design.
+            print ET.tostring(te)
             files = set()
             neededEntity = set()
             topEntityName = te.attrib['name']
             neededEntity.add(topEntityName)
             children = te.findall(".//*")
             for child in children :
-                neededEntity.add(child.attrib['name'])
+                neededEntity.add(child.attrib['instance_of'])
 
             # get files we need to compile to elaborate this entity.
             for entityName in neededEntity :
                 entity = self.vhdlXml.find(
-                        ".//entity[@name='{0}']".format(entityName)
+                        "entity[@name='{0}']".format(entityName)
                         )
                 if entity is not None :
                     fileOfEntity = entity.attrib['file']
@@ -228,11 +229,13 @@ class VHDL(vhdl_parser.VHDLParser):
             return 
         for comp in comps :
             compName = comp.attrib['name']
-            debug.printDebug("DEBUG", "Component {0} found for entity {1}".format(
-                    compName
-                    , archName
+            instanceOf = comp.attrib['instance_of']
+            debug.printDebug("DEBUG"
+                    , "Component {0} found for entity {1}".format(
+                        compName
+                        , archName
+                        )
                     )
-                )
             if comp.attrib['isInstantiated'] == "true":
                 hasParents.add(compName)
                 # Now check if architecture of this component was already added.
@@ -240,8 +243,9 @@ class VHDL(vhdl_parser.VHDLParser):
                     compXml = alreadyAddedArcs[compName]
                     archXml.append(compXml)
                 else :
-                    compXml = ET.Element("module")
+                    compXml = ET.Element("component")
                     compXml.attrib['name'] = compName 
+                    compXml.attrib['instance_of'] = instanceOf
                     alreadyAddedArcs[compName] = compXml
                     archXml.append(compXml)
             else :
@@ -307,8 +311,13 @@ class VHDL(vhdl_parser.VHDLParser):
 
         debug.printDebug("STEP", "Processing design")
         self.getHierarchy() 
-        self.vhdlXml.append(self.hierXml)
 
+        # dump the xml for debugging purpose.
+        with open("vhdl.xml", "w") as f:
+            f.write(ET.tostring(self.vhdlXml))
+        with open("hier.xml", "w") as f:
+            f.write(ET.tostring(self.hierXml))
+        
         # Run each top-entity
         debug.printDebug("STEP", "Elaborating each design ...")
         self.runDesign(generateTB, "vsim")
