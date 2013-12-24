@@ -74,7 +74,7 @@ BEGIN
             readline(vector_file, l);
             -- Read the time from the begining of the line. Skip the line if it doesn't
             -- start with a number.
-            read(l, r, good => good_number);
+            read(l, r);
             NEXT WHEN NOT good_number;
             -- Convert real number to time
             vector_time := r*1 ns;
@@ -85,35 +85,35 @@ BEGIN
             read(l, space);
             -- Read other singals etc. 
             -- read in_data value
-            read(l, tmp_in_data, good_val);
+            read(l, tmp_in_data);
             assert good_val REPORT "bad in_data value";
             read(l, space); -- skip a space
 
             -- read out_data value
-            read(l, tmp_out_data, good_val);
+            read(l, tmp_out_data);
             assert good_val REPORT "bad out_data value";
             assert tmp_out_data = out_data REPORT "vector mismatch";
             read(l, space); -- skip a space
 
             -- read in_req value
-            read(l, tmp_in_req, good_val);
+            read(l, tmp_in_req);
             assert good_val REPORT "bad in_req value";
             read(l, space); -- skip a space
 
             -- read in_ack value
-            read(l, tmp_in_ack, good_val);
+            read(l, tmp_in_ack);
             assert good_val REPORT "bad in_ack value";
             assert tmp_in_ack = in_ack REPORT "vector mismatch";
             read(l, space); -- skip a space
 
             -- read out_req value
-            read(l, tmp_out_req, good_val);
+            read(l, tmp_out_req);
             assert good_val REPORT "bad out_req value";
             assert tmp_out_req = out_req REPORT "vector mismatch";
             read(l, space); -- skip a space
 
             -- read out_ack value
-            read(l, tmp_out_ack, good_val);
+            read(l, tmp_out_ack);
             assert good_val REPORT "bad out_ack value";
             read(l, space); -- skip a space
 

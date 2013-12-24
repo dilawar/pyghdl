@@ -86,7 +86,7 @@ BEGIN
             readline(vector_file, l);
             -- Read the time from the begining of the line. Skip the line if it doesn't
             -- start with a number.
-            read(l, r, good => good_number);
+            read(l, r);
             NEXT WHEN NOT good_number;
             -- Convert real number to time
             vector_time := r*1 ns;
@@ -97,45 +97,45 @@ BEGIN
             read(l, space);
             -- Read other singals etc. 
             -- read data_left value
-            read(l, tmp_data_left, good_val);
+            read(l, tmp_data_left);
             assert good_val REPORT "bad data_left value";
             read(l, space); -- skip a space
 
             -- read req_in value
-            read(l, tmp_req_in, good_val);
+            read(l, tmp_req_in);
             assert good_val REPORT "bad req_in value";
             read(l, space); -- skip a space
 
             -- read ack_out value
-            read(l, tmp_ack_out, good_val);
+            read(l, tmp_ack_out);
             assert good_val REPORT "bad ack_out value";
             assert tmp_ack_out = ack_out REPORT "vector mismatch";
             read(l, space); -- skip a space
 
             -- read data_right value
-            read(l, tmp_data_right, good_val);
+            read(l, tmp_data_right);
             assert good_val REPORT "bad data_right value";
             assert tmp_data_right = data_right REPORT "vector mismatch";
             read(l, space); -- skip a space
 
             -- read req_out value
-            read(l, tmp_req_out, good_val);
+            read(l, tmp_req_out);
             assert good_val REPORT "bad req_out value";
             assert tmp_req_out = req_out REPORT "vector mismatch";
             read(l, space); -- skip a space
 
             -- read ack_in value
-            read(l, tmp_ack_in, good_val);
+            read(l, tmp_ack_in);
             assert good_val REPORT "bad ack_in value";
             read(l, space); -- skip a space
 
             -- read clock value
-            read(l, tmp_clock, good_val);
+            read(l, tmp_clock);
             assert good_val REPORT "bad clock value";
             read(l, space); -- skip a space
 
             -- read reset value
-            read(l, tmp_reset, good_val);
+            read(l, tmp_reset);
             assert good_val REPORT "bad reset value";
             read(l, space); -- skip a space
 

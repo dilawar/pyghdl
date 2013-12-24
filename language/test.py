@@ -1,6 +1,6 @@
 import re
 import math
-import vhdl_regex as vhdl
+import vhdl_parser as vhdl
 
 def testVCD(vcds) :
   pass

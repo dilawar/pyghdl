@@ -75,7 +75,7 @@ BEGIN
 \t\t\treadline(vector_file, l);
 \t\t\t-- Read the time from the begining of the line. Skip the line if it doesn't
 \t\t\t-- start with a number.
-\t\t\tread(l, r, good => good_number);
+\t\t\tread(l, r);
 \t\t\tNEXT WHEN NOT good_number;
 \t\t\t-- Convert real number to time
 \t\t\tvector_time := r*1 ns;
@@ -353,7 +353,7 @@ END ARCHITECTURE arch;
         for p in ports :
             port = p.text
             assertLine += "\n\t\t\t-- read {0} value\n".format(port)
-            assertLine += "\t\t\tread(l, {0}, good_val);\n".format("tmp_"+port)
+            assertLine += "\t\t\tread(l, {0});\n".format("tmp_"+port)
             assertLine += '\t\t\tassert good_val REPORT "bad {0} value";\n'.format(port)
             if p.attrib['direction'] == "out" :
                 # Out port. Assert the value.

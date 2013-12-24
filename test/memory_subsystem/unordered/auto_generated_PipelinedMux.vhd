@@ -76,7 +76,7 @@ BEGIN
             readline(vector_file, l);
             -- Read the time from the begining of the line. Skip the line if it doesn't
             -- start with a number.
-            read(l, r, good => good_number);
+            read(l, r);
             NEXT WHEN NOT good_number;
             -- Convert real number to time
             vector_time := r*1 ns;
@@ -87,45 +87,45 @@ BEGIN
             read(l, space);
             -- Read other singals etc. 
             -- read merge_data_in value
-            read(l, tmp_merge_data_in, good_val);
+            read(l, tmp_merge_data_in);
             assert good_val REPORT "bad merge_data_in value";
             read(l, space); -- skip a space
 
             -- read merge_req_in value
-            read(l, tmp_merge_req_in, good_val);
+            read(l, tmp_merge_req_in);
             assert good_val REPORT "bad merge_req_in value";
             read(l, space); -- skip a space
 
             -- read merge_ack_out value
-            read(l, tmp_merge_ack_out, good_val);
+            read(l, tmp_merge_ack_out);
             assert good_val REPORT "bad merge_ack_out value";
             assert tmp_merge_ack_out = merge_ack_out REPORT "vector mismatch";
             read(l, space); -- skip a space
 
             -- read merge_data_out value
-            read(l, tmp_merge_data_out, good_val);
+            read(l, tmp_merge_data_out);
             assert good_val REPORT "bad merge_data_out value";
             assert tmp_merge_data_out = merge_data_out REPORT "vector mismatch";
             read(l, space); -- skip a space
 
             -- read merge_req_out value
-            read(l, tmp_merge_req_out, good_val);
+            read(l, tmp_merge_req_out);
             assert good_val REPORT "bad merge_req_out value";
             assert tmp_merge_req_out = merge_req_out REPORT "vector mismatch";
             read(l, space); -- skip a space
 
             -- read merge_ack_in value
-            read(l, tmp_merge_ack_in, good_val);
+            read(l, tmp_merge_ack_in);
             assert good_val REPORT "bad merge_ack_in value";
             read(l, space); -- skip a space
 
             -- read clock value
-            read(l, tmp_clock, good_val);
+            read(l, tmp_clock);
             assert good_val REPORT "bad clock value";
             read(l, space); -- skip a space
 
             -- read reset value
-            read(l, tmp_reset, good_val);
+            read(l, tmp_reset);
             assert good_val REPORT "bad reset value";
             read(l, space); -- skip a space
 

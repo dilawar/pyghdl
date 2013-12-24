@@ -2,14 +2,14 @@ import errno
 import os
 import sys
 import xml.etree.cElementTree as ET
-import vhdl_regex
+import vhdl_parser
 import subprocess
 import shlex
 import re
 import language.test as test
 import debug.debug as debug
 
-class VHDL(vhdl_regex.VHDLParser):
+class VHDL(vhdl_parser.VHDLParser):
 
     def __init__(self, topdir):
         self.topdir = topdir
@@ -302,7 +302,7 @@ class VHDL(vhdl_regex.VHDLParser):
         files = newFiles
 
         debug.printDebug("STEP", "Building design out of files.")
-        parseVhdl = vhdl_regex.VHDLParser(topdir=self.topdir)
+        parseVhdl = vhdl_parser.VHDLParser(topdir=self.topdir)
         self.vhdlXml = parseVhdl.parseFiles(files)
 
         debug.printDebug("STEP", "Processing design")
