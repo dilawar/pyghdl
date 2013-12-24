@@ -256,11 +256,9 @@ class VHDL(vhdl_parser.VHDLParser):
         fileDict = dict()
         if self.topModule is not None and len(self.topModule) > 0:
             self.topModule = self.topModule[0]
-            print self.topModule
             topEntities = self.vhdlXml.findall(
                     "entity[@name='{0}']".format(self.topModule)
                     )
-            print topEntities 
         for te in topEntities :
             # Files needed to elaborate the design.
             files = set()
@@ -281,6 +279,7 @@ class VHDL(vhdl_parser.VHDLParser):
                     files.add(fileOfEntity)
                 else :
                     raise UserWarning, "Entity {0} not found".format(entity)
+
             fileDict[topEntityName] = files
       
         # If generateTB is set then ignore the previous TB and generate  a new one.
