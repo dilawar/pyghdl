@@ -11,92 +11,16 @@ import xml.etree.cElementTree as ET
 import errno
 import debug.debug as debug
 import collections
+import language.tb_generator as tb
 
 
-class VHDLParser:
+class VHDLParser(tb.TestBench):
 
     def __init__(self, topdir=""):
         self.tb = ""
         self.topdir = topdir
         self.workdir = os.path.join(self.topdir, 'work')
         self.vhdlXml = ET.Element("design")
-
-    def testbenchFromDict(self):
-        testbench = '''
--------------------------------------------------------------------------------
--- This testbench is automatically generated. May not work.
--- A file called vector.test must be generated in the same directory where
--- this testbench is saved. Each value must be separed by a space. 
-
--- time [in_port ] [out_port] 
--- They must be in the same order in which they appear in entity.
--------------------------------------------------------------------------------
-LIBRARY ieee;
-USE ieee.std_logic_1164.ALL;
-USE std.textio.ALL;
-USE work.ALL;
-
-ENTITY tb_{0} IS END;
-ARCHITECTURE arch OF tb_{0} IS 
-
-\t----------------------------------------------------------------
-\t-- Component declaration.
-\t----------------------------------------------------------------
-\tCOMPONENT {0} {1}
-\tPORT('''.format(self.tDict.get('comp_name'), self.tDict.get('comp_generic'))
-        testbench += "{0}".format(self.tDict.get('comp_decl'))
-        testbench += '''\n\t);
-\tEND COMPONENT;
-\t
-\t-- Signals in entity 
-'''
-        testbench += "{0}".format(self.tDict.get('signal_decl'))
-        testbench += '''
-BEGIN
-\t-- Instantiate a dut 
-'''
-        testbench += "{0}".format(self.tDict.get('dut_instance'))
-        testbench += '''
-\ttest : PROCESS 
-\t\t-- Declare variables to store the values stored in test files. 
-'''
-        testbench += "{0}".format(self.tDict['variables'])
-        testbench += '''
-\t\t-- File and its minions.
-\t\tFILE vector_file : TEXT OPEN read_mode IS "{0}";'''.format(self.tDict['vector_file_path'])
-        testbench += '''
-\t\tVARIABLE l : LINE;
-\t\tVARIABLE r : REAL;
-\t\tVARIABLE vector_time : TIME;
-\t\tVARIABLE space : CHARACTER;
-\t\tVARIABLE good_number, good_val : BOOLEAN;
-\tBEGIN
-\t\tWHILE NOT endfile(vector_file) LOOP 
-\t\t\treadline(vector_file, l);
-\t\t\t-- Read the time from the begining of the line. Skip the line if it doesn't
-\t\t\t-- start with a number.
-\t\t\tread(l, r);
-\t\t\tNEXT WHEN NOT good_number;
-\t\t\t-- Convert real number to time
-\t\t\tvector_time := r*1 ns;
-\t\t\tIF (now < vector_time) THEN
-\t\t\tWAIT FOR vector_time - now;
-\t\t\tEND IF;
-\t\t\t-- Skip a space
-\t\t\tread(l, space);
-\t\t\t-- Read other singals etc. '''
-        testbench += "{0}".format(self.tDict.get('asserts'))
-        testbench += '''
-\t\tEND LOOP;
-\t\tASSERT false REPORT "Test complete";
-\t\tWAIT;
-\tEND PROCESS;
-END ARCHITECTURE arch;
--- Testbech ends here.
-  '''
-        testbench = testbench.replace('\t', '    ')
-        self.tb = testbench
-        return testbench
         
     def parseTxt(self, txt, fileName) :
         '''
