@@ -17,6 +17,8 @@ class VHDL(vhdl_regex.VHDLParser):
         self.hierXml = ET.Element("hier")
         self.topModule = None
         self.genericsDict = dict()
+        self.compiler = 'vsim'
+        self.runtime = 1000
 
     def runDesign(self, generateTB, simulator) :
         """ Run the damn design
@@ -24,22 +26,10 @@ class VHDL(vhdl_regex.VHDLParser):
         # check for compiler. If it does not exists, quit.
         debug.printDebug("USER", "Using {0}".format(simulator))
         self.simulator = simulator
-        try:
-            subprocess.call([simulator, "--version"], stdout=subprocess.PIPE)
-        except OSError as e:
-            if e.errno == os.errno.ENOENT:
-                raise RuntimeError, "Simulator {0} not found".format(simulator)
-            else:
-                debug.printDebug("ERR"
-                        , "Something went wrong when checking for {0}".format(
-                            simulator
-                            )
-                        )
-                raise e
         # set compiler analyze command.
         self.topdir = self.vhdlXml.attrib['dir']
         compileXml = ET.SubElement(self.vhdlXml, "compiler")
-        compileXml.attrib['name'] = 'ghdl'
+        compileXml.attrib['name'] = self.compiler
         topEntities = self.vhdlXml.findall(".//hier/module[@topEntity='true']")
         fileDict = dict()
         if self.topModule is not None and len(self.topModule) > 0:
@@ -122,15 +112,35 @@ class VHDL(vhdl_regex.VHDLParser):
         except OSError as exception :
             if exception.errno != errno.EEXIST :
                 raise
-        for file in fileSet : 
-            filepath = topdir+file
-            self.analyze(filepath)
-        self.elaborate(entityName)
-        self.generateTestVector(entityName)
-        self.run(entityName)
+        if self.compiler == "vsim":
+            debug.printDebug("INFO", "Using vsim")
+            self.simulateUsingVsim(entityName, fileSet)
+        elif self.compiler == "ghdl":
+            debug.printDebug("INFO", "Using ghdl")
+            for file in fileSet : 
+                filepath = os.path.join(topdir, file)
+                self.analyze(filepath)
+            self.elaborate(entityName)
+            self.generateTestVector(entityName)
+            self.run(entityName)
+        else:
+            raise UserWarning, "Compiler not supported"
+
+    def simulateUsingVsim(self, entityName, fileSet):
+        debug.printDebug("INFO", "Simulating {0}".format(entityName))
+        subprocess.call(["vlib", self.workdir], shell=False)
+        for file in fileSet:
+            file = os.path.join(self.topdir, file)
+            subprocess.call(["vcom", file], shell=False)
+        command = "vsim -d -do \'run {0};quit\' {1}".format(
+                self.runtime
+                , entityName
+                )
+        print command 
 
     def run(self, topdir, entityName, time=1000) :
         ''' Running the binary '''
+        self.simulator == "ghdl"
         workdir = self.workdir
         bin = workdir+"/"+entityName
         testVecPath = os.path.join(workdir, "vector.test")
@@ -158,23 +168,24 @@ class VHDL(vhdl_regex.VHDLParser):
 
     def analyze(self, filepath) :
         ''' Analyze a file. '''
+        assert self.simulator == "ghdl"
         workdir = self.workdir
-        if self.simulator == "ghdl":
-            command = "ghdl -a --workdir={0} --work=work \
-                --ieee=synopsys {1}".format(workdir, filepath)
-            p1 = subprocess.Popen(shlex.split(command)
-                , stdout = subprocess.PIPE
-                , stderr = subprocess.PIPE)
-            p1.wait()
-            status = p1.stderr.readline()
-            if status.__len__() > 0 :
-              print("Compilation failed with error :  {0}".format(str(status)))
-              sys.exit(0)
-            else :
-                print("Compiled : {0}".format(filepath))
+        command = "ghdl -a --workdir={0} --work=work \
+            --ieee=synopsys {1}".format(workdir, filepath)
+        p1 = subprocess.Popen(shlex.split(command)
+            , stdout = subprocess.PIPE
+            , stderr = subprocess.PIPE)
+        p1.wait()
+        status = p1.stderr.readline()
+        if status.__len__() > 0 :
+          print("Compilation failed with error :  {0}".format(str(status)))
+          sys.exit(0)
+        else :
+            print("Compiled : {0}".format(filepath))
 
     def elaborate(self, entityname) :
         ''' Elaborate the file '''
+        assert self.simulator == "ghdl"
         workdir = self.workdir
         debug.printDebug("STEP", "Elaborating entity {0} \n".format(entityname))
         bin = os.path.join(self.workdir, entityname)
@@ -300,7 +311,7 @@ class VHDL(vhdl_regex.VHDLParser):
 
         # Run each top-entity
         debug.printDebug("STEP", "Elaborating each design ...")
-        self.runDesign(generateTB, "ghdl")
+        self.runDesign(generateTB, "vsim")
 
     def generateTestVector(self, entityName) :
         top = self.vhdlXml.attrib['dir']
