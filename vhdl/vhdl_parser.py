@@ -269,27 +269,6 @@ class VHDLParser(tb.TestBench):
             raise IOError, "Failed to write testbench", e
         return tbName
 
-
-    def generateAssertLines(self, ports ):
-        assertLine = ""
-        for p in ports :
-            port = p.text
-            assertLine += "\n\t\t\t-- read {0} value\n".format(port)
-            assertLine += "\t\t\tread(l, {0});\n".format("tmp_"+port)
-            assertLine += '\t\t\tassert good_val REPORT "bad {0} value";\n'.format(port)
-            if p.attrib['direction'] == "out" :
-                # Out port. Assert the value.
-                line = "\t\t\tassert {0} = {1} REPORT \"vector mismatch\";\n"\
-                        .format("tmp_" + port, port)
-                assertLine += line
-            assertLine += '\t\t\tread(l, space); -- skip a space\n'
-
-        assertLine += "\n\n\t\t\t-- Assign temp signals to ports \n" 
-        for p in ports:
-            port = p.text
-            assertLine += "\t\t\t{0} <= {1};\n".format(port, "tmp_"+port)
-        return assertLine
-
     def parseFiles(self, files):
         ''' Process the all file listings. 
         '''
