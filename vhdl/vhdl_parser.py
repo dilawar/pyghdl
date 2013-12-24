@@ -229,19 +229,4 @@ class VHDLParser(tb.TestBench):
                 generics[lhs] = None
         self.genericsDict[entityName] = generics
         return generics 
-    
-    def replaceGenericWithValue(self, txt, genericDict, entity):
-        for k in genericDict:
-            if k in txt:
-                if genericDict[k] is None:
-                    msg = "Can't find the value for generic {0}.".format(k)
-                    msg += " Can't produce a testbench. Initialize generics"
-                    msg += " in entity with some default values. "
-                    msg += " In entity %s" % entity
-                    debug.printDebug("ERR", msg)
-                    sys.exit()
-                else:
-                    txt = txt.replace(k, genericDict[k])
-            else: pass
-        return txt
-
+   

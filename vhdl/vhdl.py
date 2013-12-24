@@ -19,6 +19,7 @@ class VHDL(vhdl_parser.VHDLParser):
         self.compiler = 'vsim'
         self.runtime = 1000
         self.prefix = 'auto_genereted_'
+        self.signalDict = dict()
 
     def runATopEntity(self, entityName, fileSet) :
         """Running a top entity
