@@ -19,7 +19,10 @@ class VHDL(vhdl_parser.VHDLParser):
         self.compiler = 'vsim'
         self.runtime = 1000
         self.prefix = 'auto_genereted_'
+
     def runATopEntity(self, entityName, fileSet) :
+        """Running a top entity
+        """
         topdir = self.vhdlXml.attrib['dir']
         self.workdir = os.path.join(topdir, "work")
         try :
@@ -28,10 +31,8 @@ class VHDL(vhdl_parser.VHDLParser):
             if exception.errno != errno.EEXIST :
                 raise
         if self.compiler == "vsim":
-            debug.printDebug("INFO", "Using vsim")
             self.simulateUsingVsim(entityName, fileSet)
         elif self.compiler == "ghdl":
-            debug.printDebug("INFO", "Using ghdl")
             for file in fileSet : 
                 filepath = os.path.join(topdir, file)
                 self.analyze(filepath)
@@ -42,7 +43,9 @@ class VHDL(vhdl_parser.VHDLParser):
             raise UserWarning, "Compiler not supported"
 
     def simulateUsingVsim(self, entityName, fileSet):
-        debug.printDebug("INFO", "Simulating {0}".format(entityName))
+        debug.printDebug("INFO"
+                , "Simulating {0} using modelsim".format(entityName)
+                )
         subprocess.call(["vlib", self.workdir], shell=False)
         for file in fileSet:
             file = os.path.join(self.topdir, file)
