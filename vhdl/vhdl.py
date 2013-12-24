@@ -267,7 +267,7 @@ class VHDL(vhdl_parser.VHDLParser):
             neededEntity = set()
             topEntityName = te.attrib['name']
             neededEntity.add(topEntityName)
-            children = te.findall(".//*")
+            children = te.findall("component")
             for child in children :
                 neededEntity.add(child.attrib['instance_of'])
 
