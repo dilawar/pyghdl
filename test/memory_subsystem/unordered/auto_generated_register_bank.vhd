@@ -1,24 +1,69 @@
-
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- This testbench is automatically generated. May not work.
 -- A file called vector.test must be generated in the same directory where
 -- this testbench is saved. Each value must be separed by a space. 
 
 -- time [in_port ] [out_port] 
 -- They must be in the same order in which they appear in entity.
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE std.textio.ALL;
 USE work.ALL;
 
-ENTITY tb_register_bank IS END;
-ARCHITECTURE arch OF tb_register_bank IS 
+-- this function converts a given string to std-logic-vector.
+function to_std_logic(c: character) return std_logic is 
+    variable sl: std_logic;
+    begin
+      case c is
+        when 'U' => 
+           sl := 'U'; 
+        when 'X' =>
+           sl := 'X';
+        when '0' => 
+           sl := '0';
+        when '1' => 
+           sl := '1';
+        when 'Z' => 
+           sl := 'Z';
+        when 'W' => 
+           sl := 'W';
+        when 'L' => 
+           sl := 'L';
+        when 'H' => 
+           sl := 'H';
+        when '-' => 
+           sl := '-';
+        when others =>
+           sl := 'X'; 
+    end case;
+   return sl;
+  end to_std_logic;
 
-    ----------------------------------------------------------------
+
+-- converts a string into std_logic_vector
+
+function to_std_logic_vector(s: string) return std_logic_vector is 
+  variable slv: std_logic_vector(s'high-s'low downto 0);
+  variable k: integer;
+begin
+   k := s'high-s'low;
+  for i in s'range loop
+     slv(k) := to_std_logic(s(i));
+     k      := k - 1;
+  end loop;
+  return slv;
+end to_std_logic_vector;                                       
+
+
+
+ENTITY tb_{0} IS END;
+ARCHITECTURE arch OF tb_{0} IS
+    ----------------------------------------------------------
     -- Component declaration.
-    ----------------------------------------------------------------
+    ----------------------------------------------------------
     COMPONENT register_bank 
+
     GENERIC(num_loads             : natural := 5;
           num_stores            : natural := 10;
           addr_width            : natural := 9;
@@ -26,7 +71,8 @@ ARCHITECTURE arch OF tb_register_bank IS
           tag_width             : natural := 7;
           num_registers         : natural := 1
     );
-    PORT(lr_addr_in : in std_logic_vector(( 5* 9)-1 downto 0);
+    PORT(
+lr_addr_in : in std_logic_vector(( 5* 9)-1 downto 0);
         lr_req_in : in std_logic_vector( 5-1 downto 0);
         lr_ack_out : out std_logic_vector( 5-1 downto 0);
         lr_tag_in : in std_logic_vector(( 5* 7)-1 downto 0);
@@ -46,8 +92,7 @@ ARCHITECTURE arch OF tb_register_bank IS
         reset : in std_logic
     );
     END COMPONENT;
-    
-    -- Signals in entity 
+        -- Signals in entity
     SIGNAL lr_addr_in : std_logic_vector(( 5* 9)-1 downto 0);
     SIGNAL lr_req_in : std_logic_vector( 5-1 downto 0);
     SIGNAL lr_ack_out : std_logic_vector( 5-1 downto 0);
@@ -97,7 +142,7 @@ BEGIN
     );
 
     test : PROCESS 
-        -- Declare variables to store the values stored in test files. 
+        -- Declare variables to store the values stored in test files.
         VARIABLE tmp_lr_addr_in :  std_logic_vector(( 5* 9)-1 downto 0);
         VARIABLE tmp_lr_req_in :  std_logic_vector( 5-1 downto 0);
         VARIABLE tmp_lr_ack_out :  std_logic_vector( 5-1 downto 0);
@@ -127,7 +172,7 @@ BEGIN
     BEGIN
         WHILE NOT endfile(vector_file) LOOP 
             readline(vector_file, l);
-            -- Read the time from the begining of the line. Skip the line if it doesn't
+            -- Read the time from the begining of the line.Skip the line if it doesn't
             -- start with a number.
             read(l, r);
             NEXT WHEN NOT good_number;
@@ -138,7 +183,8 @@ BEGIN
             END IF;
             -- Skip a space
             read(l, space);
-            -- Read other singals etc. 
+            -- Read other singals etc.
+
             -- read lr_addr_in value
             read(l, tmp_lr_addr_in);
             assert good_val REPORT "bad lr_addr_in value";
@@ -257,10 +303,10 @@ BEGIN
             clock <= tmp_clock;
             reset <= tmp_reset;
 
+)
         END LOOP;
         ASSERT false REPORT "Test complete";
         WAIT;
     END PROCESS;
 END ARCHITECTURE arch;
 -- Testbech ends here.
-  

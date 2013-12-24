@@ -5,13 +5,11 @@ import os
 import errno
 import shlex
 import subprocess
-from language.vcd import parse_vcd
-from language.test import testVCD
 import xml.etree.cElementTree as ET
 import errno
 import debug.debug as debug
 import collections
-import language.tb_generator as tb
+import tb_generator as tb
 
 
 class VHDLParser(tb.TestBench):

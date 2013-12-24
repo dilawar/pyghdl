@@ -6,7 +6,6 @@ import vhdl_parser
 import subprocess
 import shlex
 import re
-import language.test as test
 import debug.debug as debug
 
 class VHDL(vhdl_parser.VHDLParser):

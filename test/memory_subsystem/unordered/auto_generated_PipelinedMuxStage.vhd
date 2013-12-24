@@ -1,31 +1,77 @@
-
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- This testbench is automatically generated. May not work.
 -- A file called vector.test must be generated in the same directory where
 -- this testbench is saved. Each value must be separed by a space. 
 
 -- time [in_port ] [out_port] 
 -- They must be in the same order in which they appear in entity.
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE std.textio.ALL;
 USE work.ALL;
 
-ENTITY tb_PipelinedMuxStage IS END;
-ARCHITECTURE arch OF tb_PipelinedMuxStage IS 
+-- this function converts a given string to std-logic-vector.
+function to_std_logic(c: character) return std_logic is 
+    variable sl: std_logic;
+    begin
+      case c is
+        when 'U' => 
+           sl := 'U'; 
+        when 'X' =>
+           sl := 'X';
+        when '0' => 
+           sl := '0';
+        when '1' => 
+           sl := '1';
+        when 'Z' => 
+           sl := 'Z';
+        when 'W' => 
+           sl := 'W';
+        when 'L' => 
+           sl := 'L';
+        when 'H' => 
+           sl := 'H';
+        when '-' => 
+           sl := '-';
+        when others =>
+           sl := 'X'; 
+    end case;
+   return sl;
+  end to_std_logic;
 
-    ----------------------------------------------------------------
+
+-- converts a string into std_logic_vector
+
+function to_std_logic_vector(s: string) return std_logic_vector is 
+  variable slv: std_logic_vector(s'high-s'low downto 0);
+  variable k: integer;
+begin
+   k := s'high-s'low;
+  for i in s'range loop
+     slv(k) := to_std_logic(s(i));
+     k      := k - 1;
+  end loop;
+  return slv;
+end to_std_logic_vector;                                       
+
+
+
+ENTITY tb_{0} IS END;
+ARCHITECTURE arch OF tb_{0} IS
+    ----------------------------------------------------------
     -- Component declaration.
-    ----------------------------------------------------------------
+    ----------------------------------------------------------
     COMPONENT PipelinedMuxStage 
+
     GENERIC(g_data_width: integer := 10;
            g_number_of_inputs: integer := 8;
            g_number_of_outputs: integer := 1;
            g_tag_width : integer := 3  
            
     );
-    PORT(data_left : in std_logic_vector(( 10* 8)-1 downto 0);
+    PORT(
+data_left : in std_logic_vector(( 10* 8)-1 downto 0);
         req_in : in std_logic_vector( 8-1 downto 0);
         ack_out : out std_logic_vector( 8-1 downto 0);
         data_right : out std_logic_vector(( 10* 1)-1 downto 0);
@@ -35,8 +81,7 @@ ARCHITECTURE arch OF tb_PipelinedMuxStage IS
         reset : in std_logic
     );
     END COMPONENT;
-    
-    -- Signals in entity 
+        -- Signals in entity
     SIGNAL data_left : std_logic_vector(( 10* 8)-1 downto 0);
     SIGNAL req_in : std_logic_vector( 8-1 downto 0);
     SIGNAL ack_out : std_logic_vector( 8-1 downto 0);
@@ -64,7 +109,7 @@ BEGIN
     );
 
     test : PROCESS 
-        -- Declare variables to store the values stored in test files. 
+        -- Declare variables to store the values stored in test files.
         VARIABLE tmp_data_left :  std_logic_vector(( 10* 8)-1 downto 0);
         VARIABLE tmp_req_in :  std_logic_vector( 8-1 downto 0);
         VARIABLE tmp_ack_out :  std_logic_vector( 8-1 downto 0);
@@ -84,7 +129,7 @@ BEGIN
     BEGIN
         WHILE NOT endfile(vector_file) LOOP 
             readline(vector_file, l);
-            -- Read the time from the begining of the line. Skip the line if it doesn't
+            -- Read the time from the begining of the line.Skip the line if it doesn't
             -- start with a number.
             read(l, r);
             NEXT WHEN NOT good_number;
@@ -95,7 +140,8 @@ BEGIN
             END IF;
             -- Skip a space
             read(l, space);
-            -- Read other singals etc. 
+            -- Read other singals etc.
+
             -- read data_left value
             read(l, tmp_data_left);
             assert good_val REPORT "bad data_left value";
@@ -150,10 +196,10 @@ BEGIN
             clock <= tmp_clock;
             reset <= tmp_reset;
 
+)
         END LOOP;
         ASSERT false REPORT "Test complete";
         WAIT;
     END PROCESS;
 END ARCHITECTURE arch;
 -- Testbech ends here.
-  

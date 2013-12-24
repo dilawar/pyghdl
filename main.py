@@ -3,8 +3,8 @@ import argparse
 import os
 import sys
 import math
-import language.vhdl as vhdl
-import language.test as test
+import vhdl.vhdl as vhdl
+import vhdl.test as test
 import debug.debug as debug
 import re
 
