@@ -261,7 +261,7 @@ class VHDLParser(tb.TestBench):
         self.tDict['asserts'] = self.generateAssertLines(ports)
         
         # Create a testbench
-        t = self.testbenchFromDict()
+        t = self.testbenchFromDict(entity)
         try:
             with open(tbPath, "w") as f :
                 f.write(t)
