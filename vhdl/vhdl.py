@@ -18,6 +18,7 @@ class VHDL(vhdl_parser.VHDLParser):
         self.genericsDict = dict()
         self.compiler = 'vsim'
         self.runtime = 1000
+        self.prefix = 'auto_genereted_'
 
     def runDesign(self, generateTB, simulator) :
         """ Run the damn design
@@ -82,7 +83,7 @@ class VHDL(vhdl_parser.VHDLParser):
                         )
                 try:
                     entityInTb = compXml.attrib['name']
-                    tbName = "auto_generated_"+entityInTb+".vhd"
+                    tbName = self.prefix + entityInTb + ".vhd"
                     fileSet.add( self.generateTestBench(entityInTb, tbName))
                     tbEntity = "tb_"+entityInTb
                     newFileDict[tbEntity] = fileSet
@@ -92,7 +93,7 @@ class VHDL(vhdl_parser.VHDLParser):
                     return 
             else :                              # no testbench
                 fileSet = set(fileDict[entity])
-                tbName = "auto_generated_"+entity+".vhd"
+                tbName = self.prefix + entity + ".vhd"
                 tbEntity = "tb_"+entity
                 fileSet.add(self.generateTestBench(entity, tbName))
                 newFileDict[tbEntity] = fileSet
@@ -296,7 +297,7 @@ class VHDL(vhdl_parser.VHDLParser):
         # such files have auto_generated_ prefix.
         newFiles = set()
         for file in files :
-            if re.search(r"auto_generated_", file) : pass 
+            if re.search(self.prefix, file) : pass 
             else : newFiles.add(file)
         files = newFiles
 
