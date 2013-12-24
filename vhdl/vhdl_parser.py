@@ -224,8 +224,11 @@ class VHDLParser(tb.TestBench):
             typeOfPort = p.attrib['type']
             # If any of key is matched then we should replace the name of
             # generic with its value.
-            typeOfPort = self.replaceGenericWithValue(typeOfPort, genericDict)
-            portText.append(p.text+ " : "+p.attrib['direction']+" "+typeOfPort)
+            typeOfPort = self.replaceGenericWithValue(typeOfPort
+                    , genericDict
+                    , entity
+                    )
+            portText.append(p.text + " : "+p.attrib['direction']+" "+typeOfPort)
 
         self.tDict['comp_decl'] = ';\n\t\t'.join(portText)
         
@@ -234,7 +237,7 @@ class VHDLParser(tb.TestBench):
         self.tDict['signal_decl'] = ''
         for p in ports :
             t = p.attrib['type']
-            t = self.replaceGenericWithValue(t, genericDict)
+            t = self.replaceGenericWithValue(t, genericDict, entity)
             self.tDict['signal_decl'] += ("\tSIGNAL "+p.text+" : " + t +";\n")
           
         dut = "\tdut : {0}\n".format(entity)
@@ -255,7 +258,10 @@ class VHDLParser(tb.TestBench):
         variables = ""
         for p in ports :
             portExpr = "tmp_" + p.text+" : "+" " + p.attrib['type']
-            portExpr = self.replaceGenericWithValue(portExpr, genericDict)
+            portExpr = self.replaceGenericWithValue(portExpr
+                        , genericDict
+                        , entity
+                        )
             variables += "\t\tVARIABLE "+ portExpr +";\n"
         self.tDict['variables'] = variables
         
@@ -315,14 +321,16 @@ class VHDLParser(tb.TestBench):
         self.genericsDict[entityName] = generics
         return generics 
     
-    def replaceGenericWithValue(self, txt, genericDict):
+    def replaceGenericWithValue(self, txt, genericDict, entity):
         for k in genericDict:
             if k in txt:
                 if genericDict[k] is None:
-                    msg = "Can't find the value for generic {0}".format(k)
+                    msg = "Can't find the value for generic {0}.".format(k)
                     msg += " Can't produce a testbench. Initialize generics"
                     msg += " in entity with some default values. "
-                    raise UserWarning, msg
+                    msg += " In entity %s" % entity
+                    debug.printDebug("ERR", msg)
+                    sys.exit()
                 else:
                     txt = txt.replace(k, genericDict[k])
             else: pass
