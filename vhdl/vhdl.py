@@ -36,27 +36,23 @@ class VHDL(vhdl_parser.VHDLParser):
         except OSError as exception :
             if exception.errno != errno.EEXIST :
                 raise
-        if "vsim" in self.compiler:
-            self.simulateUsingVsim(entityName, fileSet)
-        elif "ghdl" in self.compiler:
-            for file in fileSet : 
-                filepath = os.path.join(topdir, file)
-                self.analyzeWithGHDL(filepath)
-            self.elaborate(entityName)
-            self.generateTestVector(entityName)
-            self.run(entityName=entityName)
-        else:
-            raise UserWarning("Unsupported compiler")
+        for file in fileSet : 
+            filepath = os.path.join(topdir, file)
+            self.analyze(filepath)
+        self.elaborate(entityName)
+        self.generateTestVector(entityName)
+        self.run(entityName=entityName)
 
     def simulateUsingVsim(self, entityName, fileSet):
-        debug.printDebug("INFO"
-                , "Simulating {0} using modelsim".format(entityName)
-                )
         cmd.runCommand(["vlib", self.workdir])
         for file in fileSet:
             file = os.path.join(self.topdir, file)
+            debug.printDebug("STEP"
+                    , "Compiling {0} using modelsim".format(file)
+                    )
             cmd.runCommand(["vcom", file])
-        cmd.runCommand(["vsim", "-c", "-do", "run {}; quit".format(self.runtime)
+        if None:
+            cmd.runCommand(["vsim", "-c", "-do", "run {}; quit".format(self.runtime)
                 , entityName]
                 , stdout=None, stderr=None
                 )
@@ -89,45 +85,43 @@ class VHDL(vhdl_parser.VHDLParser):
         else :
             print("Successfully executed")
 
-    def analyzeWithGHDL(self, filepath) :
+    def analyze(self, filepath) :
         ''' Analyze a file. '''
         workdir = self.workdir
-        command = "ghdl  -a --workdir={0} --work=work \
-            --ieee=synopsys {1}".format(workdir, filepath)
-        p1 = subprocess.Popen(shlex.split(command)
-            , stdout = subprocess.PIPE
-            , stderr = subprocess.PIPE)
-        p1.wait()
-        status = p1.stderr.readline()
-        if status.__len__() > 0 :
-          print("Compilation failed with error :  {0}".format(str(status)))
-          sys.exit(0)
-        else :
-            print("Compiled : {0}".format(filepath))
+        if "ghdl" in self.compiler:
+            command = "ghdl  -a --workdir={0} --work=work \
+                --ieee=synopsys {1}".format(workdir, filepath)
+            cmd.runCommand(shlex.split(command))
+        elif "vsim" in self.compiler:
+            cmd.runCommand(["vlib", self.workdir])
+            cmd.runCommand(["vcom", file])
+        else:
+            debug.printDebug("WARN"
+                    , "Unknown compiler %s " % self.compiler
+                    )
+            return 
 
     def elaborate(self, entityname) :
         ''' Elaborate the file '''
-        workdir = self.workdir
-        debug.printDebug("STEP", "Elaborating entity {0} \n".format(entityname))
-        bin = os.path.join(self.workdir, entityname)
-        # Before elaboration, check if binary already exists. If yes then remove
-        # it.
-        if os.path.exists(bin):
-            os.remove(bin)
-        command = "ghdl -e --workdir={0} --work=work -o {1} {2}".format(workdir
-            , bin, entityname)
-        debug.printDebug("DEBUG", "Executing: \n$ {0}".format(command))
-        p = subprocess.Popen(shlex.split(command)
-            , stdout = subprocess.PIPE
-            , stderr = subprocess.PIPE
-            )
-        # Wait for some time. Let the file being saved.
-        p.wait()
-        if not os.path.isfile(bin) :
-            print( "ERROR : Could not elaborate entity : {0}".format(entityname))
-            print("\n\t|- Failed with : {1}".format(p.stderr.readline()))
-        else :
-            print("Elaborated successfully! \n")
+        if "ghdl" in self.compiler:
+            workdir = self.workdir
+            debug.printDebug("STEP", "Elaborating entity {0} \n".format(entityname))
+            bin = os.path.join(self.workdir, entityname)
+            # Before elaboration, check if binary already exists. If yes then remove
+            # it.
+            if os.path.exists(bin):
+                os.remove(bin)
+            command = "ghdl -e --workdir={0} --work=work -o {1} {2}".format(workdir
+                , bin, entityname)
+            debug.printDebug("DEBUG", "Executing: \n$ {0}".format(command))
+            cmd.runCommand(shlex.split(command))
+            if not os.path.isfile(bin) :
+                print( "ERROR : Could not elaborate entity : {0}".format(entityname))
+                print("\n\t|- Failed with : {1}".format(p.stderr.readline()))
+            else :
+                print("Elaborated successfully! \n")
+        else:
+            pass
 
     def getNextLevelsOfHier(self, archName, hasParents, childLess , alreadyAddedArcs):
         '''
@@ -244,7 +238,7 @@ class VHDL(vhdl_parser.VHDLParser):
 
     def generateTestVector(self, entityName) :
         top = self.vhdlXml.attrib['dir']
-        debug.printDebug("STEP", "Generating vector.test file.")
+        debug.printDebug("TODO", "Generating vector.test file.")
         # call this function now.
         #test.testEntity(entityName, top)
         return

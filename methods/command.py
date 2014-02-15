@@ -25,6 +25,7 @@ def runCommand(command, shell=False, **kwargs):
                 , stdout = kwargs.get('stdout', subprocess.PIPE)
                 , stderr = kwargs.get('stderr', subprocess.PIPE)
                 )
+        p.wait()
     except Exception as e:
         print("Failed with exception %s " % e)
         print("Command was \n %s " % " ".join(command))
