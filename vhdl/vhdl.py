@@ -35,12 +35,12 @@ class VHDL(vhdl_parser.VHDLParser):
         except OSError as exception :
             if exception.errno != errno.EEXIST :
                 raise
-        if self.compiler == "vsim":
+        if "vsim" in self.compiler:
             self.simulateUsingVsim(entityName, fileSet)
-        elif self.compiler == "ghdl":
+        elif "ghdl" in self.compiler:
             for file in fileSet : 
                 filepath = os.path.join(topdir, file)
-                self.analyze(filepath)
+                self.analyzeWithGHDL(filepath)
             self.elaborate(entityName)
             self.generateTestVector(entityName)
             self.run(entityName=entityName)
@@ -89,11 +89,10 @@ class VHDL(vhdl_parser.VHDLParser):
         else :
             print("Successfully executed")
 
-    def analyze(self, filepath) :
+    def analyzeWithGHDL(self, filepath) :
         ''' Analyze a file. '''
-        assert self.simulator == "ghdl"
         workdir = self.workdir
-        command = "ghdl -a --workdir={0} --work=work \
+        command = "ghdl  -a --workdir={0} --work=work \
             --ieee=synopsys {1}".format(workdir, filepath)
         p1 = subprocess.Popen(shlex.split(command)
             , stdout = subprocess.PIPE
