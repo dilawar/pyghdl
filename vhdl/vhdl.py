@@ -10,15 +10,15 @@ import debug.debug as debug
 
 class VHDL(vhdl_parser.VHDLParser):
 
-    def __init__(self, topdir):
+    def __init__(self, topdir, compiler='ghdl'):
         self.topdir = topdir
         self.workdir = os.path.join(self.topdir, 'work')
         self.hierXml = ET.Element("hier")
         self.topModule = None
         self.genericsDict = dict()
-        self.compiler = 'vsim'
+        self.compiler = compiler
         self.runtime = 1000
-        self.prefix = 'auto_genereted_'
+        self.prefix = '__auto_genereted_'
         self.signalDict = dict()
 
     def runATopEntity(self, entityName, fileSet) :
