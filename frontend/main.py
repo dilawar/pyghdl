@@ -7,6 +7,7 @@ import vhdl.vhdl as vhdl
 import vhdl.test as test
 import debug.debug as debug
 import re
+import subprocess
 
 def findListings(dirs, regex=None) :
    listings = set()
@@ -31,12 +32,33 @@ def findTopDir(dirs) :
         dList.append(d)
   return min(dList, key=len)
 
+def findExecutable(prgmToCheck):
+    paths = os.environ['PATH'].split(':')
+    for p in paths:
+        pathToCheck = os.path.join(p, prgmToCheck)
+        if os.path.isfile(pathToCheck) and os.access(pathToCheck, os.X_OK):
+            return pathToCheck
+    return None
+
 def findCompiler(language):
     if language == 'vhdl':
         # Try for ghdl
-        pass
-
-
+        if not findExecutable("ghdl"):
+            if not findExecutable("vsim"):
+                debug.printDebug("ERROR"
+                        , "Can't find a suitable compiler on your system" +
+                        " Use -c switch from command line"
+                        )
+            else:
+                return findExecutable("vsim")
+        else:
+            return findExecutable("ghdl")
+    else:
+        debug.printDebug("ERROR"
+                , "Unknown language {}".format(language)
+                )
+        sys.exit(0)
+            
 
 def main():
    # Argument parser.
