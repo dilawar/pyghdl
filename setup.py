@@ -20,9 +20,9 @@ setup(
         , maintainer_email = 'dilawars@iitb.ac.in'
         , requires = ['Python (>=2.6)']
         , packages=['vhdl'
-            , 'verilog'
             , 'debug'
             , 'curses'
+            , 'testbench'
             ]
         , include_package_data = True
         , classifiers = [
