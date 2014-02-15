@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 import argparse
 import os
 import sys
@@ -30,6 +30,13 @@ def findTopDir(dirs) :
       if os.path.isdir(d) :
         dList.append(d)
   return min(dList, key=len)
+
+def findCompiler(language):
+    if language == 'vhdl':
+        # Try for ghdl
+        pass
+
+
 
 def main():
    # Argument parser.
@@ -77,12 +84,14 @@ def main():
            sys.exit();
        topDir = findTopDir(args.design_directory)
        compiler = args.compiler 
-       vhdlObj = vhdl.VHDL(topDir)
+       if not compiler:
+           compiler = findCompiler("vhdl")
+       vhdlObj = vhdl.VHDL(topDir, compiler)
        vhdlObj.execute(files, top=args.top_module, generateTB=args.generate_tb)
    else:
        debug.printDebug("INFO",  "Unsupported language : {0}".format(args.l))
        debug.printDebug("DEBUG", "Languge specified {0}".format(args.l))
-       raise UserWarning, "Unsupported language. {0}".format(args.l)
+       raise UserWarning("Unsupported language. {0}".format(args.l))
 
 if __name__ == "__main__":
     main()

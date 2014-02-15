@@ -22,7 +22,7 @@ setup(
         , packages=['vhdl'
             , 'debug'
             , 'curses'
-            , 'testbench'
+            , 'frontend'
             ]
         , include_package_data = True
         , classifiers = [
@@ -36,7 +36,7 @@ setup(
             ],
         entry_points="""
         [console_scripts]
-        hdltb.py=testbench.main:main
+        hdltb.py=frontend.main:main
         """
         )
 

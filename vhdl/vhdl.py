@@ -10,7 +10,7 @@ import debug.debug as debug
 
 class VHDL(vhdl_parser.VHDLParser):
 
-    def __init__(self, topdir, compiler='ghdl'):
+    def __init__(self, topdir, compiler):
         self.topdir = topdir
         self.workdir = os.path.join(self.topdir, 'work')
         self.hierXml = ET.Element("hier")
