@@ -1,3 +1,4 @@
+function = '''
    -- this function converts a given string to std-logic-vector.
    function to_std_logic(c: character) return std_logic is 
        variable sl: std_logic;
@@ -39,3 +40,4 @@
          end loop;
          return slv;
     end to_std_logic_vector;                                       
+'''
