@@ -18,11 +18,12 @@ __status__           = "Development"
 
 import subprocess 
 
-def runCommand(command, shell=False):
+def runCommand(command, shell=False, **kwargs):
     try:
         p = subprocess.Popen(command
-                , stdin = subprocess.PIPE
-                , stdout = subprocess.PIPE
+                , stdin = kwargs.get('stdin', subprocess.PIPE)
+                , stdout = kwargs.get('stdout', subprocess.PIPE)
+                , stderr = kwargs.get('stderr', subprocess.PIPE)
                 )
     except Exception as e:
         print("Failed with exception %s " % e)

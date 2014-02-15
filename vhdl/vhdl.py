@@ -8,6 +8,7 @@ import shlex
 import re
 import debug.debug as debug
 import inspect
+import methods.command as cmd
 
 class VHDL(vhdl_parser.VHDLParser):
 
@@ -45,21 +46,20 @@ class VHDL(vhdl_parser.VHDLParser):
             self.generateTestVector(entityName)
             self.run(entityName=entityName)
         else:
-            raise UserWarning, "Compiler not supported"
+            raise UserWarning("Unsupported compiler")
 
     def simulateUsingVsim(self, entityName, fileSet):
         debug.printDebug("INFO"
                 , "Simulating {0} using modelsim".format(entityName)
                 )
-        subprocess.call(["vlib", self.workdir], shell=False)
+        cmd.runCommand(["vlib", self.workdir])
         for file in fileSet:
             file = os.path.join(self.topdir, file)
-            subprocess.call(["vcom", file], shell=False)
-        command = "vsim -d -do \'run {0};quit\' {1}".format(
-                self.runtime
-                , entityName
+            cmd.runCommand(["vcom", file])
+        cmd.runCommand(["vsim", "-c", "-do", "run {}; quit".format(self.runtime)
+                , entityName]
+                , stdout=None, stderr=None
                 )
-        print command 
 
     def run(self,  entityName, time=1000) :
         ''' Running the binary '''

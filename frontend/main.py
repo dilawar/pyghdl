@@ -49,6 +49,7 @@ def findCompiler(language):
                         , "Can't find a suitable compiler on your system" +
                         " Use -c switch from command line"
                         )
+                sys.exit(0)
             else:
                 return findExecutable("vsim")
         else:
