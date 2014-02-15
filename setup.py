@@ -22,6 +22,7 @@ setup(
         , packages=['vhdl'
             , 'debug'
             , 'curses'
+            , 'methods'
             , 'frontend'
             ]
         , include_package_data = True
