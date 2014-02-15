@@ -33,7 +33,7 @@ def findTopDir(dirs) :
   return min(dList, key=len)
 
 def findExecutable(prgmToCheck):
-    paths = os.environ['PATH'].split(':')
+    paths = os.environ['PATH'].split(os.pathsep)
     for p in paths:
         pathToCheck = os.path.join(p, prgmToCheck)
         if os.path.isfile(pathToCheck) and os.access(pathToCheck, os.X_OK):
