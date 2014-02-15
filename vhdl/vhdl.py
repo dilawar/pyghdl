@@ -7,6 +7,7 @@ import subprocess
 import shlex
 import re
 import debug.debug as debug
+import inspect
 
 class VHDL(vhdl_parser.VHDLParser):
 
@@ -20,6 +21,9 @@ class VHDL(vhdl_parser.VHDLParser):
         self.runtime = 1000
         self.prefix = '__auto_genereted_'
         self.signalDict = dict()
+        self.tempDir = '_temp'
+        if not os.path.isdir(self.tempDir):
+            os.makedirs(self.tempDir)
 
     def runATopEntity(self, entityName, fileSet) :
         """Running a top entity
@@ -39,7 +43,7 @@ class VHDL(vhdl_parser.VHDLParser):
                 self.analyze(filepath)
             self.elaborate(entityName)
             self.generateTestVector(entityName)
-            self.run(entityName)
+            self.run(entityName=entityName)
         else:
             raise UserWarning, "Compiler not supported"
 
@@ -57,9 +61,9 @@ class VHDL(vhdl_parser.VHDLParser):
                 )
         print command 
 
-    def run(self, topdir, entityName, time=1000) :
+    def run(self,  entityName, time=1000) :
         ''' Running the binary '''
-        self.simulator == "ghdl"
+        self.simulator = self.compiler
         workdir = self.workdir
         bin = workdir+"/"+entityName
         testVecPath = os.path.join(workdir, "vector.test")
@@ -104,7 +108,6 @@ class VHDL(vhdl_parser.VHDLParser):
 
     def elaborate(self, entityname) :
         ''' Elaborate the file '''
-        assert self.simulator == "ghdl"
         workdir = self.workdir
         debug.printDebug("STEP", "Elaborating entity {0} \n".format(entityname))
         bin = os.path.join(self.workdir, entityname)
@@ -238,31 +241,36 @@ class VHDL(vhdl_parser.VHDLParser):
         
         # Run each top-entity
         debug.printDebug("STEP", "Elaborating each design ...")
-        self.runDesign(generateTB, "vsim")
+        self.runDesign(generateTB)
 
     def generateTestVector(self, entityName) :
         top = self.vhdlXml.attrib['dir']
         debug.printDebug("STEP", "Generating vector.test file.")
         # call this function now.
-        test.testEntity(entityName, top)
+        #test.testEntity(entityName, top)
         return
 
-    def runDesign(self, generateTB, simulator) :
+    def runDesign(self, generateTB):
         """ Run the damn design
         """
         # check for compiler. If it does not exists, quit.
-        self.simulator = simulator
-        # set compiler analyze command.
         self.topdir = self.vhdlXml.attrib['dir']
         compileXml = ET.SubElement(self.vhdlXml, "compiler")
         compileXml.attrib['name'] = self.compiler
         topEntities = self.hierXml.findall("module[@topEntity='true']")
-        fileDict = dict()
         if self.topModule is not None and len(self.topModule) > 0:
-            self.topModule = self.topModule[0]
-            topEntities = self.vhdlXml.findall(
-                    "entity[@name='{0}']".format(self.topModule)
+            self.topModule = self.topModule[0].strip()
+            for t in self.vhdlXml.findall('.//entity[@name]'):
+                if t.get('name') == self.topModule:
+                    topEntities.append(t)
+        else:
+            debug.printDebug("WARN"
+                    , "Could not find any top-module"
+                    , frame = inspect.currentframe()
                     )
+            return 0
+
+        fileDict = dict()
         for te in topEntities :
             # Files needed to elaborate the design.
             files = set()
@@ -289,10 +297,13 @@ class VHDL(vhdl_parser.VHDLParser):
         # If generateTB is set then ignore the previous TB and generate  a new one.
         # Else execute the design as it is.
         if not generateTB:
-            return 
+            debug.printDebug("INFO"
+                    , "Not generating testbenches. In fact doing nothing more"
+                    )
+            return None 
 
         newFileDict = dict()
-        for entity in fileDict :
+        for entity in fileDict:
             # if this entity is already a testbench then remove it from the list and
             # add a new one.
             eXml = self.vhdlXml.find(".//entity[@name='{0}']".format(entity))
