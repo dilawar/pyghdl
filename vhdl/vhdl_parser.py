@@ -43,7 +43,7 @@ class VHDLParser(tb.TestBench):
             entityXml.attrib['file'] = baseName
             entityXml.attrib['noPort'] = 'false'
             genericPattern = re.compile(
-                    r'generic\s*\((?P<list>((?!port).)+)\s*\)\s*;'
+                    r'generic\s*\((?P<list>((?!\ port\ ).)+)\s*\)\s*;'
                 , re.IGNORECASE | re.DOTALL)
             genericMatch = genericPattern.finditer(body) 
             for gi in genericMatch :
@@ -60,14 +60,15 @@ class VHDLParser(tb.TestBench):
                     genXml.attrib['rhs'] = g
 
             # ports 
-            portExpr = re.compile(r'port\s*\(((?!end).)+\)\s*;'
+            portExpr = re.compile(r'port\s*\(((?!\ end\ ).)+\)\s*;'
                     , re.IGNORECASE | re.DOTALL
                     )
             portMatch = portExpr.search(body)
-            if portMatch :
+            if portMatch:
                 portText = portMatch.group(0)
                 self.parsePortText(entityXml, portText)
             else:
+                print body
                 entityXml.attrib['noPort'] = "true"
       
         architecture_body = '(?P<arch_body>((?!entity).)+)'

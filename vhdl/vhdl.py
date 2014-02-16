@@ -318,6 +318,7 @@ class VHDL(vhdl_parser.VHDLParser):
         # if this entity is already a testbench then remove it from the list and
         # add a new one.
         eXml = self.vhdlXml.find(".//entity[@name='{0}']".format(entity))
+        print ET.tostring(eXml)
         debug.printDebug("STEP"
                 , "Generating testbench for entity {0}".format(entity)
                 )
