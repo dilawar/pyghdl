@@ -110,7 +110,7 @@ def main():
        if not compiler:
            compiler = findCompiler("vhdl")
        vhdlObj = vhdl.VHDL(topDir, compiler)
-       vhdlObj.execute(files, top=args.top_module, generateTB=args.generate_tb)
+       vhdlObj.main(files, top=args.top_module, generateTB=args.generate_tb)
    else:
        debug.printDebug("INFO",  "Unsupported language : {0}".format(args.l))
        debug.printDebug("DEBUG", "Languge specified {0}".format(args.l))

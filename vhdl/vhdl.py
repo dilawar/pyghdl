@@ -18,6 +18,7 @@ class VHDL(vhdl_parser.VHDLParser):
         self.workdir = os.path.join(self.topdir, 'work')
         self.hierXml = ET.Element("hier")
         self.topModule = None
+        self.moduleList = set()
         self.genericsDict = dict()
         self.compiler = compiler
         self.runtime = 1000
@@ -95,12 +96,12 @@ class VHDL(vhdl_parser.VHDLParser):
             cmd.runCommand(shlex.split(command))
         elif "vsim" in self.compiler:
             cmd.runCommand(["vlib", self.workdir])
-            cmd.runCommand(["vcom", file])
+            cmd.runCommand(["vcom", filepath])
         else:
             debug.printDebug("WARN"
                     , "Unknown compiler %s " % self.compiler
                     )
-            return 
+            return None
 
     def elaborate(self, entityname) :
         ''' Elaborate the file '''
@@ -116,11 +117,6 @@ class VHDL(vhdl_parser.VHDLParser):
                 , bin, entityname)
             debug.printDebug("DEBUG", "Executing: \n$ {0}".format(command))
             cmd.runCommand(shlex.split(command))
-            if not os.path.isfile(bin) :
-                print( "ERROR : Could not elaborate entity : {0}".format(entityname))
-                print("\n\t|- Failed with : {1}".format(p.stderr.readline()))
-            else :
-                print("Elaborated successfully! \n")
         else:
             pass
 
@@ -182,9 +178,9 @@ class VHDL(vhdl_parser.VHDLParser):
         for entity in entities : 
             entityName = entity.attrib['name']
             allEntities.add(entityName)
+
             # If this entity is already added to hierarchy then ignore it
-            # otherwise
-            # create an xml element of it.
+            # otherwise create an xml element of it.
             if entityName not in alreadyAddedArcs.keys() :
                 entityXml = ET.Element("module")
                 entityXml.attrib['name'] = entityName 
@@ -208,7 +204,7 @@ class VHDL(vhdl_parser.VHDLParser):
           x.attrib['topEntity'] = "true"
           self.hierXml.append(x)
 
-    def execute(self, files, top, generateTB) :
+    def main(self, files, top, generateTB) :
         ''' Top most function in this folder.'''
 
         self.topModule = top
@@ -234,7 +230,6 @@ class VHDL(vhdl_parser.VHDLParser):
             f.write(ET.tostring(self.hierXml))
         
         # Run each top-entity
-        debug.printDebug("STEP", "Elaborate top entity ...")
         self.runDesign(generateTB)
 
     def generateTestVector(self, entityName) :
@@ -251,20 +246,24 @@ class VHDL(vhdl_parser.VHDLParser):
         self.topdir = self.vhdlXml.attrib['dir']
         compileXml = ET.SubElement(self.vhdlXml, "compiler")
         compileXml.attrib['name'] = self.compiler
-        topEntities = self.hierXml.findall("module[@topEntity='true']")
-        if self.topModule is not None and len(self.topModule) > 0:
-            self.topModule = self.topModule[0].strip()
-            for t in self.vhdlXml.findall('.//entity[@name]'):
-                if t.get('name') == self.topModule:
-                    print("Appending a entity : %s " % t)
-                    topEntities.append(t)
+        if self.topModule is None and len(self.moduleList) > 0:
+            self.topModule = self.moduleList[0].strip()
+        elif self.topModule:
+            pass
         else:
             debug.printDebug("WARN"
-                    , "Could not find any top-module"
+                    , "Could not find any top-module %s " % self.topModule
                     , frame = inspect.currentframe()
                     )
             return 0
 
+        topEntities = list()
+        for t in self.vhdlXml.findall('.//entity[@name]'):
+            # topModule is a list of entities.
+            if t.get('name') in self.topModule:
+                topEntities.append(t)
+
+        # Now work on all entities collected.
         fileDict = dict()
         for te in topEntities :
             # Files needed to elaborate the design.
@@ -302,7 +301,7 @@ class VHDL(vhdl_parser.VHDLParser):
             # if this entity is already a testbench then remove it from the list and
             # add a new one.
             eXml = self.vhdlXml.find(".//entity[@name='{0}']".format(entity))
-            debug.printDebug("INFO"
+            debug.printDebug("STEP"
                     , "Generating testbench for entity {0}".format(entity)
                     )
             if eXml.attrib['noPort'] == "true": # It's a testbench.

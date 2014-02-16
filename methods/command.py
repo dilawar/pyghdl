@@ -17,8 +17,15 @@ __status__           = "Development"
 
 
 import subprocess 
+import shlex
+import debug.debug as debug
+import sys
 
 def runCommand(command, shell=False, **kwargs):
+    if type(command) is list:
+        pass
+    else:
+        command = shlex.split(command)
     try:
         p = subprocess.Popen(command
                 , stdin = kwargs.get('stdin', subprocess.PIPE)
@@ -27,7 +34,8 @@ def runCommand(command, shell=False, **kwargs):
                 )
         p.wait()
     except Exception as e:
-        print("Failed with exception %s " % e)
-        print("Command was \n %s " % " ".join(command))
+        debug.printDebug("ERROR", "Failed with exception %s " % e)
+        debug.printDebug("DEBUG", "Command was:  {}".format(command))
+        sys.exit(0)
 
 
