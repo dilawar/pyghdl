@@ -11,6 +11,7 @@ import inspect
 import methods.command as cmd
 
 class VHDL(vhdl_parser.VHDLParser):
+    ''' Class for vhdl '''
 
     def __init__(self, topdir, compiler):
         self.topdir = topdir
@@ -136,7 +137,7 @@ class VHDL(vhdl_parser.VHDLParser):
         comps = self.vhdlXml.findall(".//architecture[@of='{0}']/*".format(archName))
         archXml = alreadyAddedArcs[archName]
         if len(comps) < 1 :
-            debug.printDebug("INFO"
+            debug.printDebug("DEBUG"
                     , "No component found for {0}".format(archName)
                     )
             childLess.add(archName)
@@ -188,15 +189,15 @@ class VHDL(vhdl_parser.VHDLParser):
                 entityXml = ET.Element("module")
                 entityXml.attrib['name'] = entityName 
                 alreadyAddedArcs[entityName] = entityXml
-            else :
-                entityXml = alreadyAddedArcs[entityName]
-                # Pass this name of entity along with root xmlElement to be
-                # processed.
-                self.getNextLevelsOfHier(entityName
-                        , hasParents
-                        , childLess
-                        , alreadyAddedArcs
-                        )
+
+            entityXml = alreadyAddedArcs[entityName]
+            # Pass this name of entity along with root xmlElement to be
+            # processed.
+            self.getNextLevelsOfHier(entityName
+                    , hasParents
+                    , childLess
+                    , alreadyAddedArcs
+                    )
         
         # Here we should have two sets. Nodes which do not have children and
         # nodes which do not have parents. Nodes with following properties can
@@ -223,7 +224,7 @@ class VHDL(vhdl_parser.VHDLParser):
         parseVhdl = vhdl_parser.VHDLParser(topdir=self.topdir)
         self.vhdlXml = parseVhdl.parseFiles(files)
 
-        debug.printDebug("STEP", "Processing design")
+        debug.printDebug("STEP", "Processing design and building hierarchy")
         self.getHierarchy() 
 
         # dump the xml for debugging purpose.
@@ -233,7 +234,7 @@ class VHDL(vhdl_parser.VHDLParser):
             f.write(ET.tostring(self.hierXml))
         
         # Run each top-entity
-        debug.printDebug("STEP", "Elaborating each design ...")
+        debug.printDebug("STEP", "Elaborate top entity ...")
         self.runDesign(generateTB)
 
     def generateTestVector(self, entityName) :
@@ -255,6 +256,7 @@ class VHDL(vhdl_parser.VHDLParser):
             self.topModule = self.topModule[0].strip()
             for t in self.vhdlXml.findall('.//entity[@name]'):
                 if t.get('name') == self.topModule:
+                    print("Appending a entity : %s " % t)
                     topEntities.append(t)
         else:
             debug.printDebug("WARN"
