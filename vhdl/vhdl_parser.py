@@ -39,7 +39,7 @@ class VHDLParser(tb.TestBench):
             entityXml = ET.SubElement(elemXml, "entity")
             #entityXml.text = str(body)
             entityXml.attrib['name'] = match['name']
-            baseName = fileName.replace(topdir,"")
+            baseName = os.path.basename(fileName)
             entityXml.attrib['file'] = baseName
             entityXml.attrib['noPort'] = 'false'
             genericPattern = re.compile(
@@ -219,6 +219,7 @@ class VHDLParser(tb.TestBench):
     def populateGenericDict(self, genXml, entityName):
         """Create generic for this entity
         """
+        self.genericsDict = dict()
         generics = dict()
         for xml in genXml:
             rhs = xml.attrib['rhs']
@@ -228,5 +229,5 @@ class VHDLParser(tb.TestBench):
             else:
                 generics[lhs] = None
         self.genericsDict[entityName] = generics
-        return generics 
+        return generics
    

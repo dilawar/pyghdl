@@ -87,6 +87,11 @@ def main():
            , default=None
            , help = 'Optional : Top module in your design.'
            )
+   parser.add_argument('--test-vector-file', '-v', metavar='test_vector'
+           , required = False
+           , default = None
+           , help = 'Test vector file which test-bench should use'
+           )
    parser.add_argument('--generate-tb', '-r', metavar='auto_test'
            , nargs=1
            , required = False
@@ -110,7 +115,7 @@ def main():
        if not compiler:
            compiler = findCompiler("vhdl")
        vhdlObj = vhdl.VHDL(topDir, compiler)
-       vhdlObj.main(files, top=args.top_module, generateTB=args.generate_tb)
+       vhdlObj.main(files, args)
    else:
        debug.printDebug("INFO",  "Unsupported language : {0}".format(args.l))
        debug.printDebug("DEBUG", "Languge specified {0}".format(args.l))
