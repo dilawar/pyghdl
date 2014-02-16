@@ -301,7 +301,7 @@ class VHDL(vhdl_parser.VHDLParser):
             return None 
         else:
             newFileDict = dict()
-            [self.generateTestBench(file, newFileDict) for file in self.fileDict]
+            [self.testBench(file, newFileDict) for file in self.fileDict]
 
         # Copy the new file list to old one.
         self.fileDict = newFileDict
@@ -312,13 +312,12 @@ class VHDL(vhdl_parser.VHDLParser):
       
 
 
-    def generateTestBench(self, entity, newFileDict):
+    def testBench(self, entity, newFileDict):
         """Generate the test-bench """
         
         # if this entity is already a testbench then remove it from the list and
         # add a new one.
         eXml = self.vhdlXml.find(".//entity[@name='{0}']".format(entity))
-        print ET.tostring(eXml)
         debug.printDebug("STEP"
                 , "Generating testbench for entity {0}".format(entity)
                 )
@@ -338,5 +337,7 @@ class VHDL(vhdl_parser.VHDLParser):
             fileSet = set(self.fileDict[entity])
             tbName = self.prefix + entity + ".vhd"
             tbEntity = "tb_"+entity
-            fileSet.add(self.generateTestBench(entity, tbName))
+            fileSet.add(
+                    self.generateTestBench(entity, tbName, self.testVectorFile)
+                    )
             newFileDict[tbEntity] = fileSet
