@@ -64,33 +64,23 @@ class VHDL(vhdl_parser.VHDLParser):
 
     def run(self,  entityName, time=1000) :
         ''' Running the binary '''
-        self.simulator = self.compiler
-        workdir = self.workdir
-        bin = workdir+"/"+entityName
-        testVecPath = os.path.join(workdir, "vector.test")
-        debug.printDebug("STEP", "Simulating design")
-        if not os.path.exists(testVecPath) :
-            debug.printDebug("ERRPR"
-                    , "Test vector file not found".format(testVecPath)
-                    )
-            sys.exit(0)
-        if not os.path.isfile(bin) :
-            msg = "Error : Binary not found. Existing."
-            print(msg)
-            return
-        # Else run the command.
-        command = "{0} --vcd={1}.vcd --stop-time={2}ns \n".format(
-                bin, workdir+"/"+entityName, time)
-        print(command)
-        p = subprocess.Popen(shlex.split(command)
-                , stdout = subprocess.PIPE
-                , stderr = subprocess.PIPE)
-        p.wait()
-        status = p.stderr.readline()
-        if status.__len__() > 0 :
-            print("Error status :  {0}".format(str(status)))
-        else :
-            print("Successfully executed")
+        if "ghdl" in self.compiler:
+            self.simulator = self.compiler
+            workdir = self.workdir
+            bin = workdir+"/"+entityName
+            debug.printDebug("STEP", "Simulating design")
+            if not os.path.isfile(bin) :
+                msg = "Error : Binary not found. Existing."
+                debug.printDebug("WARN", msg)
+                return
+            # Else run the command.
+            command = "{0} --vcd={1}.vcd --stop-time={2}ns \n".format(
+                    bin, workdir+"/"+entityName, time)
+            cmd.runCommand(shlex.split(command))
+
+        if "vsim" in self.compiler:
+            print("using vsim")
+
 
     def analyze(self, filepath) :
         ''' Analyze a file. '''
