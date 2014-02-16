@@ -62,64 +62,75 @@ def findCompiler(language):
             
 
 def main():
-   # Argument parser.
-   description = '''Write testbench for vhdl and run it using ghdl/vsim.'''
-   parser = argparse.ArgumentParser(description=description)
-   parser.add_argument('--design-directory', '-d', metavar='design_directory'
-           , nargs=1
-           , action='append'
-           , required = True
-           , help = 'Top directory containing your VHDL design.'
-           )
-   parser.add_argument('--language', '-l'
-           , metavar='language', nargs=1
-           , default = "vhdl"
-           , help = 'Which language (supported : vhdl )'
-           )
-   parser.add_argument('--compiler', '-c'
-           , metavar='compiler'
-           , required = False
-           , help = "Optional: Specify a compiler or I'll try to guess on system"
-           )
-   parser.add_argument('--top-module', '-t', metavar='top_module'
-           , nargs=1
-           , required = False
-           , default=None
-           , help = 'Optional : Top module in your design.'
-           )
-   parser.add_argument('--test-vector-file', '-v', metavar='test_vector'
-           , required = False
-           , default = None
-           , help = 'Test vector file which test-bench should use'
-           )
-   parser.add_argument('--generate-tb', '-r', metavar='auto_test'
-           , nargs=1
-           , required = False
-           , default=True
-           , help = 'Optional : If specified testbenches will be generated \
-                   automatically.'
+    # Argument parser.
+    description = '''Write testbench for vhdl and run it using ghdl/vsim.'''
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('--design-directory', '-d', metavar='design_directory'
+            , nargs=1
+            , action='append'
+            , required = True
+            , help = 'Top directory containing your VHDL design.'
+            )
+    parser.add_argument('--language', '-l'
+            , metavar = 'language'
+            , nargs=1
+            , default = "vhdl"
+            , help = 'Which language (supported : vhdl )'
+            )
+    parser.add_argument('--compiler', '-c'
+            , metavar='compiler'
+            , required = False
+            , help = "Optional: Specify a compiler or I'll try to guess on system"
+            )
+    parser.add_argument('--top-module', '-t', metavar='top_module'
+            , nargs = 1
+            , required = False
+            , default = None
+            , help = 'Optional : Top module in your design.'
+            )
+    parser.add_argument('--test-vector-file', '-v', metavar='test_vector'
+            , required = False
+            , default = None
+            , help = 'Test vector file which test-bench should use'
+            )
+    parser.add_argument('--generate-tb', '-r', metavar='auto_test'
+            , nargs = 1
+            , required = False
+            , default = True
+            , help = 'Testbench will be generated automatically.'
             )
  
-   class Args: pass 
-   args = Args()
-   parser.parse_args(namespace=args)
-   if args.language == "vhdl" :
-       file_regex = ".*\.vhdl?$"
-       files = findListings(args.design_directory, regex=file_regex)
-       if len(files) < 1 :
-           debug.printDebug("WARN", "No file is found with regex \
-                   {0} in directories {1}".format( file_regex, args.d))
-           sys.exit();
-       topDir = findTopDir(args.design_directory)
-       compiler = args.compiler 
-       if not compiler:
-           compiler = findCompiler("vhdl")
-       vhdlObj = vhdl.VHDL(topDir, compiler)
-       vhdlObj.main(files, args)
-   else:
-       debug.printDebug("INFO",  "Unsupported language : {0}".format(args.l))
-       debug.printDebug("DEBUG", "Languge specified {0}".format(args.l))
-       raise UserWarning("Unsupported language. {0}".format(args.l))
+    class Args: pass 
+    args = Args()
+    parser.parse_args(namespace=args)
+    if args.test_vector_file:
+        args.test_vector_file = os.path.join(os.getcwd(), args.test_vector_file)
+        if not os.path.isfile(args.test_vector_file):
+            debug.printDebug("ERROR"
+                    , "Test vector file %s not found " % args.test_vector_file 
+                    )
+            sys.exit(-11)
+        else: pass
+    if args.language == "vhdl":
+        file_regex = ".*\.vhdl?$"
+        files = findListings(args.design_directory, regex=file_regex)
+        if len(files) < 1 :
+            debug.printDebug("WARN"
+                 , "No file is found with regex {0} in directories {1}".format( 
+                     file_regex
+                     , args.d)
+                 )
+            sys.exit(-10);
+        topDir = findTopDir(args.design_directory)
+        compiler = args.compiler 
+        if not compiler:
+            compiler = findCompiler("vhdl")
+        vhdlObj = vhdl.VHDL(topDir, compiler)
+        vhdlObj.main(files, args)
+    else:
+        debug.printDebug("INFO",  "Unsupported language : {0}".format(args.l))
+        debug.printDebug("DEBUG", "Languge specified {0}".format(args.l))
+        raise UserWarning("Unsupported language. {0}".format(args.l))
 
 if __name__ == "__main__":
     main()

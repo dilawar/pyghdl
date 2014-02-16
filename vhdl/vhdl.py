@@ -24,6 +24,8 @@ class VHDL(vhdl_parser.VHDLParser):
         self.runtime = 1000
         self.prefix = '__auto_genereted_'
         self.signalDict = dict()
+        self.testVectorFile = None
+        self.generateTB = None
         self.tempDir = '_temp'
         if not os.path.isdir(self.tempDir):
             os.makedirs(self.tempDir)
@@ -42,7 +44,8 @@ class VHDL(vhdl_parser.VHDLParser):
             filepath = os.path.join(topdir, file)
             self.analyze(filepath)
         self.elaborate(entityName)
-        self.generateTestVector(entityName)
+        if not self.testVectorFile:
+            self.generateTestVector(entityName)
         self.run(entityName=entityName)
 
     def simulateUsingVsim(self, entityName, fileSet):
