@@ -102,7 +102,7 @@ class VHDL(vhdl_parser.VHDLParser):
         ''' Elaborate the file '''
         if "ghdl" in self.compiler:
             workdir = self.workdir
-            debug.printDebug("STEP", "Elaborating entity {0} \n".format(entityname))
+            debug.printDebug("STEP", "Elaborating entity {0}".format(entityname))
             bin = os.path.join(self.workdir, entityname)
             # Before elaboration, check if binary already exists. If yes then remove
             # it.
@@ -110,7 +110,6 @@ class VHDL(vhdl_parser.VHDLParser):
                 os.remove(bin)
             command = "ghdl -e --workdir={0} --work=work -o {1} {2}".format(workdir
                 , bin, entityname)
-            debug.printDebug("DEBUG", "Executing: \n$ {0}".format(command))
             cmd.runCommand(shlex.split(command))
         else:
             pass

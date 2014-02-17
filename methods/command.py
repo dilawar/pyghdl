@@ -37,5 +37,9 @@ def runCommand(command, shell=False, **kwargs):
         debug.printDebug("ERROR", "Failed with exception %s " % e)
         debug.printDebug("DEBUG", "Command was:  {}".format(command))
         sys.exit(0)
-
+    else:
+        debug.printDebug("INFO"
+                , "Success : {}".format(" ".join(command))
+                )
+        return 
 
