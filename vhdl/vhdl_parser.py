@@ -9,13 +9,11 @@ import xml.etree.cElementTree as ET
 import errno
 import debug.debug as debug
 import collections
-import tb_generator as tb
 
 
-class VHDLParser(tb.TestBench):
+class VHDLParser():
 
     def __init__(self, topdir=""):
-        self.tb = ""
         self.topdir = topdir
         self.workdir = os.path.join(self.topdir, 'work')
         self.vhdlXml = ET.Element("design")
