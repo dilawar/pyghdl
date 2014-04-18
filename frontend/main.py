@@ -118,7 +118,7 @@ def main():
             debug.printDebug("WARN"
                  , "No file is found with regex {0} in directories {1}".format( 
                      file_regex
-                     , args.d)
+                     , args.design_directory)
                  )
             sys.exit(-10);
         topDir = findTopDir(args.design_directory)
@@ -128,9 +128,9 @@ def main():
         vhdlObj = vhdl.VHDL(topDir, compiler)
         vhdlObj.main(files, args)
     else:
-        debug.printDebug("INFO",  "Unsupported language : {0}".format(args.l))
-        debug.printDebug("DEBUG", "Languge specified {0}".format(args.l))
-        raise UserWarning("Unsupported language. {0}".format(args.l))
+        debug.printDebug("INFO",  "Unsupported language : {0}".format(args.language))
+        debug.printDebug("DEBUG", "Languge specified {0}".format(args.language))
+        raise UserWarning("Unsupported language. {0}".format(args.language))
 
 if __name__ == "__main__":
     main()
