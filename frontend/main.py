@@ -73,7 +73,6 @@ def main():
             )
     parser.add_argument('--language', '-l'
             , metavar = 'language'
-            , nargs=1
             , default = "vhdl"
             , help = 'Which language (supported : vhdl )'
             )
